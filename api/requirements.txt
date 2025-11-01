@@ -1,0 +1,37 @@
+# FastAPI et dépendances web
+fastapi==0.109.2
+uvicorn[standard]==0.27.1
+python-multipart==0.0.9
+python-dotenv==1.2.1
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
+
+# Base de données
+sqlalchemy==2.0.25
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+alembic==1.13.1
+greenlet==3.2.4
+
+# Pydantic
+pydantic==2.6.1
+pydantic-settings==2.1.0
+email-validator==2.1.0
+
+# Outils de développement
+black==25.9.0
+mypy==1.18.2
+pytest==8.4.2
+pytest-asyncio==1.2.0
+pytest-cov==7.0.0
+ruff==0.14.2
+
+# Utilities
+python-dateutil==2.8.2
+phonenumbers==8.13.29
+
+# Types
+types-python-dateutil==2.8.19.20240106
+types-pytz==2024.1.0.20240203
+types-setuptools==80.9.0.20250822

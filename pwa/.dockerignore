@@ -1,0 +1,70 @@
+# ===========================================================================
+# .dockerignore - PWA Frontend
+# ===========================================================================
+# Fichiers à exclure du contexte Docker pour optimiser les builds
+# ===========================================================================
+
+# Node modules (réinstallés dans le container)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs (regénérés dans le container)
+dist/
+dist-ssr/
+build/
+out/
+
+# Cache
+.cache/
+.parcel-cache/
+.vite/
+
+# Tests
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+.DS_Store
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Documentation
+README.md
+CHANGELOG.md
+*.md
+
+# Fichiers temporaires
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# Logs
+logs/
+*.log
+
+# Environnement (géré par Docker Compose)
+.env
+.env.*
+
+# Fichiers de lock (on garde package-lock.json)
+yarn.lock
+pnpm-lock.yaml

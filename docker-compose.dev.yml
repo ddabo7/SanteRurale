@@ -1,0 +1,260 @@
+# ===========================================================================
+# Docker Compose - Environnement de développement
+# ===========================================================================
+# Services inclus:
+# - PostgreSQL 16 (avec extensions)
+# - Redis (cache + queue Celery)
+# - MinIO (S3-compatible storage)
+# - MailHog (SMTP testing)
+# - API FastAPI
+# - Celery Worker
+# - Frontend PWA (Vite dev server)
+# ===========================================================================
+
+services:
+  # ===========================================================================
+  # PostgreSQL Database
+  # ===========================================================================
+  db:
+    image: postgres:16-alpine
+    container_name: sante_db
+    environment:
+      POSTGRES_DB: sante_rurale
+      POSTGRES_USER: sante
+      POSTGRES_PASSWORD: sante_pwd
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=fr_FR.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./api/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sante -d sante_rurale"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sante_network
+
+  # ===========================================================================
+  # Redis (Cache + Celery Broker)
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: sante_redis
+    command: redis-server --appendonly yes --requirepass redis_pwd
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - sante_network
+
+  # ===========================================================================
+  # MinIO (S3-compatible object storage)
+  # ===========================================================================
+  minio:
+    image: minio/minio:latest
+    container_name: sante_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"  # Console
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - sante_network
+
+  # Créer le bucket au démarrage
+  minio_init:
+    image: minio/mc:latest
+    container_name: sante_minio_init
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      /usr/bin/mc config host add minio http://minio:9000 minioadmin minioadmin123;
+      /usr/bin/mc mb minio/sante-rurale-mali --ignore-existing;
+      /usr/bin/mc anonymous set download minio/sante-rurale-mali;
+      exit 0;
+      "
+    networks:
+      - sante_network
+
+  # ===========================================================================
+  # MailHog (SMTP testing)
+  # ===========================================================================
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: sante_mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - sante_network
+
+  # ===========================================================================
+  # API FastAPI
+  # ===========================================================================
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+      target: development
+    container_name: sante_api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      # Application
+      ENVIRONMENT: development
+      DEBUG: "true"
+      LOG_LEVEL: DEBUG
+
+      # Database
+      DATABASE_URL: postgresql+asyncpg://sante:sante_pwd@db:5432/sante_rurale
+
+      # Redis
+      REDIS_URL: redis://:redis_pwd@redis:6379/0
+      CELERY_BROKER_URL: redis://:redis_pwd@redis:6379/1
+      CELERY_RESULT_BACKEND: redis://:redis_pwd@redis:6379/2
+
+      # S3/MinIO
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_BUCKET_NAME: sante-rurale-mali
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin123
+
+      # Security
+      SECRET_KEY: dev_secret_key_change_in_production
+      JWT_ALGORITHM: HS256  # En dev, on utilise HS256 pour simplicité
+
+      # Features
+      ENABLE_AUDIT_LOGS: "true"
+      ENABLE_OFFLINE_SYNC: "true"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app:delegated
+      - api_keys:/app/keys
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - sante_network
+    stdin_open: true
+    tty: true
+
+  # ===========================================================================
+  # Celery Worker (tâches asynchrones)
+  # ===========================================================================
+  celery_worker:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+      target: development
+    container_name: sante_celery
+    command: celery -A app.celery_app worker --loglevel=info
+    environment:
+      # Database
+      DATABASE_URL: postgresql+asyncpg://sante:sante_pwd@db:5432/sante_rurale
+
+      # Redis
+      REDIS_URL: redis://:redis_pwd@redis:6379/0
+      CELERY_BROKER_URL: redis://:redis_pwd@redis:6379/1
+      CELERY_RESULT_BACKEND: redis://:redis_pwd@redis:6379/2
+
+      # S3
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_BUCKET_NAME: sante-rurale-mali
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin123
+
+      # DHIS2 (mock en dev)
+      DHIS2_BASE_URL: https://play.dhis2.org/2.39.1
+      DHIS2_USERNAME: admin
+      DHIS2_PASSWORD: district
+    volumes:
+      - ./api:/app:delegated
+    depends_on:
+      - db
+      - redis
+    networks:
+      - sante_network
+
+  # ===========================================================================
+  # Frontend PWA (Vite dev server)
+  # ===========================================================================
+  frontend:
+    build:
+      context: ./pwa
+      dockerfile: Dockerfile
+      target: development
+    container_name: sante_pwa
+    command: npm run dev -- --host
+    environment:
+      VITE_API_URL: http://localhost:8000/v1
+      VITE_ENVIRONMENT: development
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./pwa:/app:delegated
+      - /app/node_modules  # Volume anonyme pour node_modules
+    depends_on:
+      - api
+    networks:
+      - sante_network
+    stdin_open: true
+    tty: true
+
+  # ===========================================================================
+  # Adminer (DB management UI - optionnel)
+  # ===========================================================================
+  adminer:
+    image: adminer:latest
+    container_name: sante_adminer
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+      ADMINER_DESIGN: dracula
+    depends_on:
+      - db
+    networks:
+      - sante_network
+
+# ===========================================================================
+# Volumes
+# ===========================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
+  api_keys:
+    driver: local
+
+# ===========================================================================
+# Network
+# ===========================================================================
+networks:
+  sante_network:
+    driver: bridge

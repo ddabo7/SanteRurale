@@ -1,0 +1,400 @@
+# ===========================================================================
+# .gitignore - Santé Rurale Mali
+# ===========================================================================
+# SÉCURITÉ: Ce fichier protège les données sensibles du projet
+# ===========================================================================
+
+# ===========================================================================
+# ENVIRONNEMENT & SECRETS (CRITIQUE)
+# ===========================================================================
+.env
+.env.*
+!.env.template
+*.env
+
+# Variables d'environnement spécifiques
+.envrc
+.env.local
+.env.development.local
+.env.test.local
+.env.production
+.env.staging
+.env.backup
+
+# ===========================================================================
+# CLÉS & CERTIFICATS (CRITIQUE)
+# ===========================================================================
+# Clés JWT
+keys/*.pem
+keys/*.key
+keys/*.pub
+!keys/README.md
+
+# Certificats SSL/TLS
+*.crt
+*.cer
+*.p12
+*.pfx
+*.pem
+*.key
+ssl/
+certs/
+
+# Clés SSH
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+*.ppk
+
+# Clés GPG
+*.gpg
+*.asc
+secring.gpg
+
+# ===========================================================================
+# SECRETS & CREDENTIALS (CRITIQUE)
+# ===========================================================================
+secrets/
+credentials/
+.secrets/
+*.secret
+*.credentials
+
+# AWS
+.aws/
+aws-credentials.json
+
+# Service Account Keys (GCP, etc.)
+*-service-account.json
+service-account-key.json
+
+# Mots de passe
+passwords.txt
+*.password
+
+# Tokens
+*.token
+.token
+
+# ===========================================================================
+# BASE DE DONNÉES (CRITIQUE)
+# ===========================================================================
+# Dumps et sauvegardes
+*.sql
+*.sql.gz
+*.dump
+*.dmp
+*.backup
+*.bak
+backup/
+backups/
+dumps/
+
+# Fichiers de base de données locale
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# PostgreSQL
+pgdata/
+postgres_data/
+
+# ===========================================================================
+# PYTHON
+# ===========================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Environnements virtuels
+venv/
+ENV/
+env/
+.venv/
+virtualenv/
+
+# Pipenv
+Pipfile.lock
+
+# Poetry
+poetry.lock
+
+# ===========================================================================
+# NODE / JAVASCRIPT / REACT
+# ===========================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.pnpm-store/
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+out/
+
+# Cache
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.vuepress/dist
+.serverless/
+.fusebox/
+
+# Local files
+*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ===========================================================================
+# TERRAFORM (CRITIQUE)
+# ===========================================================================
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/*.tfstate.backup
+terraform/.terraform.lock.hcl
+terraform/terraform.tfvars
+terraform/*.tfvars
+terraform/override.tf
+terraform/override.tf.json
+terraform/*_override.tf
+terraform/*_override.tf.json
+terraform/.terraformrc
+terraform/terraform.rc
+terraform/crash.log
+terraform/crash.*.log
+
+# ===========================================================================
+# DOCKER
+# ===========================================================================
+# Volumes persistants
+postgres_data/
+redis_data/
+minio_data/
+mysql_data/
+
+# Logs
+*.log
+docker-compose.override.yml
+
+# ===========================================================================
+# IDE & ÉDITEURS
+# ===========================================================================
+# VSCode
+.vscode/
+.vscode/*
+!.vscode/settings.json.template
+*.code-workspace
+
+# JetBrains (PyCharm, WebStorm, etc.)
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*.swn
+*~
+.vim/
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ===========================================================================
+# SYSTÈME D'EXPLOITATION
+# ===========================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+.directory
+.Trash-*
+.nfs*
+
+# ===========================================================================
+# LOGS & MONITORING (CONTIENT DES DONNÉES SENSIBLES)
+# ===========================================================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# Sentry
+.sentryclirc
+
+# ===========================================================================
+# TESTS & COUVERTURE
+# ===========================================================================
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+junit.xml
+test-results/
+playwright-report/
+playwright/.cache/
+
+# ===========================================================================
+# FICHIERS TEMPORAIRES
+# ===========================================================================
+tmp/
+temp/
+*.tmp
+*.temp
+.temp/
+.tmp/
+
+# ===========================================================================
+# UPLOADS & MEDIA (PEUT CONTENIR DES DONNÉES PATIENTS)
+# ===========================================================================
+uploads/
+media/
+static/uploads/
+public/uploads/
+user_uploads/
+attachments/local/
+
+# ===========================================================================
+# S3 / OBJECT STORAGE LOCAL
+# ===========================================================================
+s3_local/
+minio_local/
+
+# ===========================================================================
+# AUTRES FICHIERS SENSIBLES
+# ===========================================================================
+# Fichiers de session
+sessions/
+.session
+
+# Cookies
+*.cookie
+
+# PID files
+*.pid
+
+# Lock files
+*.lock
+!package-lock.json
+!yarn.lock
+
+# Archives (peuvent contenir des données sensibles)
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# Fichiers de migration Alembic générés
+# (Gardez les migrations versionnées, ignorez les temporaires)
+alembic/versions/*.pyc
+
+# ===========================================================================
+# CI/CD SECRETS
+# ===========================================================================
+.gitlab-ci-local/
+.github/secrets/
+
+# ===========================================================================
+# ANALYTICS & TRACKING
+# ===========================================================================
+.vercel
+.netlify
+
+# ===========================================================================
+# FICHIERS DE DÉVELOPPEMENT PERSONNELS
+# ===========================================================================
+TODO.md
+NOTES.md
+notes/
+scratch/
+sandbox/
+
+# Mais garder les docs officielles
+!docs/
+!README.md
+!CHANGELOG.md
+!CONTRIBUTING.md
+!LICENSE

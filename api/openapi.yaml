@@ -1,0 +1,1457 @@
+openapi: 3.1.0
+info:
+  title: Santé Rurale Mali API
+  description: |
+    API REST pour la gestion des dossiers patients en zones rurales du Mali.
+
+    ## Caractéristiques
+    - Offline-first avec synchronisation opportuniste
+    - Authentification JWT (RS256)
+    - Support FHIR R4 et exports DHIS2
+    - Gestion multi-sites avec RBAC
+
+    ## Sécurité
+    - TLS 1.3 requis en production
+    - JWT access token (15 min) + refresh token (7 jours)
+    - Rate limiting: 100 req/min par IP, 1000 req/heure par user
+
+  version: 1.0.0
+  contact:
+    name: Support Technique
+    email: support@sante-rurale.ml
+
+servers:
+  - url: https://api.sante-rurale.ml/v1
+    description: Production
+  - url: https://staging-api.sante-rurale.ml/v1
+    description: Staging
+  - url: http://localhost:8000/v1
+    description: Développement local
+
+tags:
+  - name: auth
+    description: Authentification et autorisation
+  - name: patients
+    description: Gestion des patients
+  - name: encounters
+    description: Consultations médicales
+  - name: conditions
+    description: Diagnostics
+  - name: medications
+    description: Ordonnances
+  - name: procedures
+    description: Actes médicaux
+  - name: references
+    description: Références vers centres supérieurs
+  - name: reports
+    description: Rapports et statistiques
+  - name: sync
+    description: Synchronisation offline
+  - name: dhis2
+    description: Intégration DHIS2
+  - name: attachments
+    description: Fichiers joints (photos, PDFs)
+  - name: admin
+    description: Administration
+
+security:
+  - BearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Connexion utilisateur
+      description: Authentifie un utilisateur et retourne un access token + refresh token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: infirmier@cscom-konobougou.ml
+                password:
+                  type: string
+                  format: password
+                  example: SecurePass123!
+      responses:
+        '200':
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/refresh:
+    post:
+      tags: [auth]
+      summary: Rafraîchir le token
+      description: Obtient un nouveau access token avec le refresh token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+                  example: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: Token rafraîchi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Déconnexion
+      description: Invalide le refresh token actuel
+      responses:
+        '204':
+          description: Déconnexion réussie
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: Profil utilisateur actuel
+      responses:
+        '200':
+          description: Profil utilisateur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /patients:
+    get:
+      tags: [patients]
+      summary: Liste des patients
+      description: Retourne les patients du site de l'utilisateur (ou tous si admin)
+      parameters:
+        - name: search
+          in: query
+          description: Recherche par nom/prénom/téléphone
+          schema:
+            type: string
+            example: Diara
+        - name: village
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Liste des patients
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Patient'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags: [patients]
+      summary: Créer un patient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientCreate'
+      responses:
+        '201':
+          description: Patient créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /patients/{id}:
+    get:
+      tags: [patients]
+      summary: Détails d'un patient
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      responses:
+        '200':
+          description: Détails du patient
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientDetails'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [patients]
+      summary: Modifier un patient
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientUpdate'
+      responses:
+        '200':
+          description: Patient modifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+
+  /encounters:
+    get:
+      tags: [encounters]
+      summary: Liste des consultations
+      parameters:
+        - name: patient_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Liste des consultations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Encounter'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags: [encounters]
+      summary: Créer une consultation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EncounterCreate'
+      responses:
+        '201':
+          description: Consultation créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Encounter'
+
+  /encounters/{id}:
+    get:
+      tags: [encounters]
+      summary: Détails d'une consultation
+      parameters:
+        - $ref: '#/components/parameters/EncounterId'
+      responses:
+        '200':
+          description: Détails de la consultation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EncounterDetails'
+
+    patch:
+      tags: [encounters]
+      summary: Modifier une consultation
+      parameters:
+        - $ref: '#/components/parameters/EncounterId'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EncounterUpdate'
+      responses:
+        '200':
+          description: Consultation modifiée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Encounter'
+
+  /conditions:
+    post:
+      tags: [conditions]
+      summary: Ajouter un diagnostic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConditionCreate'
+      responses:
+        '201':
+          description: Diagnostic ajouté
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Condition'
+
+  /medication-requests:
+    post:
+      tags: [medications]
+      summary: Créer une ordonnance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MedicationRequestCreate'
+      responses:
+        '201':
+          description: Ordonnance créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MedicationRequest'
+
+  /procedures:
+    post:
+      tags: [procedures]
+      summary: Enregistrer un acte
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcedureCreate'
+      responses:
+        '201':
+          description: Acte enregistré
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Procedure'
+
+  /references:
+    get:
+      tags: [references]
+      summary: Liste des références
+      parameters:
+        - name: statut
+          in: query
+          schema:
+            type: string
+            enum: [en_attente, confirme, complete, annule]
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Liste des références
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Reference'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags: [references]
+      summary: Créer une référence
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReferenceCreate'
+      responses:
+        '201':
+          description: Référence créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reference'
+
+  /references/{id}:
+    patch:
+      tags: [references]
+      summary: Mettre à jour le statut d'une référence
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                statut:
+                  type: string
+                  enum: [confirme, complete, annule]
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Référence mise à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reference'
+
+  /reports/overview:
+    get:
+      tags: [reports]
+      summary: Vue d'ensemble des activités
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: site_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Statistiques d'activité
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  period:
+                    type: object
+                    properties:
+                      from:
+                        type: string
+                        format: date
+                      to:
+                        type: string
+                        format: date
+                  total_consultations:
+                    type: integer
+                    example: 456
+                  total_patients:
+                    type: integer
+                    example: 234
+                  nouveaux_patients:
+                    type: integer
+                    example: 45
+                  consultations_moins_5_ans:
+                    type: integer
+                    example: 123
+                  top_diagnostics:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          type: string
+                        libelle:
+                          type: string
+                        count:
+                          type: integer
+                    example:
+                      - code: A00.9
+                        libelle: Paludisme
+                        count: 89
+                      - code: J00
+                        libelle: Rhino-pharyngite
+                        count: 34
+                  references:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      confirmes:
+                        type: integer
+
+  /sync/changes:
+    get:
+      tags: [sync]
+      summary: Récupérer les changements depuis un curseur
+      description: |
+        Récupère toutes les modifications (create/update/delete) depuis un curseur donné.
+        Le client maintient le dernier curseur reçu pour la prochaine synchronisation.
+      parameters:
+        - name: since
+          in: query
+          required: true
+          description: Curseur de version (timestamp ou séquence)
+          schema:
+            type: string
+            example: "2024-04-20T10:30:00Z"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 500
+      responses:
+        '200':
+          description: Liste des changements
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  changes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        entity:
+                          type: string
+                          enum: [patient, encounter, condition, medication_request, procedure, reference]
+                        operation:
+                          type: string
+                          enum: [create, update, delete]
+                        id:
+                          type: string
+                          format: uuid
+                        data:
+                          type: object
+                        version:
+                          type: string
+                          format: date-time
+                  next_cursor:
+                    type: string
+                    example: "2024-04-20T12:45:00Z"
+                  has_more:
+                    type: boolean
+
+  /sync/batch:
+    post:
+      tags: [sync]
+      summary: Synchroniser un lot de changements
+      description: |
+        Envoie un lot de changements locaux au serveur.
+        Chaque opération DOIT inclure un `idempotency_key` unique (UUID client-side).
+        Le serveur garantit l'idempotence : ré-envoyer la même clé ne créera pas de doublon.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [operations]
+              properties:
+                operations:
+                  type: array
+                  items:
+                    type: object
+                    required: [operation, entity, idempotency_key, payload]
+                    properties:
+                      operation:
+                        type: string
+                        enum: [create, update, delete]
+                      entity:
+                        type: string
+                        enum: [patient, encounter, condition, medication_request, procedure, reference]
+                      idempotency_key:
+                        type: string
+                        format: uuid
+                        description: UUID généré côté client pour garantir l'idempotence
+                      client_id:
+                        type: string
+                        format: uuid
+                        description: ID local du client (optionnel, pour mapping)
+                      payload:
+                        type: object
+                        description: Données de l'entité
+      responses:
+        '200':
+          description: Résultats de la synchronisation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  synced:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        idempotency_key:
+                          type: string
+                          format: uuid
+                        client_id:
+                          type: string
+                          format: uuid
+                        server_id:
+                          type: string
+                          format: uuid
+                        status:
+                          type: string
+                          enum: [created, updated, deleted, skipped]
+                  conflicts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        idempotency_key:
+                          type: string
+                        error:
+                          type: string
+                        server_version:
+                          type: object
+                          description: Version serveur en conflit
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        idempotency_key:
+                          type: string
+                        error:
+                          type: string
+
+  /dhis2/export:
+    post:
+      tags: [dhis2]
+      summary: Exporter des données vers DHIS2
+      description: |
+        Génère et envoie un export DHIS2 dataValueSet pour une période donnée.
+        L'export est exécuté de manière asynchrone. Retourne un job_id pour suivi.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [period, site_id]
+              properties:
+                period:
+                  type: string
+                  pattern: '^\d{6}$'
+                  example: "202404"
+                  description: Format YYYYMM
+                site_id:
+                  type: string
+                  format: uuid
+                dry_run:
+                  type: boolean
+                  default: false
+                  description: Si true, valide sans envoyer
+      responses:
+        '202':
+          description: Export lancé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [pending, running, completed, failed]
+                  message:
+                    type: string
+
+  /dhis2/export/{job_id}:
+    get:
+      tags: [dhis2]
+      summary: Statut d'un export DHIS2
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Statut du job
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                  status:
+                    type: string
+                    enum: [pending, running, completed, failed]
+                  created_at:
+                    type: string
+                    format: date-time
+                  completed_at:
+                    type: string
+                    format: date-time
+                  result:
+                    type: object
+                    properties:
+                      imported:
+                        type: integer
+                      updated:
+                        type: integer
+                      ignored:
+                        type: integer
+                      errors:
+                        type: array
+                        items:
+                          type: string
+
+  /attachments:
+    post:
+      tags: [attachments]
+      summary: Créer un upload pré-signé
+      description: |
+        Génère une URL pré-signée S3 pour upload direct depuis le client.
+        Le client upload ensuite le fichier directement sur S3.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [filename, mime_type, size_bytes]
+              properties:
+                filename:
+                  type: string
+                  example: ordonnance_patient_123.pdf
+                mime_type:
+                  type: string
+                  example: application/pdf
+                size_bytes:
+                  type: integer
+                  example: 524288
+                patient_id:
+                  type: string
+                  format: uuid
+                encounter_id:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Upload URL créée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  attachment_id:
+                    type: string
+                    format: uuid
+                  upload_url:
+                    type: string
+                    format: uri
+                    example: https://s3.eu-west-1.amazonaws.com/sante-rurale-mali/uploads/uuid.pdf?X-Amz-Algorithm=...
+                  expires_at:
+                    type: string
+                    format: date-time
+
+  /attachments/{id}:
+    get:
+      tags: [attachments]
+      summary: Récupérer un fichier joint
+      description: Génère une URL pré-signée pour télécharger le fichier
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: URL de téléchargement
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  attachment:
+                    $ref: '#/components/schemas/Attachment'
+                  download_url:
+                    type: string
+                    format: uri
+                  expires_at:
+                    type: string
+                    format: date-time
+
+  /admin/users:
+    get:
+      tags: [admin]
+      summary: Liste des utilisateurs
+      security:
+        - BearerAuth: [admin]
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Liste des utilisateurs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags: [admin]
+      summary: Créer un utilisateur
+      security:
+        - BearerAuth: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: Utilisateur créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT access token obtenu via /auth/login.
+        Format: `Authorization: Bearer <token>`
+
+  parameters:
+    PatientId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    EncounterId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    Cursor:
+      name: cursor
+      in: query
+      description: Curseur de pagination
+      schema:
+        type: string
+
+    Limit:
+      name: limit
+      in: query
+      description: Nombre d'éléments par page
+      schema:
+        type: integer
+        default: 50
+        maximum: 200
+
+    IfMatch:
+      name: If-Match
+      in: header
+      description: ETag pour la gestion de concurrence optimiste
+      schema:
+        type: string
+
+  schemas:
+    TokenResponse:
+      type: object
+      required: [access_token, refresh_token, token_type, expires_in]
+      properties:
+        access_token:
+          type: string
+          example: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+        refresh_token:
+          type: string
+          example: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+          example: 900
+          description: Durée de validité en secondes (15 minutes)
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nom:
+          type: string
+          example: Coulibaly Amadou
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        role:
+          type: string
+          enum: [soignant, major, medecin, pharmacien, admin]
+        site_id:
+          type: string
+          format: uuid
+        site:
+          $ref: '#/components/schemas/Site'
+        last_login:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    UserCreate:
+      type: object
+      required: [nom, email, password, role, site_id]
+      properties:
+        nom:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        password:
+          type: string
+          format: password
+          minLength: 12
+        role:
+          type: string
+          enum: [soignant, major, medecin, pharmacien, admin]
+        site_id:
+          type: string
+          format: uuid
+
+    Site:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nom:
+          type: string
+          example: CSCOM Konobougou
+        district:
+          type: string
+          example: Ségou
+        region:
+          type: string
+          example: Ségou
+        latitude:
+          type: number
+          format: float
+        longitude:
+          type: number
+          format: float
+
+    Patient:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nom:
+          type: string
+          example: Sanogo
+        prenom:
+          type: string
+          example: Diara
+        sexe:
+          type: string
+          enum: [M, F]
+          example: F
+        annee_naissance:
+          type: integer
+          example: 1978
+        age:
+          type: integer
+          example: 46
+          description: Calculé automatiquement
+        telephone:
+          type: string
+          example: "+223 70 12 34 56"
+        village:
+          type: string
+          example: Konobougou
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          description: Version pour gestion de conflits
+
+    PatientCreate:
+      type: object
+      required: [nom, sexe]
+      properties:
+        nom:
+          type: string
+          minLength: 2
+        prenom:
+          type: string
+        sexe:
+          type: string
+          enum: [M, F]
+        annee_naissance:
+          type: integer
+          minimum: 1900
+          maximum: 2025
+        telephone:
+          type: string
+        village:
+          type: string
+
+    PatientUpdate:
+      type: object
+      properties:
+        nom:
+          type: string
+        prenom:
+          type: string
+        telephone:
+          type: string
+        village:
+          type: string
+
+    PatientDetails:
+      allOf:
+        - $ref: '#/components/schemas/Patient'
+        - type: object
+          properties:
+            recent_encounters:
+              type: array
+              items:
+                $ref: '#/components/schemas/Encounter'
+            attachments:
+              type: array
+              items:
+                $ref: '#/components/schemas/Attachment'
+
+    Encounter:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        patient_id:
+          type: string
+          format: uuid
+        patient:
+          $ref: '#/components/schemas/Patient'
+        site_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        user:
+          type: object
+          properties:
+            nom:
+              type: string
+        date:
+          type: string
+          format: date
+        motif:
+          type: string
+        temperature:
+          type: number
+          format: float
+          example: 36.8
+        pouls:
+          type: integer
+          example: 78
+        notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        version:
+          type: integer
+
+    EncounterCreate:
+      type: object
+      required: [patient_id, date]
+      properties:
+        patient_id:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        motif:
+          type: string
+        temperature:
+          type: number
+          format: float
+        pouls:
+          type: integer
+        notes:
+          type: string
+
+    EncounterUpdate:
+      type: object
+      properties:
+        motif:
+          type: string
+        temperature:
+          type: number
+        pouls:
+          type: integer
+        notes:
+          type: string
+
+    EncounterDetails:
+      allOf:
+        - $ref: '#/components/schemas/Encounter'
+        - type: object
+          properties:
+            conditions:
+              type: array
+              items:
+                $ref: '#/components/schemas/Condition'
+            medication_requests:
+              type: array
+              items:
+                $ref: '#/components/schemas/MedicationRequest'
+            procedures:
+              type: array
+              items:
+                $ref: '#/components/schemas/Procedure'
+            reference:
+              $ref: '#/components/schemas/Reference'
+
+    Condition:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        encounter_id:
+          type: string
+          format: uuid
+        code_icd10:
+          type: string
+          example: A00.9
+        libelle:
+          type: string
+          example: Paludisme
+        created_at:
+          type: string
+          format: date-time
+
+    ConditionCreate:
+      type: object
+      required: [encounter_id, libelle]
+      properties:
+        encounter_id:
+          type: string
+          format: uuid
+        code_icd10:
+          type: string
+        libelle:
+          type: string
+
+    MedicationRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        encounter_id:
+          type: string
+          format: uuid
+        medicament:
+          type: string
+          example: Artésunate 100 mg
+        posologie:
+          type: string
+          example: 1-0-1 pendant 3 jours
+        duree_jours:
+          type: integer
+          example: 3
+        created_at:
+          type: string
+          format: date-time
+
+    MedicationRequestCreate:
+      type: object
+      required: [encounter_id, medicament, posologie]
+      properties:
+        encounter_id:
+          type: string
+          format: uuid
+        medicament:
+          type: string
+        posologie:
+          type: string
+        duree_jours:
+          type: integer
+
+    Procedure:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        encounter_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          example: Test de diagnostic rapide
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    ProcedureCreate:
+      type: object
+      required: [encounter_id, type]
+      properties:
+        encounter_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        description:
+          type: string
+
+    Reference:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        encounter_id:
+          type: string
+          format: uuid
+        destination:
+          type: string
+          example: Hôpital de Ségou
+        raison:
+          type: string
+        statut:
+          type: string
+          enum: [en_attente, confirme, complete, annule]
+        eta:
+          type: string
+          format: date-time
+          description: Heure d'arrivée estimée
+        created_at:
+          type: string
+          format: date-time
+
+    ReferenceCreate:
+      type: object
+      required: [encounter_id, destination, raison]
+      properties:
+        encounter_id:
+          type: string
+          format: uuid
+        destination:
+          type: string
+        raison:
+          type: string
+        eta:
+          type: string
+          format: date-time
+
+    Attachment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        patient_id:
+          type: string
+          format: uuid
+        encounter_id:
+          type: string
+          format: uuid
+        filename:
+          type: string
+        s3_key:
+          type: string
+        mime_type:
+          type: string
+        size_bytes:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    Pagination:
+      type: object
+      properties:
+        cursor:
+          type: string
+          description: Curseur actuel
+        next_cursor:
+          type: string
+          description: Curseur pour la page suivante
+        has_more:
+          type: boolean
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: validation_error
+        message:
+          type: string
+          example: Le champ 'nom' est requis
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Requête invalide
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Non authentifié
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: unauthorized
+            message: Token invalide ou expiré
+
+    Forbidden:
+      description: Accès interdit
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Ressource non trouvée
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Conflict:
+      description: Conflit (ex. doublon, violation contrainte)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    PreconditionFailed:
+      description: Échec de la condition préalable (ETag mismatch)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    TooManyRequests:
+      description: Trop de requêtes
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
