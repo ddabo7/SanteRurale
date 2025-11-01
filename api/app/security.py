@@ -3,9 +3,14 @@ Fonctions de sécurité : hachage de mot de passe, création de tokens JWT
 """
 from datetime import datetime, timedelta
 from typing import Any
+import uuid
 
-from jose import jwt
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import jwt, JWTError
 from passlib.context import CryptContext
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 
@@ -62,3 +67,54 @@ def decode_token(token: str) -> dict[str, Any]:
     Décode un token JWT
     """
     return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+
+
+# ===========================================================================
+# DEPENDENCIES FOR AUTHENTICATION
+# ===========================================================================
+
+security = HTTPBearer()
+
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+):
+    """
+    Récupère l'utilisateur actuellement authentifié à partir du token JWT
+
+    Note: Cette fonction doit être utilisée avec Depends(get_db) séparément
+    dans les endpoints pour obtenir la session de base de données
+    """
+    from app.database import engine
+    from app.models import User
+
+    token = credentials.credentials
+
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        payload = decode_token(token)
+        user_id_str: str = payload.get("sub")
+        if user_id_str is None:
+            raise credentials_exception
+
+        user_id = uuid.UUID(user_id_str)
+
+    except (JWTError, ValueError):
+        raise credentials_exception
+
+    # Récupérer l'utilisateur depuis la base de données
+    from sqlalchemy.ext.asyncio import AsyncSession as AS
+    async with AS(engine) as session:
+        query = select(User).where(User.id == user_id, User.actif == True)
+        result = await session.execute(query)
+        user = result.scalar_one_or_none()
+
+        if user is None:
+            raise credentials_exception
+
+        return user

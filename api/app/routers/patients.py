@@ -6,10 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_, and_
 from typing import Optional, List
 import uuid
-import structlog
+import logging
 
-from app.database import get_db, set_db_context
-from app.models import Patient, Encounter, Attachment, User, UserRole
+from app.database import get_db
+from app.models import Patient, Encounter, User, UserRole
 from app.schemas import (
     PatientCreate,
     PatientUpdate,
@@ -19,9 +19,9 @@ from app.schemas import (
     AttachmentOut,
     PaginationMeta,
 )
-from app.security import get_current_user, check_site_access
+from app.security import get_current_user
 
-logger = structlog.get_logger()
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/patients", tags=["patients"])
 
@@ -189,11 +189,12 @@ async def get_patient(
         )
 
     # Vérifier l'accès au site
-    if not await check_site_access(current_user, patient.site_id):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Accès non autorisé à ce patient"
-        )
+    if current_user.role not in [UserRole.ADMIN, UserRole.MEDECIN]:
+        if patient.site_id != current_user.site_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Accès non autorisé à ce patient"
+            )
 
     # Vérifier ETag (cache)
     current_etag = f'"version:{patient.version}"'
@@ -264,11 +265,12 @@ async def update_patient(
         )
 
     # Vérifier l'accès
-    if not await check_site_access(current_user, patient.site_id):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Accès non autorisé"
-        )
+    if current_user.role not in [UserRole.ADMIN, UserRole.MEDECIN]:
+        if patient.site_id != current_user.site_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Accès non autorisé"
+            )
 
     # Vérifier If-Match si fourni
     if if_match:

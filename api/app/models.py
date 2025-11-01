@@ -4,10 +4,17 @@ Modèles de base de données pour Santé Rurale Mali
 import uuid as uuid_module
 from datetime import datetime
 from typing import Optional
+import enum
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, Numeric, String, Text, Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+
+# Enum pour le sexe
+class SexeEnum(str, enum.Enum):
+    M = "M"
+    F = "F"
 
 
 class Base(DeclarativeBase):
@@ -107,34 +114,121 @@ class User(Base, TimestampMixin):
 
 
 class Patient(Base, TimestampMixin):
-    """Modèle pour les patients"""
+    """Modèle pour les patients - Correspond exactement à la structure DB"""
     __tablename__ = "patients"
 
     id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid_module.uuid4)
     nom: Mapped[str] = mapped_column(String(200), nullable=False)
-    prenom: Mapped[str] = mapped_column(String(200), nullable=False)
-    sexe: Mapped[str] = mapped_column(String(1), nullable=False)  # M ou F
-    date_naissance: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    prenom: Mapped[str | None] = mapped_column(String(200))
+    sexe: Mapped[SexeEnum] = mapped_column(SQLEnum(SexeEnum, name="sexe", create_type=False), nullable=False)
     annee_naissance: Mapped[int | None] = mapped_column(Integer)
-
-    # Contact
     telephone: Mapped[str | None] = mapped_column(String(50))
-    telephone_urgence: Mapped[str | None] = mapped_column(String(50))
-
-    # Localisation
     village: Mapped[str | None] = mapped_column(String(200))
-    commune: Mapped[str | None] = mapped_column(String(200))
-
-    # Site d'enregistrement
     site_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("sites.id"), nullable=False)
+    matricule: Mapped[str | None] = mapped_column(String(50), unique=True)
 
-    # Informations médicales de base
-    groupe_sanguin: Mapped[str | None] = mapped_column(String(10))
-    allergies: Mapped[str | None] = mapped_column(Text)
-    antecedents_medicaux: Mapped[str | None] = mapped_column(Text)
+    # Audit fields
+    created_by: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    updated_by: Mapped[uuid_module.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
 
-    # Statut
-    actif: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    # Version for optimistic locking
+    version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+
+    # Soft delete
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     # Relations
-    site: Mapped["Site"] = relationship(back_populates="patients")
+    site: Mapped["Site"] = relationship(back_populates="patients", foreign_keys=[site_id])
+    encounters: Mapped[list["Encounter"]] = relationship(back_populates="patient", cascade="all, delete-orphan")
+    created_by_user: Mapped["User"] = relationship(foreign_keys=[created_by])
+    updated_by_user: Mapped["User"] = relationship(foreign_keys=[updated_by])
+
+
+class Encounter(Base, TimestampMixin):
+    """Modèle pour les consultations/rencontres médicales - Correspond exactement à la structure DB"""
+    __tablename__ = "encounters"
+
+    id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid_module.uuid4)
+    patient_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("patients.id"), nullable=False)
+    site_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("sites.id"), nullable=False)
+    user_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+
+    # Date de la consultation
+    date: Mapped[datetime] = mapped_column(Date, nullable=False)
+
+    # Motif de consultation
+    motif: Mapped[str | None] = mapped_column(Text)
+
+    # Signes vitaux
+    temperature: Mapped[float | None] = mapped_column(Numeric(4, 1))
+    pouls: Mapped[int | None] = mapped_column(Integer)
+    pression_systolique: Mapped[int | None] = mapped_column(Integer)
+    pression_diastolique: Mapped[int | None] = mapped_column(Integer)
+    poids: Mapped[float | None] = mapped_column(Numeric(5, 2))
+    taille: Mapped[int | None] = mapped_column(Integer)
+
+    # Notes
+    notes: Mapped[str | None] = mapped_column(Text)
+
+    # Version pour gestion optimiste des conflits
+    version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+
+    # Soft delete
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    # Relations
+    patient: Mapped["Patient"] = relationship(back_populates="encounters")
+    site: Mapped["Site"] = relationship()
+    user: Mapped["User"] = relationship()
+    conditions: Mapped[list["Condition"]] = relationship(back_populates="encounter", cascade="all, delete-orphan")
+    medication_requests: Mapped[list["MedicationRequest"]] = relationship(back_populates="encounter", cascade="all, delete-orphan")
+    procedures: Mapped[list["Procedure"]] = relationship(back_populates="encounter", cascade="all, delete-orphan")
+
+
+class Condition(Base, TimestampMixin):
+    """Modèle pour les diagnostics"""
+    __tablename__ = "conditions"
+
+    id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid_module.uuid4)
+    encounter_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("encounters.id"), nullable=False)
+
+    # Code CIM-10
+    code_icd10: Mapped[str | None] = mapped_column(String(10))
+    libelle: Mapped[str] = mapped_column(String(500), nullable=False)
+    notes: Mapped[str | None] = mapped_column(Text)
+
+    # Relation
+    encounter: Mapped["Encounter"] = relationship(back_populates="conditions")
+
+
+class MedicationRequest(Base, TimestampMixin):
+    """Modèle pour les prescriptions médicamenteuses"""
+    __tablename__ = "medication_requests"
+
+    id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid_module.uuid4)
+    encounter_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("encounters.id"), nullable=False)
+
+    medicament: Mapped[str] = mapped_column(String(500), nullable=False)
+    posologie: Mapped[str] = mapped_column(String(500), nullable=False)
+    duree_jours: Mapped[int | None] = mapped_column(Integer)
+    quantite: Mapped[float | None] = mapped_column(Numeric(10, 2))
+    unite: Mapped[str | None] = mapped_column(String(50))
+    notes: Mapped[str | None] = mapped_column(Text)
+
+    # Relation
+    encounter: Mapped["Encounter"] = relationship(back_populates="medication_requests")
+
+
+class Procedure(Base, TimestampMixin):
+    """Modèle pour les actes médicaux"""
+    __tablename__ = "procedures"
+
+    id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid_module.uuid4)
+    encounter_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("encounters.id"), nullable=False)
+
+    type: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    resultat: Mapped[str | None] = mapped_column(Text)
+
+    # Relation
+    encounter: Mapped["Encounter"] = relationship(back_populates="procedures")

@@ -167,6 +167,7 @@ class PatientUpdate(BaseModel):
 class PatientOut(PatientBase):
     id: UUID
     site_id: UUID
+    matricule: Optional[str] = None
     age: Optional[int] = None
     created_at: datetime
     updated_at: datetime
@@ -185,7 +186,7 @@ class PatientDetails(PatientOut):
 
 class EncounterBase(BaseSchema):
     patient_id: UUID
-    encounter_date: date = Field(default_factory=lambda: datetime.now().date(), alias="date")
+    encounter_date: date = Field(default_factory=lambda: datetime.now().date(), serialization_alias="date", validation_alias="date")
     motif: Optional[str] = None
     temperature: Optional[Decimal] = Field(None, ge=30.0, le=45.0)
     pouls: Optional[int] = Field(None, ge=20, le=300)
@@ -194,6 +195,8 @@ class EncounterBase(BaseSchema):
     poids: Optional[Decimal] = Field(None, ge=0.5, le=300)
     taille: Optional[int] = Field(None, ge=30, le=250)
     notes: Optional[str] = None
+
+    model_config = ConfigDict(populate_by_name=True, from_attributes=True, use_enum_values=True)
 
     @field_validator("pression_systolique", "pression_diastolique")
     @classmethod
