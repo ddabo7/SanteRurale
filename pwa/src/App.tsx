@@ -8,6 +8,7 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { EmailVerificationPage } from './pages/EmailVerificationPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { DebugEnvPage } from './pages/DebugEnvPage'
+import { DebugPage } from './pages/DebugPage'
 import { PatientsPage } from './pages/PatientsPage'
 import { PatientFormPage } from './pages/PatientFormPage'
 import { ConsultationsPage } from './pages/ConsultationsPage'
@@ -25,6 +26,7 @@ function App() {
           <Route path="/verify-email" element={<EmailVerificationPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/debug-env" element={<DebugEnvPage />} />
+          <Route path="/debug" element={<DebugPage />} />
 
           {/* Protected routes */}
           <Route

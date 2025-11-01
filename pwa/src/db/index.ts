@@ -149,6 +149,7 @@ export interface UserSession {
   id: string
   email: string
   nom: string
+  prenom?: string
   role: string
   site_id: string
   access_token: string

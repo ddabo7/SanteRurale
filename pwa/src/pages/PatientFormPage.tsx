@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { db } from '../db'
-import type { Patient } from '../db'
+import { patientsService } from '../services/api'
 
 export const PatientFormPage = () => {
   const { id } = useParams()
@@ -16,7 +15,6 @@ export const PatientFormPage = () => {
     annee_naissance: currentYear - 30,
     telephone: '',
     village: '',
-    matricule: '',
   })
 
   const [isLoading, setIsLoading] = useState(false)
@@ -30,7 +28,7 @@ export const PatientFormPage = () => {
 
   const loadPatient = async (patientId: string) => {
     try {
-      const patient = await db.patients.get(patientId)
+      const patient = await patientsService.get(patientId)
       if (patient) {
         setFormData({
           nom: patient.nom,
@@ -39,12 +37,11 @@ export const PatientFormPage = () => {
           annee_naissance: patient.annee_naissance ?? currentYear - 30,
           telephone: patient.telephone || '',
           village: patient.village || '',
-          matricule: patient.matricule || '',
         })
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur chargement patient:', error)
-      setError('Impossible de charger le patient')
+      setError(error.response?.data?.detail || 'Impossible de charger le patient')
     }
   }
 
@@ -54,57 +51,40 @@ export const PatientFormPage = () => {
     setIsLoading(true)
 
     try {
-      const now = new Date().toISOString()
-      const normalizedData = {
+      const patientData = {
         nom: formData.nom.trim(),
         prenom: formData.prenom.trim() || undefined,
         sexe: formData.sexe,
-        annee_naissance: formData.annee_naissance,
+        annee_naissance: formData.annee_naissance || undefined,
         telephone: formData.telephone.trim() || undefined,
         village: formData.village.trim() || undefined,
-        matricule: formData.matricule.trim() || undefined,
       }
 
       if (isEditMode && id) {
-        await db.patients.update(id, {
-          ...normalizedData,
-          updated_at: now,
-          _synced: false,
-        })
-
-        // Ajouter à la queue de sync
-        await db.addToOutbox(
-          'update',
-          'patient',
-          { id, ...normalizedData },
-          id
-        )
+        // Mise à jour via API
+        await patientsService.update(id, patientData)
       } else {
-        const generatedId =
-          typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-            ? crypto.randomUUID()
-            : `patient-${Date.now()}-${Math.random().toString(16).slice(2)}`
-
-        const newPatient: Patient = {
-          id: generatedId,
-          ...normalizedData,
-          site_id: 'site-1', // TODO: Utiliser le site de l'utilisateur connecté
-          created_at: now,
-          updated_at: now,
-          version: 1,
-          _synced: false,
-        }
-
-        await db.patients.add(newPatient)
-
-        // Ajouter à la queue de sync
-        await db.addToOutbox('create', 'patient', newPatient, generatedId)
+        // Création via API
+        await patientsService.create(patientData)
       }
 
+      // Rediriger vers la liste
       navigate('/patients')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur sauvegarde patient:', error)
-      setError('Erreur lors de la sauvegarde')
+
+      // Afficher le message d'erreur de l'API
+      if (error.response?.data?.detail) {
+        if (Array.isArray(error.response.data.detail)) {
+          // Erreurs de validation Pydantic
+          const errors = error.response.data.detail.map((e: any) => e.msg).join(', ')
+          setError(`Erreur de validation: ${errors}`)
+        } else {
+          setError(error.response.data.detail)
+        }
+      } else {
+        setError('Erreur lors de la sauvegarde. Vérifiez votre connexion.')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -237,21 +217,6 @@ export const PatientFormPage = () => {
               onChange={(e) => setFormData({ ...formData, village: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
               placeholder="Nom du village"
-            />
-          </div>
-
-          {/* Matricule */}
-          <div>
-            <label htmlFor="matricule" className="block text-sm font-medium text-gray-700 mb-2">
-              Matricule
-            </label>
-            <input
-              id="matricule"
-              type="text"
-              value={formData.matricule}
-              onChange={(e) => setFormData({ ...formData, matricule: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-              placeholder="Numéro d'identification"
             />
           </div>
 

@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { db } from '../db'
+import { patientsService } from '../services/api'
 import type { Patient } from '../db'
 
 export const PatientsPage = () => {
   const [patients, setPatients] = useState<Patient[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadPatients()
@@ -14,11 +15,16 @@ export const PatientsPage = () => {
 
   const loadPatients = async () => {
     try {
-      const allPatients = await db.patients.toArray()
-      setPatients(allPatients.filter(p => !p.deleted_at))
-      setIsLoading(false)
-    } catch (error) {
+      setIsLoading(true)
+      setError(null)
+
+      // Charger depuis l'API
+      const response = await patientsService.list({ limit: 200 })
+      setPatients(response.data || [])
+    } catch (error: any) {
       console.error('Erreur chargement patients:', error)
+      setError(error.response?.data?.detail || 'Impossible de charger les patients')
+    } finally {
       setIsLoading(false)
     }
   }
@@ -46,6 +52,23 @@ export const PatientsPage = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Chargement des patients...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="text-red-600 text-6xl mb-4">⚠️</div>
+          <p className="text-red-600 font-semibold mb-2">{error}</p>
+          <button
+            onClick={loadPatients}
+            className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg"
+          >
+            Réessayer
+          </button>
         </div>
       </div>
     )
@@ -172,7 +195,7 @@ export const PatientsPage = () => {
                         Voir
                       </Link>
                       <Link
-                        to={`/patients/${patient.id}/consultation`}
+                        to={`/consultations?patient=${patient.id}`}
                         className="text-blue-600 hover:text-blue-900"
                       >
                         Consulter
