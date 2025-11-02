@@ -24,7 +24,9 @@ export function useSyncStatus() {
     // Écouter les changements
     const unsubscribe = syncService.addStatusListener(setStatus)
 
-    return unsubscribe
+    return () => {
+      unsubscribe()
+    }
   }, [])
 
   return status
@@ -38,7 +40,9 @@ export function useOnlineStatus() {
 
   useEffect(() => {
     const unsubscribe = connectivityMonitor.addListener(setIsOnline)
-    return unsubscribe
+    return () => {
+      unsubscribe()
+    }
   }, [])
 
   return isOnline
