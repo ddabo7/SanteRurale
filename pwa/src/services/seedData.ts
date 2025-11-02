@@ -1,7 +1,7 @@
 import { db } from '../db'
 import type { Patient } from '../db'
 
-// Noms et prénoms typiquement maliens
+// Noms et prénoms typiquement
 const NOMS_MALIENS = [
   'TRAORÉ', 'DIARRA', 'COULIBALY', 'KEITA', 'KONÉ', 'SANGARÉ', 'DIALLO',
   'SISSOKO', 'DEMBÉLÉ', 'BAH', 'TOURÉ', 'KONATÉ', 'CAMARA', 'OUATTARA',

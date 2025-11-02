@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Script de configuration de la base de données PostgreSQL
-# pour Santé Rurale Mali
+# pour Santé Rurale
 
 set -e
 
 echo "======================================================================"
-echo "🏥 Configuration de la base de données - Santé Rurale Mali"
+echo "🏥 Configuration de la base de données - Santé Rurale"
 echo "======================================================================"
 echo ""
 

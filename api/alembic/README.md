@@ -1,4 +1,4 @@
-# Migrations Alembic - Santé Rurale Mali
+# Migrations Alembic - Santé Rurale
 
 ## 📋 Vue d'ensemble
 

@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Script pour installer Python 3.12 et configurer le projet Santé Rurale Mali
+# Script pour installer Python 3.12 et configurer le projet Santé Rurale
 # Usage: chmod +x install_python312.sh && ./install_python312.sh
 
 set -e
 
 echo "======================================================================"
-echo "🐍 Installation de Python 3.12 pour Santé Rurale Mali"
+echo "🐍 Installation de Python 3.12 pour Santé Rurale"
 echo "======================================================================"
 echo ""
 

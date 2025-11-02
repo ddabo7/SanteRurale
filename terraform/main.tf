@@ -1,5 +1,5 @@
 # ===========================================================================
-# Terraform Configuration - Infrastructure AWS Santé Rurale Mali
+# Terraform Configuration - Infrastructure AWS Santé Rurale
 # ===========================================================================
 # Ressources créées:
 # - VPC avec subnets publics/privés multi-AZ
@@ -45,7 +45,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = "SanteRuraleMali"
+      Project     = "SanteRurale"
       Environment = var.environment
       ManagedBy   = "Terraform"
     }
@@ -435,7 +435,7 @@ resource "aws_elasticache_subnet_group" "main" {
 
 resource "aws_elasticache_replication_group" "main" {
   replication_group_id       = "${var.project_name}-redis"
-  replication_group_description = "Redis for Santé Rurale Mali"
+  replication_group_description = "Redis for Santé Rurale"
 
   engine               = "redis"
   engine_version       = "7.1"

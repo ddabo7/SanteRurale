@@ -3,7 +3,7 @@
 ## Vue d'ensemble
 
 Ce document présente les exemples de mapping entre:
-- Le modèle de données interne de Santé Rurale Mali
+- Le modèle de données interne de Santé Rurale
 - Les ressources FHIR R4 (interopérabilité)
 - Les dataValueSets DHIS2 (rapportage)
 

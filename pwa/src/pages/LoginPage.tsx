@@ -36,10 +36,10 @@ export const LoginPage = () => {
           <div className="text-center mb-8">
             <div className="text-6xl mb-4">🏥</div>
             <h1 className="text-3xl font-bold text-gray-900">
-              Santé Rurale Mali
+              Santé Rurale
             </h1>
             <p className="text-gray-600 mt-2">
-              Centre de Santé Communautaire
+              Gestion de santé offline-first
             </p>
           </div>
 
@@ -69,7 +69,7 @@ export const LoginPage = () => {
                 required
                 autoComplete="email"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
-                placeholder="votre.email@cscom.ml"
+                placeholder="votre.email@example.com"
               />
             </div>
 

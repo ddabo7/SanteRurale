@@ -46,7 +46,7 @@ def send_verification_email(to_email: str, verification_token: str, user_name: s
     """
     verification_url = f"{settings.FRONTEND_URL}/verify-email?token={verification_token}"
 
-    subject = "Vérifiez votre adresse email - Santé Rurale Mali"
+    subject = "Vérifiez votre adresse email - Santé Rurale"
 
     html_body = f"""
     <!DOCTYPE html>
@@ -65,11 +65,11 @@ def send_verification_email(to_email: str, verification_token: str, user_name: s
     <body>
         <div class="container">
             <div class="header">
-                <h1>🏥 Santé Rurale Mali</h1>
+                <h1>🏥 Santé Rurale</h1>
             </div>
             <div class="content">
                 <h2>Bonjour {user_name},</h2>
-                <p>Merci de vous être inscrit sur Santé Rurale Mali !</p>
+                <p>Merci de vous être inscrit sur Santé Rurale !</p>
                 <p>Pour activer votre compte, veuillez cliquer sur le bouton ci-dessous :</p>
                 <p style="text-align: center;">
                     <a href="{verification_url}" class="button">Vérifier mon email</a>
@@ -83,7 +83,7 @@ def send_verification_email(to_email: str, verification_token: str, user_name: s
             </div>
             <div class="footer">
                 <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
-                <p>&copy; 2025 Santé Rurale Mali - Système de gestion des soins de santé</p>
+                <p>&copy; 2025 Santé Rurale - Système de gestion des soins de santé</p>
             </div>
         </div>
     </body>
@@ -91,11 +91,11 @@ def send_verification_email(to_email: str, verification_token: str, user_name: s
     """
 
     text_body = f"""
-    Santé Rurale Mali - Vérification d'email
+    Santé Rurale - Vérification d'email
 
     Bonjour {user_name},
 
-    Merci de vous être inscrit sur Santé Rurale Mali !
+    Merci de vous être inscrit sur Santé Rurale !
 
     Pour activer votre compte, veuillez cliquer sur ce lien :
     {verification_url}
@@ -106,7 +106,7 @@ def send_verification_email(to_email: str, verification_token: str, user_name: s
 
     ---
     Cet email a été envoyé automatiquement, merci de ne pas y répondre.
-    © 2025 Santé Rurale Mali
+    © 2025 Santé Rurale
     """
 
     send_email(to_email, subject, html_body, text_body)
@@ -118,7 +118,7 @@ def send_password_reset_email(to_email: str, reset_token: str, user_name: str) -
     """
     reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
 
-    subject = "Réinitialisation de mot de passe - Santé Rurale Mali"
+    subject = "Réinitialisation de mot de passe - Santé Rurale"
 
     html_body = f"""
     <!DOCTYPE html>
@@ -138,7 +138,7 @@ def send_password_reset_email(to_email: str, reset_token: str, user_name: str) -
     <body>
         <div class="container">
             <div class="header">
-                <h1>🔒 Santé Rurale Mali</h1>
+                <h1>🔒 Santé Rurale</h1>
             </div>
             <div class="content">
                 <h2>Bonjour {user_name},</h2>
@@ -158,7 +158,7 @@ def send_password_reset_email(to_email: str, reset_token: str, user_name: str) -
             </div>
             <div class="footer">
                 <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
-                <p>&copy; 2025 Santé Rurale Mali - Système de gestion des soins de santé</p>
+                <p>&copy; 2025 Santé Rurale - Système de gestion des soins de santé</p>
             </div>
         </div>
     </body>
@@ -166,7 +166,7 @@ def send_password_reset_email(to_email: str, reset_token: str, user_name: str) -
     """
 
     text_body = f"""
-    Santé Rurale Mali - Réinitialisation de mot de passe
+    Santé Rurale - Réinitialisation de mot de passe
 
     Bonjour {user_name},
 
@@ -181,7 +181,7 @@ def send_password_reset_email(to_email: str, reset_token: str, user_name: str) -
 
     ---
     Cet email a été envoyé automatiquement, merci de ne pas y répondre.
-    © 2025 Santé Rurale Mali
+    © 2025 Santé Rurale
     """
 
     send_email(to_email, subject, html_body, text_body)

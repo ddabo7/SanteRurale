@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script de configuration PostgreSQL pour Santé Rurale Mali
+# Script de configuration PostgreSQL pour Santé Rurale
 # Usage: ./setup_postgresql.sh
 
 set -e
@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 
 echo ""
 echo "======================================================================"
-echo -e "${BLUE}🗄️  Configuration PostgreSQL - Santé Rurale Mali${NC}"
+echo -e "${BLUE}🗄️  Configuration PostgreSQL - Santé Rurale${NC}"
 echo "======================================================================"
 echo ""
 

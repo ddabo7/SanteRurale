@@ -176,7 +176,7 @@ export class SanteDB extends Dexie {
   user_session!: Table<UserSession, string>
 
   constructor() {
-    super('SanteRuraleMali')
+    super('SanteRurale')
 
     this.version(1).stores({
       // Index: champs indexés pour recherche rapide

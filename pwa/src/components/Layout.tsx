@@ -1,6 +1,7 @@
 import { ReactNode } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { SyncIndicator } from './SyncIndicator'
 
 interface LayoutProps {
   children: ReactNode
@@ -26,7 +27,7 @@ export const Layout = ({ children }: LayoutProps) => {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
               <Link to="/" className="flex items-center">
-                <span className="text-2xl font-bold">🏥 Santé Rurale Mali</span>
+                <span className="text-2xl font-bold">🏥 Santé Rurale</span>
               </Link>
 
               {isAuthenticated && (
@@ -92,7 +93,7 @@ export const Layout = ({ children }: LayoutProps) => {
       <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center text-sm text-gray-500">
-            <p>© 2024 Santé Rurale Mali</p>
+            <p>© 2025 Santé Rurale</p>
             <div className="flex space-x-4">
               <span className="flex items-center">
                 <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
@@ -104,6 +105,9 @@ export const Layout = ({ children }: LayoutProps) => {
           </div>
         </div>
       </footer>
+
+      {/* Indicateur de synchronisation */}
+      {isAuthenticated && <SyncIndicator />}
     </div>
   )
 }

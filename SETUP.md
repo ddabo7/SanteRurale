@@ -1,4 +1,4 @@
-# Guide de démarrage - Santé Rurale Mali
+# Guide de démarrage - Santé Rurale
 
 ## Système de validation d'email et réinitialisation de mot de passe
 

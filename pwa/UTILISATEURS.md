@@ -1,4 +1,4 @@
-# 👥 Comptes Utilisateurs - Santé Rurale Mali
+# 👥 Comptes Utilisateurs - Santé Rurale
 
 ## Comptes disponibles pour connexion
 

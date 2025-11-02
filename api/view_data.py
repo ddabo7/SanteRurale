@@ -27,7 +27,7 @@ async def view_database_stats():
     try:
         async with async_session() as session:
             print("\n" + "="*60)
-            print("📊 STATISTIQUES DE LA BASE DE DONNÉES - Santé Rurale Mali")
+            print("📊 STATISTIQUES DE LA BASE DE DONNÉES - Santé Rurale")
             print("="*60 + "\n")
 
             # Importer les modèles

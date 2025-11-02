@@ -1,5 +1,5 @@
 # ===========================================================================
-# .gitignore - Santé Rurale Mali
+# .gitignore - Santé Rurale
 # ===========================================================================
 # SÉCURITÉ: Ce fichier protège les données sensibles du projet
 # ===========================================================================
@@ -398,3 +398,6 @@ sandbox/
 !CHANGELOG.md
 !CONTRIBUTING.md
 !LICENSE
+
+# Production credentials
+PRODUCTION_CREDENTIALS.md

@@ -1,4 +1,4 @@
-# Sécurité - Santé Rurale Mali
+# Sécurité - Santé Rurale
 
 ## 🔒 Vue d'ensemble
 

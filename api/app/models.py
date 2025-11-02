@@ -1,5 +1,5 @@
 """
-Modèles de base de données pour Santé Rurale Mali
+Modèles de base de données pour Santé Rurale
 """
 import uuid as uuid_module
 from datetime import datetime
@@ -37,19 +37,20 @@ class TimestampMixin:
     )
 
 
-class Region(Base, TimestampMixin):
-    """Modèle pour les régions du Mali"""
+class Region(Base):
+    """Modèle pour les régions"""
     __tablename__ = "regions"
 
     id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid_module.uuid4)
     nom: Mapped[str] = mapped_column(String(200), nullable=False)
     code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.utcnow(), nullable=False)
 
     # Relations
     districts: Mapped[list["District"]] = relationship(back_populates="region", cascade="all, delete-orphan")
 
 
-class District(Base, TimestampMixin):
+class District(Base):
     """Modèle pour les districts"""
     __tablename__ = "districts"
 
@@ -57,6 +58,7 @@ class District(Base, TimestampMixin):
     nom: Mapped[str] = mapped_column(String(200), nullable=False)
     code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     region_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("regions.id"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.utcnow(), nullable=False)
 
     # Relations
     region: Mapped["Region"] = relationship(back_populates="districts")

@@ -1,3 +1,3 @@
 """
-Module principal de l'application Santé Rurale Mali
+Module principal de l'application Santé Rurale
 """

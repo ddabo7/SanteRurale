@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # Configuration de l'application
-    APP_NAME: str = "Santé Rurale Mali API"
+    APP_NAME: str = "Santé Rurale API"
     DEBUG: bool = True
     API_V1_STR: str = "/api"
 
@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     EMAIL_HOST_USER: str = "crosssecmar@gmail.com"
     EMAIL_HOST_PASSWORD: str = "myrh iucx pjrh rboe"
     EMAIL_FROM: str = "noreply@sante-rurale.ml"
-    EMAIL_FROM_NAME: str = "Santé Rurale Mali"
+    EMAIL_FROM_NAME: str = "Santé Rurale"
 
     # URLs de l'application
     FRONTEND_URL: str = "http://localhost:5173"

@@ -1,8 +1,8 @@
-# Architecture PWA Santé Rurale Mali
+# Architecture PWA Santé Rurale
 
 ## Vue d'ensemble
 
-Cette architecture cible une PWA offline-first pour zones rurales au Mali avec connectivité intermittente (2G/3G).
+Cette architecture cible une PWA offline-first pour zones rurales avec connectivité intermittente (2G/3G).
 
 ## 1. Architecture Logique
 
@@ -83,14 +83,14 @@ graph TB
 
 ```mermaid
 graph TB
-    subgraph "Zone Rurale Mali"
+    subgraph "Zone Rurale"
         DEVICE1[Android Device 1<br/>CSCOM Konobougou]
         DEVICE2[Android Device 2<br/>CSCOM Djeli]
         DEVICE3[Android Device N...]
     end
 
     subgraph "Internet 2G/3G"
-        ISP[Orange/Malitel]
+        ISP[Opérateurs mobiles]
     end
 
     subgraph "Cloud Region eu-west-1 Paris"
@@ -117,7 +117,7 @@ graph TB
             end
         end
 
-        S3_BUCKET[S3 Bucket<br/>sante-rurale-mali<br/>SSE-S3]
+        S3_BUCKET[S3 Bucket<br/>sante-rurale<br/>SSE-S3]
         SECRETS[AWS Secrets Manager]
         CLOUDWATCH[CloudWatch Logs]
 
@@ -146,7 +146,7 @@ graph TB
     DEVICE3 -.HTTPS.-> ISP
     ISP --> ALB
 
-    WORKER1 -.export.-> DHIS2_EXTERNAL[DHIS2 Mali<br/>dhis2.sante.gov.ml]
+    WORKER1 -.export.-> DHIS2_EXTERNAL[DHIS2 National<br/>dhis2.example.org]
     WORKER1 -.SMS.-> SMS_GATEWAY[Orange API]
 ```
 

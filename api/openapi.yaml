@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
-  title: Santé Rurale Mali API
+  title: Santé Rurale API
   description: |
-    API REST pour la gestion des dossiers patients en zones rurales du Mali.
+    API REST pour la gestion des dossiers patients en zones rurales rurales.
 
     ## Caractéristiques
     - Offline-first avec synchronisation opportuniste
@@ -810,7 +810,7 @@ paths:
                   upload_url:
                     type: string
                     format: uri
-                    example: https://s3.eu-west-1.amazonaws.com/sante-rurale-mali/uploads/uuid.pdf?X-Amz-Algorithm=...
+                    example: https://s3.eu-west-1.amazonaws.com/sante-rurale/uploads/uuid.pdf?X-Amz-Algorithm=...
                   expires_at:
                     type: string
                     format: date-time

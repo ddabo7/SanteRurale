@@ -1,4 +1,4 @@
-# Plan de Déploiement & Formation - Santé Rurale Mali
+# Plan de Déploiement & Formation - Santé Rurale
 
 ## Table des matières
 
@@ -73,12 +73,12 @@ gantt
 2. **CSCOM Novou-Tamala** (District Ségou)
    - Population: 3200
    - Personnel: 3 infirmiers, 1 major
-   - Connectivité: 2G Malitel
+   - Connectivité: 2G opérateur local
 
 3. **CSCOM Djeli** (District Ségou)
    - Population: 2800
    - Personnel: 2 infirmiers, 1 matrone
-   - Connectivité: 3G Orange/Malitel
+   - Connectivité: 3G Orange/opérateur local
 
 ### Préparation du pilote
 
@@ -88,7 +88,7 @@ gantt
   - 2-3 smartphones Android par site (Samsung A14 ou équivalent, 4GB RAM min)
   - Chargeurs + powerbanks
   - Étuis de protection renforcés
-  - Cartes SIM (Orange + Malitel pour redondance)
+  - Cartes SIM (Orange + opérateur local pour redondance)
 
 - [ ] **Infrastructure**:
   - Créer les comptes utilisateurs dans le système

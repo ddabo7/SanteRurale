@@ -1,7 +1,7 @@
 {
   "name": "sante-rurale-pwa",
   "version": "1.0.0",
-  "description": "PWA Offline-first pour la gestion des dossiers patients - Mali",
+  "description": "PWA Offline-first pour la gestion de santé en zones rurales à connectivité limitée",
   "type": "module",
   "scripts": {
     "dev": "vite",

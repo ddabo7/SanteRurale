@@ -1,8 +1,8 @@
-# Backlog MVP - Santé Rurale Mali
+# Backlog MVP - Santé Rurale
 
 ## Vue d'ensemble
 
-Ce backlog détaille les **user stories** pour le MVP (Minimum Viable Product) de la PWA Santé Rurale Mali.
+Ce backlog détaille les **user stories** pour le MVP (Minimum Viable Product) de la PWA Santé Rurale.
 
 **Durée estimée MVP**: 12 semaines (3 sprints de 4 semaines)
 

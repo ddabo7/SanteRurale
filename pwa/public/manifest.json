@@ -1,7 +1,7 @@
 {
-  "name": "Santé Rurale Mali",
-  "short_name": "Santé Mali",
-  "description": "Application de gestion des dossiers patients en zones rurales du Mali",
+  "name": "Santé Rurale",
+  "short_name": "Santé Rurale",
+  "description": "Solution de gestion de santé pour zones rurales à connectivité limitée",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -36,6 +36,6 @@
     }
   ],
   "categories": ["health", "medical", "productivity"],
-  "lang": "fr-ML",
+  "lang": "fr",
   "dir": "ltr"
 }

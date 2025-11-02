@@ -88,8 +88,8 @@ services:
       /bin/sh -c "
       sleep 5;
       /usr/bin/mc config host add minio http://minio:9000 minioadmin minioadmin123;
-      /usr/bin/mc mb minio/sante-rurale-mali --ignore-existing;
-      /usr/bin/mc anonymous set download minio/sante-rurale-mali;
+      /usr/bin/mc mb minio/sante-rurale --ignore-existing;
+      /usr/bin/mc anonymous set download minio/sante-rurale;
       exit 0;
       "
     networks:
@@ -133,7 +133,7 @@ services:
 
       # S3/MinIO
       S3_ENDPOINT_URL: http://minio:9000
-      S3_BUCKET_NAME: sante-rurale-mali
+      S3_BUCKET_NAME: sante-rurale
       AWS_ACCESS_KEY_ID: minioadmin
       AWS_SECRET_ACCESS_KEY: minioadmin123
 
@@ -182,7 +182,7 @@ services:
 
       # S3
       S3_ENDPOINT_URL: http://minio:9000
-      S3_BUCKET_NAME: sante-rurale-mali
+      S3_BUCKET_NAME: sante-rurale
       AWS_ACCESS_KEY_ID: minioadmin
       AWS_SECRET_ACCESS_KEY: minioadmin123
 

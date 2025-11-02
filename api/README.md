@@ -1,6 +1,6 @@
-# 🏥 Santé Rurale Mali - Backend API
+# 🏥 Santé Rurale - Backend API
 
-API REST pour le système de gestion des soins de santé ruraux au Mali.
+API REST pour le système de gestion des soins de santé ruraux en zones rurales.
 
 ## 🚀 Installation Rapide
 
@@ -58,7 +58,7 @@ api/
 
 ### Tables
 
-- **regions** - Régions du Mali
+- **regions** - Régions
 - **districts** - Districts
 - **sites** - Sites de santé (CSCOM, centres de référence, etc.)
 - **users** - Utilisateurs (personnel de santé)
@@ -291,8 +291,8 @@ python seed_data.py
 
 ## 📄 Licence
 
-Projet interne - Santé Rurale Mali
+Projet interne - Santé Rurale
 
 ## 👥 Équipe
 
-Développé pour améliorer l'accès aux soins de santé dans les zones rurales du Mali.
+Développé pour améliorer l'accès aux soins de santé dans les zones rurales à travers le monde.

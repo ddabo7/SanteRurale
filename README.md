@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-# SanteRurale
-=======
-# Santé Rurale Mali - PWA Offline-First
+# Santé Rurale - PWA Offline-First
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://www.python.org/)
@@ -9,19 +6,19 @@
 [![React](https://img.shields.io/badge/React-18-blue.svg)](https://react.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
 
-> PWA offline-first pour la gestion des dossiers patients en zones rurales du Mali avec synchronisation opportuniste, exports DHIS2 et interopérabilité FHIR R4.
+> Solution de gestion de santé pour zones rurales à connectivité limitée. PWA offline-first avec synchronisation automatique, exports DHIS2 et interopérabilité FHIR R4.
 
 ---
 
 ## 📋 Table des matières
 
 - [Vue d'ensemble](#vue-densemble)
+- [Démarrage rapide](#démarrage-rapide)
 - [Architecture](#architecture)
 - [Fonctionnalités](#fonctionnalités)
-- [Prérequis](#prérequis)
-- [Installation locale](#installation-locale)
-- [Déploiement production](#déploiement-production)
+- [Synchronisation Offline-First](#synchronisation-offline-first)
 - [Documentation](#documentation)
+- [Utilisateurs de production](#utilisateurs-de-production)
 - [Tests](#tests)
 - [Contribution](#contribution)
 - [Licence](#licence)
@@ -30,23 +27,58 @@
 
 ## 🎯 Vue d'ensemble
 
-**Santé Rurale Mali** est une Progressive Web App (PWA) conçue pour permettre aux soignants en zones rurales du Mali de gérer les dossiers patients même en l'absence de connexion internet.
+**Santé Rurale** est une Progressive Web App (PWA) conçue pour permettre aux soignants en zones rurales de gérer les dossiers patients même en l'absence de connexion internet.
 
 ### Problématique
 
-- **Connectivité 2G/3G intermittente** : zones rurales avec coupures réseau fréquentes
-- **Rapportage DHIS2 obligatoire** : export mensuel vers le système national
+Les zones rurales à travers le monde partagent des défis similaires :
+- **Connectivité 2G/3G intermittente** : coupures réseau fréquentes
+- **Rapportage obligatoire** : exports vers systèmes nationaux (DHIS2, etc.)
 - **Continuité des soins** : nécessité de maintenir un historique patient complet
 - **Matériel limité** : smartphones Android bas/moyen de gamme
 
+### Cas d'usage
+- Centres de santé en zones rurales (Afrique, Amérique latine, Asie)
+- Cliniques mobiles et missions humanitaires
+- Camps de réfugiés
+- Zones à infrastructure limitée
+
 ### Solution
 
-- ✅ **Offline-first** : fonctionne 100% hors-ligne avec synchronisation automatique
+- ✅ **Offline-first** : fonctionne 100% hors-ligne avec synchronisation automatique bidirectionnelle
 - ✅ **Dossier patient minimal** : nom, sexe, âge, village, téléphone
 - ✅ **Consultations complètes** : signes vitaux, diagnostics CIM-10, ordonnances, actes
-- ✅ **Synchronisation robuste** : gestion de conflits, retry automatique, idempotence
+- ✅ **Synchronisation robuste** : outbox pattern, gestion de conflits, retry automatique, idempotence
 - ✅ **Exports DHIS2** : agrégation mensuelle et envoi automatisé
 - ✅ **Interopérabilité FHIR R4** : Patient, Encounter, Condition, MedicationRequest
+
+---
+
+## 🚀 Démarrage rapide
+
+```bash
+# 1. Cloner le repo
+git clone https://github.com/your-org/sante-rurale.git
+cd sante-rurale
+
+# 2. Démarrer avec Docker Compose
+docker-compose up -d
+
+# 3. Initialiser la base de données
+docker exec sante_api alembic upgrade head
+
+# 4. Créer les données de base (régions, districts, sites)
+docker exec -e DATABASE_URL="postgresql+asyncpg://sante:sante_pwd@db:5432/sante_rurale" sante_api python scripts/seed_base_data.py
+
+# 5. Créer les utilisateurs de production
+docker exec -e DATABASE_URL="postgresql+asyncpg://sante:sante_pwd@db:5432/sante_rurale" sante_api python scripts/create_production_users.py
+```
+
+**Accès** :
+- 🌐 **API**: http://localhost:8000
+- 📖 **Docs API**: http://localhost:8000/docs
+- 💻 **PWA**: http://localhost:5173
+- 🗄️ **Base de données** (Adminer): http://localhost:8080
 
 ---
 
@@ -56,47 +88,74 @@
 
 **Frontend (PWA)**:
 - React 18 + TypeScript
-- Vite (build)
-- Workbox (Service Worker / offline)
-- Dexie.js (IndexedDB)
+- Vite (build & dev server)
+- **Dexie.js** (IndexedDB pour stockage offline)
+- **Service Workers** (cache & offline)
 - TailwindCSS (UI)
+- React Router (navigation)
 
 **Backend (API)**:
 - FastAPI (Python 3.11+)
 - PostgreSQL 16
-- Redis (cache + queue Celery)
-- S3/MinIO (attachments)
+- SQLAlchemy 2.0 (ORM async)
+- Alembic (migrations)
+- JWT Authentication (RS256)
 
 **Infrastructure**:
-- Docker / Docker Compose (dev)
-- AWS ECS Fargate (prod)
-- RDS PostgreSQL Multi-AZ
-- ElastiCache Redis
-- Terraform (IaC)
+- Docker / Docker Compose (dev & prod)
+- Nginx (reverse proxy)
+- MinIO (stockage S3-compatible)
 
-**Observabilité**:
-- Prometheus + Grafana
-- Sentry
-- CloudWatch Logs
+### Architecture Offline-First
 
-### Diagramme d'architecture
+```
+┌─────────────────────────────────────────────────────┐
+│                   Application PWA                    │
+├─────────────────────────────────────────────────────┤
+│                                                       │
+│  ┌─────────────┐           ┌──────────────┐        │
+│  │   UI/Pages  │────────▶│  API Service  │        │
+│  └─────────────┘           └──────┬───────┘        │
+│                                    │                 │
+│                           ┌────────▼────────┐       │
+│                           │  Sync Service   │       │
+│                           └────────┬────────┘       │
+│                                    │                 │
+│                    ┌───────────────┼────────┐       │
+│                    │               │        │       │
+│            ┌───────▼──────┐ ┌─────▼────┐  │       │
+│            │  IndexedDB   │ │  Outbox  │  │       │
+│            │   (Dexie)    │ │  Queue   │  │       │
+│            └──────────────┘ └──────────┘  │       │
+│                                            │       │
+└────────────────────────────────────────────┼───────┘
+                                             │
+                                    ┌────────▼────────┐
+                                    │  FastAPI Backend│
+                                    │   PostgreSQL    │
+                                    └─────────────────┘
+```
 
-Voir [docs/architecture.md](docs/architecture.md) pour les diagrammes détaillés.
+**Voir [OFFLINE_SYNC_GUIDE.md](OFFLINE_SYNC_GUIDE.md) pour la documentation complète.**
 
 ---
 
 ## ✨ Fonctionnalités
 
-### MVP (Version 1.0)
+### Implémenté ✅
 
-- [x] **Patients** : Créer, modifier, rechercher (offline)
-- [x] **Consultations** : Enregistrer avec signes vitaux, diagnostics, ordonnances, actes
-- [x] **Synchronisation** : Queue locale (outbox), sync auto, gestion de conflits
-- [x] **Références** : Transférer vers hôpital avec notification SMS (non-clinique)
-- [x] **Rapports** : Statistiques site, top diagnostics, export CSV
-- [x] **DHIS2** : Export mensuel automatisé avec validation
-- [x] **Authentification** : JWT (RS256), refresh tokens, RBAC
-- [x] **Audit** : Logs complets (qui, quand, quoi)
+- [x] **Authentification** : JWT (RS256), refresh tokens, RBAC (admin, medecin, major, soignant)
+- [x] **Patients** : Création, modification, recherche (offline-first avec IndexedDB)
+- [x] **Consultations** : Enregistrement avec signes vitaux, diagnostics, ordonnances, actes
+- [x] **Synchronisation bidirectionnelle** :
+  - Push local → serveur (outbox pattern)
+  - Pull serveur → local
+  - Détection automatique de connectivité
+  - Sync toutes les 2 minutes + au retour en ligne
+  - Indicateur visuel de statut
+- [x] **Références** : Transferts vers hôpital
+- [x] **Rapports** : Statistiques par site
+- [x] **Gestion des sites** : Régions, districts, centres de santé
 
 ### Post-MVP (V2)
 
@@ -106,195 +165,44 @@ Voir [docs/architecture.md](docs/architecture.md) pour les diagrammes détaillé
 - [ ] Suivi prénatal
 - [ ] Carnet de vaccination
 - [ ] Support multilingue (Bambara)
+- [ ] Exports DHIS2
 
 ---
 
-## 📦 Prérequis
+## 🔄 Synchronisation Offline-First
 
-### Développement local
+### Stratégie
 
-- **Docker** : 20.10+
-- **Docker Compose** : 2.0+
-- **Node.js** : 18+ (si dev frontend sans Docker)
-- **Python** : 3.11+ (si dev backend sans Docker)
+L'application utilise une approche **offline-first** complète :
 
-### Production
+1. **Écriture locale immédiate** (Optimistic UI)
+   - Toutes les créations/modifications sont sauvegardées localement d'abord
+   - L'interface se met à jour instantanément
+   - Meilleure expérience utilisateur
 
-- Compte **AWS** (ou infrastructure équivalente)
-- **Terraform** : 1.6+
-- Nom de domaine configuré
-- Certificat SSL (Let's Encrypt ou ACM)
+2. **Outbox Pattern**
+   - Les opérations sont ajoutées à une queue locale
+   - Chaque opération a une clé d'idempotence
+   - Garantit qu'une opération n'est exécutée qu'une seule fois
 
----
+3. **Synchronisation bidirectionnelle**
+   - **Push** : Envoi des modifications locales vers le serveur
+   - **Pull** : Récupération des données du serveur
+   - Automatique en arrière-plan
 
-## 🚀 Installation locale
+4. **Gestion des conflits**
+   - Utilisation de numéros de version
+   - Le serveur fait autorité en cas de conflit
 
-### Option 1 : Script automatique (recommandé)
+### Composants
 
-```bash
-# 1. Cloner le repo
-git clone https://github.com/your-org/sante-rurale-mali.git
-cd sante-rurale-mali
+- **[pwa/src/services/syncService.ts](pwa/src/services/syncService.ts)** : Service principal de synchronisation
+- **[pwa/src/contexts/SyncContext.tsx](pwa/src/contexts/SyncContext.tsx)** : Contexte React global
+- **[pwa/src/hooks/useSync.ts](pwa/src/hooks/useSync.ts)** : Hooks React pour la sync
+- **[pwa/src/components/SyncIndicator.tsx](pwa/src/components/SyncIndicator.tsx)** : Indicateur visuel
+- **[pwa/src/db/index.ts](pwa/src/db/index.ts)** : Base de données locale (IndexedDB)
 
-# 2. Lancer le script de configuration (tout automatique)
-./setup.sh
-```
-
-Le script `setup.sh` va automatiquement :
-- ✅ Créer le fichier `.env` avec les bonnes valeurs de développement
-- ✅ Générer les clés JWT RSA
-- ✅ Démarrer tous les services Docker
-- ✅ Initialiser la base de données
-- ✅ Vérifier que tout fonctionne
-
-**Accès** :
-- API: http://localhost:8000
-- Docs API: http://localhost:8000/docs
-- PWA: http://localhost:5173
-- MinIO Console: http://localhost:9001
-- Adminer (DB): http://localhost:8080
-
-### Option 2 : Manuel
-
-```bash
-# Si vous préférez tout faire à la main
-
-# 1. Créer le .env
-cat > .env << 'EOF'
-# (Copier le contenu depuis setup.sh)
-EOF
-
-# 2. Générer les clés JWT
-mkdir -p api/keys
-openssl genrsa -out api/keys/jwt-private.pem 4096
-openssl rsa -in api/keys/jwt-private.pem -pubout -out api/keys/jwt-public.pem
-
-# 3. Lancer Docker Compose
-docker-compose -f docker-compose.dev.yml up -d
-
-# 4. Initialiser la base
-docker-compose -f docker-compose.dev.yml exec api alembic upgrade head
-```
-
-### Option 3 : Sans Docker (développement backend/frontend séparé)
-
-<details>
-<summary>Cliquer pour voir les instructions détaillées</summary>
-
-#### Backend
-
-```bash
-cd api/
-
-# Créer un environnement virtuel
-python3.11 -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Installer les dépendances
-pip install -r requirements.txt
-
-# Lancer PostgreSQL et Redis localement (ou via Docker)
-docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=sante_pwd postgres:16
-docker run -d -p 6379:6379 redis:7-alpine
-
-# Le fichier .env est déjà configuré
-# Éditer DATABASE_URL, REDIS_URL, etc. si nécessaire
-
-# Lancer les migrations
-alembic upgrade head
-
-# Lancer le serveur de dev
-uvicorn app.main:app --reload
-```
-
-#### Frontend
-
-```bash
-cd pwa/
-
-# Installer les dépendances
-npm install
-
-# Lancer le dev server
-npm run dev
-
-# Accéder à http://localhost:5173
-```
-
-</details>
-
----
-
-## 🌍 Déploiement production
-
-### Préparation
-
-```bash
-# 1. Créer un backend S3 pour Terraform state
-aws s3 mb s3://sante-rurale-terraform-state --region eu-west-1
-aws dynamodb create-table \
-    --table-name terraform-lock \
-    --attribute-definitions AttributeName=LockID,AttributeType=S \
-    --key-schema AttributeName=LockID,KeyType=HASH \
-    --billing-mode PAY_PER_REQUEST
-
-# 2. Configurer Terraform backend
-cd terraform/
-# Décommenter le bloc backend "s3" dans main.tf
-
-terraform init
-```
-
-### Déploiement infrastructure
-
-```bash
-cd terraform/
-
-# Planifier
-terraform plan -var="environment=production"
-
-# Appliquer
-terraform apply -var="environment=production"
-
-# Noter les outputs (RDS endpoint, Redis endpoint, etc.)
-```
-
-### Déploiement application
-
-```bash
-# 1. Build et push des images Docker
-cd api/
-docker build -t sante-rurale-api:latest --target production .
-docker tag sante-rurale-api:latest <YOUR_ECR>/sante-rurale-api:latest
-docker push <YOUR_ECR>/sante-rurale-api:latest
-
-cd ../pwa/
-docker build -t sante-rurale-pwa:latest .
-docker tag sante-rurale-pwa:latest <YOUR_ECR>/sante-rurale-pwa:latest
-docker push <YOUR_ECR>/sante-rurale-pwa:latest
-
-# 2. Déployer sur ECS (via Terraform ou AWS CLI)
-# Voir docs/operations-runbooks.md pour les détails
-
-# 3. Configurer le DNS (Route53)
-# Pointer api.sante-rurale.ml vers l'ALB
-```
-
-### Post-déploiement
-
-```bash
-# 1. Vérifier la santé de l'API
-curl https://api.sante-rurale.ml/health
-
-# 2. Créer le premier utilisateur admin
-# (via script ou interface admin)
-
-# 3. Configurer les alertes Prometheus/Grafana
-
-# 4. Activer les sauvegardes automatiques RDS
-
-# 5. Planifier le premier test de restauration
-```
+**Documentation complète** : Voir [OFFLINE_SYNC_GUIDE.md](OFFLINE_SYNC_GUIDE.md)
 
 ---
 
@@ -302,48 +210,97 @@ curl https://api.sante-rurale.ml/health
 
 | Document | Description |
 |----------|-------------|
-| [Architecture](docs/architecture.md) | Diagrammes d'architecture, stack technique, modèle de données |
-| [OpenAPI Spec](api/openapi.yaml) | Spécification complète de l'API REST |
-| [Schéma SQL](api/schema.sql) | Schéma PostgreSQL avec indexes et contraintes |
-| [FHIR & DHIS2](docs/fhir-dhis2-interoperability.md) | Mapping FHIR R4 et exports DHIS2 |
-| [Operations & Runbooks](docs/operations-runbooks.md) | Procédures opérationnelles, SLO/SLA, incidents |
-| [Backlog MVP](docs/backlog-mvp.md) | User stories détaillées avec DoR/DoD |
-| [Déploiement & Formation](docs/deployment-training-plan.md) | Plan de déploiement pilote et formation |
+| **[OFFLINE_SYNC_GUIDE.md](OFFLINE_SYNC_GUIDE.md)** | **Guide complet de la synchronisation offline-first** |
+| **[MULTI_COUNTRY_SETUP.md](MULTI_COUNTRY_SETUP.md)** | **Configuration multi-pays et adaptation régionale** |
+| [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) | Guide de déploiement en production |
+| [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) | Variables d'environnement (dev & prod) |
+| [PRODUCTION_CREDENTIALS.md](PRODUCTION_CREDENTIALS.md) | Identifiants des utilisateurs de production |
+| [API Documentation](http://localhost:8000/docs) | Documentation interactive de l'API (Swagger) |
+
+---
+
+## 👥 Utilisateurs de démonstration
+
+Des utilisateurs de démonstration peuvent être créés automatiquement lors de l'initialisation :
+
+| Rôle | Email | Mot de passe | Site |
+|------|-------|--------------|------|
+| Admin | admin@sante-rurale.health | `AdminSecure2025!` | Centre de santé de démonstration |
+| Médecin | medecin@sante-rurale.health | `MedecinDemo2025!` | Centre de santé de démonstration |
+| Major | major@sante-rurale.health | `MajorDemo2025!` | Centre de santé de démonstration |
+| Soignant | soignant@sante-rurale.health | `SoignantDemo2025!` | Centre de santé de démonstration |
+
+⚠️ **IMPORTANT** : Changer tous les mots de passe après la première connexion !
+
+**Voir [PRODUCTION_CREDENTIALS.md](PRODUCTION_CREDENTIALS.md) pour plus de détails.**
 
 ---
 
 ## 🧪 Tests
 
-### Tests unitaires (Backend)
+### Test de synchronisation offline
 
-```bash
-cd api/
-pytest tests/ -v --cov=app --cov-report=html
+1. Ouvrir l'application en ligne
+2. Ouvrir DevTools → Network → **Offline**
+3. Créer un nouveau patient
+4. Créer une consultation
+5. Vérifier que tout fonctionne localement
+6. Revenir **Online**
+7. Attendre la synchronisation automatique (ou cliquer sur l'indicateur)
+8. Vérifier que les données sont sur le serveur
+
+### Commandes de debug
+
+```javascript
+// Dans la console du navigateur
+
+// Voir les données locales
+await db.patients.toArray()
+await db.encounters.toArray()
+
+// Voir l'outbox
+await db.outbox.where('processed').equals(0).toArray()
+
+// Voir les éléments non synchronisés
+await db.getUnsyncedCount()
+
+// Forcer une synchronisation
+await syncService.forceSync()
+
+// Statut de synchronisation
+await syncService.getStatus()
 ```
 
-### Tests E2E (Frontend)
+---
+
+## 🌍 Déploiement production
+
+### Guide complet
+
+Voir [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) pour les instructions détaillées.
+
+### Résumé rapide
 
 ```bash
-cd pwa/
-npm run test:e2e
+# 1. Configurer les variables d'environnement
+cp .env.example .env.production
+# Éditer .env.production avec les valeurs de production
 
-# Ou pour lancer Playwright UI
-npx playwright test --ui
-```
+# 2. Générer les clés JWT
+mkdir -p api/keys
+openssl genrsa -out api/keys/jwt-private.pem 4096
+openssl rsa -in api/keys/jwt-private.pem -pubout -out api/keys/jwt-public.pem
 
-### Tests d'intégration
+# 3. Build et déploiement
+docker-compose -f docker-compose.prod.yml up -d
 
-```bash
-# Lancer avec Docker Compose
-docker-compose -f docker-compose.dev.yml up -d
-cd tests/integration/
-pytest test_api_integration.py -v
-```
+# 4. Initialiser la base de données
+docker exec sante_api alembic upgrade head
+docker exec sante_api python scripts/seed_base_data.py
+docker exec sante_api python scripts/create_production_users.py
 
-### Test de charge (k6)
-
-```bash
-k6 run tests/load/consultation_workflow.js
+# 5. Configurer Nginx et SSL
+# Voir DEPLOYMENT_GUIDE.md
 ```
 
 ---
@@ -354,7 +311,7 @@ k6 run tests/load/consultation_workflow.js
 
 1. Fork le projet
 2. Créer une branche feature (`git checkout -b feature/amazing-feature`)
-3. Commit vos changements (`git commit -m 'Add amazing feature'`)
+3. Commit vos changements (`git commit -m 'feat: add amazing feature'`)
 4. Push vers la branche (`git push origin feature/amazing-feature`)
 5. Ouvrir une Pull Request
 
@@ -363,20 +320,6 @@ k6 run tests/load/consultation_workflow.js
 - **Python** : Black (formatage), Ruff (linting), mypy (types)
 - **TypeScript** : ESLint, Prettier
 - **Commits** : Conventional Commits (`feat:`, `fix:`, `docs:`, etc.)
-
-### Revue de code
-
-- Toute PR doit avoir au moins 1 approbation
-- Les tests doivent passer (CI/CD)
-- La couverture de tests ne doit pas diminuer
-
----
-
-## 📧 Support
-
-- **Email** : support@sante-rurale.ml
-- **WhatsApp** : +223 XX XX XX XX (heures ouvrables)
-- **Issues GitHub** : [github.com/your-org/sante-rurale-mali/issues](https://github.com/your-org/sante-rurale-mali/issues)
 
 ---
 
@@ -388,20 +331,14 @@ Ce projet est sous licence **MIT**. Voir le fichier [LICENSE](LICENSE) pour plus
 
 ## 🙏 Remerciements
 
-- **Ministère de la Santé du Mali** pour le soutien institutionnel
 - **DHIS2 Community** pour les ressources et l'expertise
-- **Tous les soignants** en zones rurales qui testent et utilisent l'application au quotidien
+- **Tous les soignants** en zones rurales à travers le monde qui testent et utilisent l'application
+- **Ministères de la Santé** des pays pilotes pour leur soutien institutionnel
 
 ---
 
-## 📊 Statistiques du projet
+**Fait avec ❤️ pour la santé rurale mondiale**
 
-![GitHub stars](https://img.shields.io/github/stars/your-org/sante-rurale-mali?style=social)
-![GitHub forks](https://img.shields.io/github/forks/your-org/sante-rurale-mali?style=social)
-![GitHub issues](https://img.shields.io/github/issues/your-org/sante-rurale-mali)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/your-org/sante-rurale-mali)
-
----
-
-**Fait avec ❤️ pour la santé rurale au Mali**
->>>>>>> eb71c8c (Initial commit)
+**Version** : 1.0.0
+**Dernière mise à jour** : 2 Novembre 2025
+**Déploiements** : déploiement pilote, autres pays à venir

@@ -13,8 +13,8 @@
 FROM python:3.11-slim as base
 
 # Métadonnées
-LABEL maintainer="support@sante-rurale.ml"
-LABEL description="API Santé Rurale Mali"
+LABEL maintainer="support@sante-rurale.health"
+LABEL description="API Santé Rurale"
 
 # Variables d'environnement Python
 ENV PYTHONUNBUFFERED=1 \

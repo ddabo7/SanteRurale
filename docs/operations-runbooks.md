@@ -1,4 +1,4 @@
-# Documentation Opérationnelle & Runbooks - Santé Rurale Mali
+# Documentation Opérationnelle & Runbooks - Santé Rurale
 
 ## Table des matières
 

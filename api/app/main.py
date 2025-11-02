@@ -1,5 +1,5 @@
 """
-Application FastAPI principale pour Santé Rurale Mali
+Application FastAPI principale pour Santé Rurale
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,7 +11,7 @@ from app.routers import patients_simple as patients
 # Créer l'application FastAPI
 app = FastAPI(
     title=settings.APP_NAME,
-    description="API pour le système de gestion des soins de santé ruraux au Mali",
+    description="API pour le système de gestion des soins de santé ruraux en zones rurales",
     version="1.0.0",
 )
 
@@ -38,7 +38,7 @@ async def root():
     Endpoint racine
     """
     return {
-        "message": "Bienvenue sur l'API Santé Rurale Mali",
+        "message": "Bienvenue sur l'API Santé Rurale",
         "version": "1.0.0",
         "docs": "/docs",
     }

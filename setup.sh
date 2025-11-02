@@ -1,13 +1,13 @@
 #!/bin/bash
 # ===========================================================================
-# Script d'initialisation - Santé Rurale Mali
+# Script d'initialisation - Santé Rurale
 # ===========================================================================
 # Ce script configure l'environnement de développement local
 # ===========================================================================
 
 set -e  # Arrêter en cas d'erreur
 
-echo "🏥 Santé Rurale Mali - Configuration initiale"
+echo "🏥 Santé Rurale - Configuration initiale"
 echo "=============================================="
 echo ""
 
@@ -35,8 +35,8 @@ if [ ! -f .env ]; then
     echo "📝 Création du fichier .env pour le développement local..."
 
     cat > .env << 'EOF'
-# Configuration Environnement - Santé Rurale Mali (Développement Local)
-APP_NAME=Santé Rurale Mali API
+# Configuration Environnement - Santé Rurale (Développement Local)
+APP_NAME=Santé Rurale API
 APP_VERSION=1.0.0
 ENVIRONMENT=development
 DEBUG=true
@@ -67,7 +67,7 @@ CELERY_RESULT_BACKEND=redis://:redis_pwd@redis:6379/2
 # S3 / MinIO
 S3_ENDPOINT_URL=http://minio:9000
 S3_REGION=eu-west-1
-S3_BUCKET_NAME=sante-rurale-mali
+S3_BUCKET_NAME=sante-rurale
 AWS_ACCESS_KEY_ID=minioadmin
 AWS_SECRET_ACCESS_KEY=minioadmin123
 S3_PRESIGNED_URL_EXPIRY=3600

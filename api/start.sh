@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script de démarrage rapide pour le backend Santé Rurale Mali
+# Script de démarrage rapide pour le backend Santé Rurale
 # Usage: ./start.sh
 
 # Couleurs
@@ -12,7 +12,7 @@ NC='\033[0m' # No Color
 
 echo ""
 echo "======================================================================"
-echo -e "${BLUE}🏥 Démarrage du Backend Santé Rurale Mali${NC}"
+echo -e "${BLUE}🏥 Démarrage du Backend Santé Rurale${NC}"
 echo "======================================================================"
 echo ""
 

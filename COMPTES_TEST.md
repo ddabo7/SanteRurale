@@ -1,4 +1,4 @@
-# 🔐 Comptes de Test - Santé Rurale Mali
+# 🔐 Comptes de Test - Santé Rurale
 
 ## 📍 Localisation des données
 

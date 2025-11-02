@@ -1,4 +1,4 @@
-# ✅ Installation Complète - Santé Rurale Mali
+# ✅ Installation Complète - Santé Rurale
 
 ## Résumé de l'installation
 
@@ -37,7 +37,7 @@ api/
 ### Base de Données PostgreSQL
 
 **Tables créées** :
-- ✅ `regions` - Régions du Mali
+- ✅ `regions` - Régions
 - ✅ `districts` - Districts
 - ✅ `sites` - Sites de santé (CSCOM, etc.)
 - ✅ `users` - Utilisateurs (avec vérification email)
