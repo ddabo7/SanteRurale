@@ -23,6 +23,7 @@ IGNORED=0
 IGNORE_FILES=(
     "CHANGELOG_GENERIQUE.md"
     "MULTI_COUNTRY_SETUP.md"
+    "RAPPORT_NETTOYAGE_MALI.md"
     "pwa/src/config/regions.ts"
     "verify_no_mali.sh"
     "clean_mali_references.sh"
