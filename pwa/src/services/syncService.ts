@@ -61,9 +61,11 @@ class ConnectivityMonitor {
     return this.isOnlineState
   }
 
-  addListener(listener: (isOnline: boolean) => void) {
+  addListener(listener: (isOnline: boolean) => void): () => void {
     this.listeners.add(listener)
-    return () => this.listeners.delete(listener)
+    return () => {
+      this.listeners.delete(listener)
+    }
   }
 
   async checkConnectivity(): Promise<boolean> {
@@ -356,9 +358,11 @@ class SyncService {
   /**
    * Écouter les changements de statut
    */
-  addStatusListener(listener: (status: SyncStatus) => void) {
+  addStatusListener(listener: (status: SyncStatus) => void): () => void {
     this.statusListeners.add(listener)
-    return () => this.statusListeners.delete(listener)
+    return () => {
+      this.statusListeners.delete(listener)
+    }
   }
 
   private async notifyStatusChange() {
@@ -404,3 +408,9 @@ export async function offlineWrite<T>(
     syncService.sync().catch(err => console.error('Background sync failed:', err))
   }
 }
+
+// ===========================================================================
+// EXPORTS POUR LES TESTS
+// ===========================================================================
+
+export { ConnectivityMonitor, SyncService }
