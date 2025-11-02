@@ -1,0 +1,589 @@
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { encountersService, patientsService, conditionsService, medicationsService, proceduresService } from '../services/api'
+
+interface Patient {
+  id: string
+  nom: string
+  prenom: string
+  sexe: 'M' | 'F'
+  annee_naissance?: number
+}
+
+interface Condition {
+  libelle: string
+  code_icd10?: string
+  notes?: string
+}
+
+interface Medication {
+  medicament: string
+  posologie: string
+  duree_jours?: number
+  quantite?: number
+  unite?: string
+  notes?: string
+}
+
+interface Procedure {
+  type: string
+  description?: string
+  resultat?: string
+}
+
+export const ConsultationFormPage = () => {
+  const { id } = useParams()
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const isEditMode = !!id
+  const patientIdParam = searchParams.get('patient')
+
+  const [patients, setPatients] = useState<Patient[]>([])
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  // Données de la consultation
+  const [formData, setFormData] = useState({
+    patient_id: patientIdParam || '',
+    date: new Date().toISOString().split('T')[0],
+    motif: '',
+    temperature: '',
+    pouls: '',
+    pression_systolique: '',
+    pression_diastolique: '',
+    poids: '',
+    taille: '',
+    notes: '',
+  })
+
+  // Diagnostics, prescriptions, actes
+  const [conditions, setConditions] = useState<Condition[]>([])
+  const [medications, setMedications] = useState<Medication[]>([])
+  const [procedures, setProcedures] = useState<Procedure[]>([])
+
+  useEffect(() => {
+    loadPatients()
+  }, [])
+
+  useEffect(() => {
+    if (formData.patient_id) {
+      const patient = patients.find(p => p.id === formData.patient_id)
+      setSelectedPatient(patient || null)
+    }
+  }, [formData.patient_id, patients])
+
+  const loadPatients = async () => {
+    try {
+      const response = await patientsService.list({ limit: 200 })
+      setPatients(response.data || [])
+    } catch (error) {
+      console.error('Erreur chargement patients:', error)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // Empêcher les soumissions multiples
+    if (isLoading) return
+
+    setError('')
+    setIsLoading(true)
+
+    try {
+      // Créer la consultation
+      const encounterData = {
+        patient_id: formData.patient_id,
+        date: formData.date,
+        motif: formData.motif || undefined,
+        temperature: formData.temperature ? parseFloat(formData.temperature) : undefined,
+        pouls: formData.pouls ? parseInt(formData.pouls) : undefined,
+        pression_systolique: formData.pression_systolique ? parseInt(formData.pression_systolique) : undefined,
+        pression_diastolique: formData.pression_diastolique ? parseInt(formData.pression_diastolique) : undefined,
+        poids: formData.poids ? parseFloat(formData.poids) : undefined,
+        taille: formData.taille ? parseInt(formData.taille) : undefined,
+        notes: formData.notes || undefined,
+      }
+
+      const encounter = await encountersService.create(encounterData)
+
+      // Ajouter les diagnostics
+      for (const condition of conditions) {
+        if (condition.libelle.trim()) {
+          await conditionsService.create({
+            encounter_id: encounter.id,
+            ...condition,
+          })
+        }
+      }
+
+      // Ajouter les prescriptions
+      for (const medication of medications) {
+        if (medication.medicament.trim()) {
+          await medicationsService.create({
+            encounter_id: encounter.id,
+            ...medication,
+          })
+        }
+      }
+
+      // Ajouter les actes
+      for (const procedure of procedures) {
+        if (procedure.type.trim()) {
+          await proceduresService.create({
+            encounter_id: encounter.id,
+            ...procedure,
+          })
+        }
+      }
+
+      // Rediriger vers la liste des consultations
+      navigate('/consultations')
+    } catch (error: any) {
+      console.error('Erreur sauvegarde consultation:', error)
+      if (error.response?.data?.detail) {
+        if (Array.isArray(error.response.data.detail)) {
+          const errors = error.response.data.detail.map((e: any) => e.msg).join(', ')
+          setError(`Erreur de validation: ${errors}`)
+        } else {
+          setError(error.response.data.detail)
+        }
+      } else {
+        setError('Erreur lors de la sauvegarde. Vérifiez votre connexion.')
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const addCondition = () => {
+    setConditions([...conditions, { libelle: '', code_icd10: '', notes: '' }])
+  }
+
+  const removeCondition = (index: number) => {
+    setConditions(conditions.filter((_, i) => i !== index))
+  }
+
+  const addMedication = () => {
+    setMedications([...medications, { medicament: '', posologie: '', duree_jours: undefined, notes: '' }])
+  }
+
+  const removeMedication = (index: number) => {
+    setMedications(medications.filter((_, i) => i !== index))
+  }
+
+  const addProcedure = () => {
+    setProcedures([...procedures, { type: '', description: '', resultat: '' }])
+  }
+
+  const removeProcedure = (index: number) => {
+    setProcedures(procedures.filter((_, i) => i !== index))
+  }
+
+  const calculateAge = () => {
+    if (selectedPatient?.annee_naissance) {
+      return new Date().getFullYear() - selectedPatient.annee_naissance
+    }
+    return null
+  }
+
+  return (
+    <div className="max-w-5xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">
+          {isEditMode ? 'Modifier la consultation' : 'Nouvelle consultation'}
+        </h1>
+        <p className="text-gray-600 mt-1">
+          Enregistrez les détails de la consultation médicale
+        </p>
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-8">
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Patient et Date */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="patient_id" className="block text-sm font-medium text-gray-700 mb-2">
+                Patient <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="patient_id"
+                value={formData.patient_id}
+                onChange={(e) => setFormData({ ...formData, patient_id: e.target.value })}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+              >
+                <option value="">Sélectionner un patient</option>
+                {patients.map((patient) => (
+                  <option key={patient.id} value={patient.id}>
+                    {patient.nom} {patient.prenom} ({patient.sexe})
+                  </option>
+                ))}
+              </select>
+              {selectedPatient && (
+                <p className="text-sm text-gray-500 mt-1">
+                  {calculateAge() && `Âge: ${calculateAge()} ans`}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
+                Date de consultation <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="date"
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                required
+                max={new Date().toISOString().split('T')[0]}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Motif */}
+          <div>
+            <label htmlFor="motif" className="block text-sm font-medium text-gray-700 mb-2">
+              Motif de consultation
+            </label>
+            <textarea
+              id="motif"
+              value={formData.motif}
+              onChange={(e) => setFormData({ ...formData, motif: e.target.value })}
+              rows={3}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+              placeholder="Raison de la visite..."
+            />
+          </div>
+
+          {/* Signes vitaux */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Signes vitaux</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label htmlFor="temperature" className="block text-sm font-medium text-gray-700 mb-2">
+                  Température (°C)
+                </label>
+                <input
+                  id="temperature"
+                  type="number"
+                  step="0.1"
+                  value={formData.temperature}
+                  onChange={(e) => setFormData({ ...formData, temperature: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                  placeholder="37.5"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="pouls" className="block text-sm font-medium text-gray-700 mb-2">
+                  Pouls (bpm)
+                </label>
+                <input
+                  id="pouls"
+                  type="number"
+                  value={formData.pouls}
+                  onChange={(e) => setFormData({ ...formData, pouls: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                  placeholder="72"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tension artérielle
+                </label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    value={formData.pression_systolique}
+                    onChange={(e) => setFormData({ ...formData, pression_systolique: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                    placeholder="120"
+                  />
+                  <span className="text-gray-500">/</span>
+                  <input
+                    type="number"
+                    value={formData.pression_diastolique}
+                    onChange={(e) => setFormData({ ...formData, pression_diastolique: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                    placeholder="80"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="poids" className="block text-sm font-medium text-gray-700 mb-2">
+                  Poids (kg)
+                </label>
+                <input
+                  id="poids"
+                  type="number"
+                  step="0.1"
+                  value={formData.poids}
+                  onChange={(e) => setFormData({ ...formData, poids: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                  placeholder="70.5"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="taille" className="block text-sm font-medium text-gray-700 mb-2">
+                  Taille (cm)
+                </label>
+                <input
+                  id="taille"
+                  type="number"
+                  value={formData.taille}
+                  onChange={(e) => setFormData({ ...formData, taille: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                  placeholder="175"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Diagnostics */}
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Diagnostics</h3>
+              <button
+                type="button"
+                onClick={addCondition}
+                className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg"
+              >
+                + Ajouter diagnostic
+              </button>
+            </div>
+            <div className="space-y-3">
+              {conditions.map((condition, index) => (
+                <div key={index} className="flex gap-3 items-start bg-gray-50 p-3 rounded-lg">
+                  <div className="flex-1 grid grid-cols-3 gap-3">
+                    <input
+                      type="text"
+                      value={condition.libelle}
+                      onChange={(e) => {
+                        const updated = [...conditions]
+                        updated[index].libelle = e.target.value
+                        setConditions(updated)
+                      }}
+                      className="px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Libellé du diagnostic"
+                    />
+                    <input
+                      type="text"
+                      value={condition.code_icd10 || ''}
+                      onChange={(e) => {
+                        const updated = [...conditions]
+                        updated[index].code_icd10 = e.target.value
+                        setConditions(updated)
+                      }}
+                      className="px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Code CIM-10"
+                      maxLength={10}
+                    />
+                    <input
+                      type="text"
+                      value={condition.notes || ''}
+                      onChange={(e) => {
+                        const updated = [...conditions]
+                        updated[index].notes = e.target.value
+                        setConditions(updated)
+                      }}
+                      className="px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Notes"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeCondition(index)}
+                    className="text-red-600 hover:text-red-800 px-2 py-2"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Prescriptions */}
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Prescriptions</h3>
+              <button
+                type="button"
+                onClick={addMedication}
+                className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg"
+              >
+                + Ajouter prescription
+              </button>
+            </div>
+            <div className="space-y-3">
+              {medications.map((medication, index) => (
+                <div key={index} className="flex gap-3 items-start bg-gray-50 p-3 rounded-lg">
+                  <div className="flex-1 grid grid-cols-2 gap-3">
+                    <input
+                      type="text"
+                      value={medication.medicament}
+                      onChange={(e) => {
+                        const updated = [...medications]
+                        updated[index].medicament = e.target.value
+                        setMedications(updated)
+                      }}
+                      className="px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Médicament"
+                    />
+                    <input
+                      type="text"
+                      value={medication.posologie}
+                      onChange={(e) => {
+                        const updated = [...medications]
+                        updated[index].posologie = e.target.value
+                        setMedications(updated)
+                      }}
+                      className="px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Posologie (ex: 1 cp x 3/jour)"
+                    />
+                    <input
+                      type="number"
+                      value={medication.duree_jours || ''}
+                      onChange={(e) => {
+                        const updated = [...medications]
+                        updated[index].duree_jours = e.target.value ? parseInt(e.target.value) : undefined
+                        setMedications(updated)
+                      }}
+                      className="px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Durée (jours)"
+                    />
+                    <input
+                      type="text"
+                      value={medication.notes || ''}
+                      onChange={(e) => {
+                        const updated = [...medications]
+                        updated[index].notes = e.target.value
+                        setMedications(updated)
+                      }}
+                      className="px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Notes"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeMedication(index)}
+                    className="text-red-600 hover:text-red-800 px-2 py-2"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Actes médicaux */}
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Actes médicaux</h3>
+              <button
+                type="button"
+                onClick={addProcedure}
+                className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg"
+              >
+                + Ajouter acte
+              </button>
+            </div>
+            <div className="space-y-3">
+              {procedures.map((procedure, index) => (
+                <div key={index} className="flex gap-3 items-start bg-gray-50 p-3 rounded-lg">
+                  <div className="flex-1 grid grid-cols-3 gap-3">
+                    <input
+                      type="text"
+                      value={procedure.type}
+                      onChange={(e) => {
+                        const updated = [...procedures]
+                        updated[index].type = e.target.value
+                        setProcedures(updated)
+                      }}
+                      className="px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Type d'acte"
+                    />
+                    <input
+                      type="text"
+                      value={procedure.description || ''}
+                      onChange={(e) => {
+                        const updated = [...procedures]
+                        updated[index].description = e.target.value
+                        setProcedures(updated)
+                      }}
+                      className="px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Description"
+                    />
+                    <input
+                      type="text"
+                      value={procedure.resultat || ''}
+                      onChange={(e) => {
+                        const updated = [...procedures]
+                        updated[index].resultat = e.target.value
+                        setProcedures(updated)
+                      }}
+                      className="px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Résultat"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeProcedure(index)}
+                    className="text-red-600 hover:text-red-800 px-2 py-2"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+              Notes de consultation
+            </label>
+            <textarea
+              id="notes"
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              rows={4}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+              placeholder="Observations, recommandations..."
+            />
+          </div>
+
+          {/* Buttons */}
+          <div className="flex space-x-4 pt-4 border-t">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+            >
+              {isLoading ? 'Enregistrement...' : isEditMode ? 'Modifier' : 'Enregistrer la consultation'}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/consultations')}
+              className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
+            >
+              Annuler
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}

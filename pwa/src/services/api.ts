@@ -215,21 +215,21 @@ export const encountersService = {
 
 export const conditionsService = {
   async create(data: any) {
-    const response = await apiClient.post('/conditions', data)
+    const response = await apiClient.post('/encounters/conditions', data)
     return response.data
   },
 }
 
 export const medicationsService = {
   async create(data: any) {
-    const response = await apiClient.post('/medication-requests', data)
+    const response = await apiClient.post('/encounters/medication-requests', data)
     return response.data
   },
 }
 
 export const proceduresService = {
   async create(data: any) {
-    const response = await apiClient.post('/procedures', data)
+    const response = await apiClient.post('/encounters/procedures', data)
     return response.data
   },
 }

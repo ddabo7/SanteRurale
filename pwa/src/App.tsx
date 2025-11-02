@@ -12,6 +12,8 @@ import { DebugPage } from './pages/DebugPage'
 import { PatientsPage } from './pages/PatientsPage'
 import { PatientFormPage } from './pages/PatientFormPage'
 import { ConsultationsPage } from './pages/ConsultationsPage'
+import { ConsultationFormPage } from './pages/ConsultationFormPage'
+import { ConsultationDetailsPage } from './pages/ConsultationDetailsPage'
 import { RapportsPage } from './pages/RapportsPage'
 
 function App() {
@@ -79,6 +81,28 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <ConsultationsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/consultations/nouvelle"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ConsultationFormPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/consultations/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ConsultationDetailsPage />
                 </Layout>
               </ProtectedRoute>
             }

@@ -170,6 +170,10 @@ class Encounter(Base, TimestampMixin):
     # Notes
     notes: Mapped[str | None] = mapped_column(Text)
 
+    # Audit fields
+    created_by: Mapped[uuid_module.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+    updated_by: Mapped[uuid_module.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+
     # Version pour gestion optimiste des conflits
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
 
@@ -179,13 +183,15 @@ class Encounter(Base, TimestampMixin):
     # Relations
     patient: Mapped["Patient"] = relationship(back_populates="encounters")
     site: Mapped["Site"] = relationship()
-    user: Mapped["User"] = relationship()
+    user: Mapped["User"] = relationship(foreign_keys=[user_id])
+    created_by_user: Mapped["User"] = relationship(foreign_keys=[created_by])
+    updated_by_user: Mapped["User"] = relationship(foreign_keys=[updated_by])
     conditions: Mapped[list["Condition"]] = relationship(back_populates="encounter", cascade="all, delete-orphan")
     medication_requests: Mapped[list["MedicationRequest"]] = relationship(back_populates="encounter", cascade="all, delete-orphan")
     procedures: Mapped[list["Procedure"]] = relationship(back_populates="encounter", cascade="all, delete-orphan")
 
 
-class Condition(Base, TimestampMixin):
+class Condition(Base):
     """Modèle pour les diagnostics"""
     __tablename__ = "conditions"
 
@@ -197,11 +203,15 @@ class Condition(Base, TimestampMixin):
     libelle: Mapped[str] = mapped_column(String(500), nullable=False)
     notes: Mapped[str | None] = mapped_column(Text)
 
+    # Metadata
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.utcnow(), nullable=False)
+    created_by: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+
     # Relation
     encounter: Mapped["Encounter"] = relationship(back_populates="conditions")
 
 
-class MedicationRequest(Base, TimestampMixin):
+class MedicationRequest(Base):
     """Modèle pour les prescriptions médicamenteuses"""
     __tablename__ = "medication_requests"
 
@@ -215,11 +225,15 @@ class MedicationRequest(Base, TimestampMixin):
     unite: Mapped[str | None] = mapped_column(String(50))
     notes: Mapped[str | None] = mapped_column(Text)
 
+    # Metadata
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.utcnow(), nullable=False)
+    created_by: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+
     # Relation
     encounter: Mapped["Encounter"] = relationship(back_populates="medication_requests")
 
 
-class Procedure(Base, TimestampMixin):
+class Procedure(Base):
     """Modèle pour les actes médicaux"""
     __tablename__ = "procedures"
 
@@ -229,6 +243,10 @@ class Procedure(Base, TimestampMixin):
     type: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
     resultat: Mapped[str | None] = mapped_column(Text)
+
+    # Metadata
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.utcnow(), nullable=False)
+    created_by: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
 
     # Relation
     encounter: Mapped["Encounter"] = relationship(back_populates="procedures")

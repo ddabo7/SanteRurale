@@ -132,6 +132,15 @@ class UserUpdate(BaseModel):
     actif: Optional[bool] = None
 
 
+class UserSimple(BaseSchema):
+    """User sans les relations (pour inclure dans d'autres schémas)"""
+    id: UUID
+    nom: str
+    prenom: Optional[str] = None
+    email: EmailStr
+    role: UserRole
+    site_id: UUID
+
 class UserOut(UserBase):
     id: UUID
     actif: bool
@@ -229,7 +238,7 @@ class EncounterOut(EncounterBase):
     site_id: UUID
     user_id: UUID
     patient: Optional[PatientOut] = None
-    user: Optional[dict] = None
+    user: Optional[UserSimple] = None
     created_at: datetime
     updated_at: datetime
     version: int

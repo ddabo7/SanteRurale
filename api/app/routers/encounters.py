@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.models import Condition, Encounter, MedicationRequest, Patient, Procedure
+from app.models import Condition, Encounter, MedicationRequest, Patient, Procedure, User
 from app.schemas import (
     ConditionCreate,
     ConditionOut,
@@ -22,6 +22,7 @@ from app.schemas import (
     ProcedureCreate,
     ProcedureOut,
 )
+from app.security import get_current_user
 
 router = APIRouter(prefix="/encounters", tags=["Encounters"])
 
@@ -48,6 +49,7 @@ async def list_encounters(
         .where(Encounter.deleted_at == None)
         .options(
             selectinload(Encounter.patient),
+            selectinload(Encounter.user),
             selectinload(Encounter.conditions),
             selectinload(Encounter.medication_requests),
             selectinload(Encounter.procedures),
@@ -98,6 +100,7 @@ async def get_encounter(
 
     query = select(Encounter).where(Encounter.id == encounter_uuid).options(
         selectinload(Encounter.patient),
+        selectinload(Encounter.user),
         selectinload(Encounter.conditions),
         selectinload(Encounter.medication_requests),
         selectinload(Encounter.procedures),
@@ -118,6 +121,7 @@ async def get_encounter(
 @router.post("", response_model=EncounterOut, status_code=status.HTTP_201_CREATED)
 async def create_encounter(
     encounter_data: EncounterCreate,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -134,11 +138,9 @@ async def create_encounter(
             detail="Patient non trouvé"
         )
 
-    # TODO: Récupérer site_id et user_id depuis le token JWT
-    # Pour l'instant, on utilise le site_id du patient
-    site_id = patient.site_id
-    # Et un user_id fictif (à remplacer par le vrai user_id du token)
-    user_id = patient.site.users[0].id if patient.site.users else patient.site_id
+    # Utiliser le site et l'user depuis le token JWT
+    site_id = current_user.site_id
+    user_id = current_user.id
 
     # Créer l'encounter
     new_encounter = Encounter(
@@ -146,6 +148,7 @@ async def create_encounter(
         patient_id=encounter_data.patient_id,
         site_id=site_id,
         user_id=user_id,
+        created_by=user_id,
         date=encounter_data.encounter_date,
         motif=encounter_data.motif,
         temperature=encounter_data.temperature,
@@ -164,6 +167,7 @@ async def create_encounter(
     # Charger les relations
     query = select(Encounter).where(Encounter.id == new_encounter.id).options(
         selectinload(Encounter.patient),
+        selectinload(Encounter.user),
         selectinload(Encounter.conditions),
         selectinload(Encounter.medication_requests),
         selectinload(Encounter.procedures),
@@ -182,6 +186,7 @@ async def create_encounter(
 @router.post("/conditions", response_model=ConditionOut, status_code=status.HTTP_201_CREATED)
 async def create_condition(
     condition_data: ConditionCreate,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -204,6 +209,7 @@ async def create_condition(
         code_icd10=condition_data.code_icd10,
         libelle=condition_data.libelle,
         notes=condition_data.notes,
+        created_by=current_user.id,
     )
 
     db.add(new_condition)
@@ -221,6 +227,7 @@ async def create_condition(
 @router.post("/medication-requests", response_model=MedicationRequestOut, status_code=status.HTTP_201_CREATED)
 async def create_medication_request(
     medication_data: MedicationRequestCreate,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -246,6 +253,7 @@ async def create_medication_request(
         quantite=medication_data.quantite,
         unite=medication_data.unite,
         notes=medication_data.notes,
+        created_by=current_user.id,
     )
 
     db.add(new_medication)
@@ -263,6 +271,7 @@ async def create_medication_request(
 @router.post("/procedures", response_model=ProcedureOut, status_code=status.HTTP_201_CREATED)
 async def create_procedure(
     procedure_data: ProcedureCreate,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -285,6 +294,7 @@ async def create_procedure(
         type=procedure_data.type,
         description=procedure_data.description,
         resultat=procedure_data.resultat,
+        created_by=current_user.id,
     )
 
     db.add(new_procedure)
