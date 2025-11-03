@@ -273,13 +273,58 @@ await syncService.getStatus()
 
 ---
 
-## 🌍 Déploiement production
+## 🌍 Déploiement Production
 
-### Guide complet
+### 🚀 Déploiement sur Hostinger VPS (Recommandé)
 
-Voir [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) pour les instructions détaillées.
+**Nouveau** : Déploiement automatisé en 15 minutes !
 
-### Résumé rapide
+```bash
+# 1. Connectez-vous au serveur
+ssh root@votre-ip-serveur
+
+# 2. Téléchargez le projet
+git clone https://github.com/your-org/sante-rurale.git
+cd sante-rurale/deployment
+
+# 3. Lancez le script de déploiement
+chmod +x deploy.sh
+sudo ./deploy.sh --full --domain votre-domaine.com
+```
+
+**C'est tout !** Le script installe et configure automatiquement :
+- ✅ Python 3.12, Node.js 20, PostgreSQL 14, Nginx
+- ✅ Backend FastAPI avec systemd
+- ✅ Frontend React PWA (build de production)
+- ✅ SSL/HTTPS avec Let's Encrypt
+- ✅ Backups automatiques quotidiens
+- ✅ Monitoring et logs
+
+### 📚 Documentation de Déploiement
+
+| Guide | Description | Temps Estimé |
+|-------|-------------|--------------|
+| **[deployment/QUICK_START.md](deployment/QUICK_START.md)** | 🚀 Déploiement rapide (automatisé) | 5-15 min |
+| **[deployment/README.md](deployment/README.md)** | 📘 Guide complet étape par étape | 30-60 min |
+| **[deployment/INDEX.md](deployment/INDEX.md)** | 📖 Index et navigation de la documentation | - |
+| **[deployment/CHECKLIST_DEPLOIEMENT.md](deployment/CHECKLIST_DEPLOIEMENT.md)** | ✅ Checklist complète de déploiement | - |
+| **[DEPLOIEMENT_HOSTINGER.md](DEPLOIEMENT_HOSTINGER.md)** | 🌐 Guide détaillé Hostinger VPS | 45-90 min |
+| **[HTTPS_SSL_GUIDE.md](HTTPS_SSL_GUIDE.md)** | 🔒 Configuration SSL/TLS | 15-30 min |
+| **[MONITORING_GUIDE.md](MONITORING_GUIDE.md)** | 📊 Sentry + Prometheus + Grafana | 30-45 min |
+| **[PRODUCTION_READINESS_REPORT.md](PRODUCTION_READINESS_REPORT.md)** | ✅ Rapport complet de préparation production | - |
+| **[RESUME_FINAL_DEPLOIEMENT.md](RESUME_FINAL_DEPLOIEMENT.md)** | 📋 Résumé final et fichiers créés | - |
+
+### 🛠️ Fichiers de Configuration
+
+Tous les fichiers nécessaires sont dans le dossier `deployment/` :
+
+- **deploy.sh** - Script de déploiement automatisé
+- **sante-rurale-api.service** - Service systemd pour le backend
+- **nginx-sante-rurale.conf** - Configuration Nginx complète
+- **.env.production.example** - Variables d'environnement backend
+- **.env.frontend.production.example** - Variables d'environnement frontend
+
+### ⚡ Déploiement Docker (Alternative)
 
 ```bash
 # 1. Configurer les variables d'environnement
@@ -298,10 +343,14 @@ docker-compose -f docker-compose.prod.yml up -d
 docker exec sante_api alembic upgrade head
 docker exec sante_api python scripts/seed_base_data.py
 docker exec sante_api python scripts/create_production_users.py
-
-# 5. Configurer Nginx et SSL
-# Voir DEPLOYMENT_GUIDE.md
 ```
+
+### 📊 Production Ready
+
+✅ **Tests** : 70+ tests backend (pytest), 15+ tests frontend (vitest), 25+ tests E2E (Playwright)
+✅ **Sécurité** : Rate limiting, Security headers, HTTPS/SSL, CORS
+✅ **Monitoring** : Sentry (erreurs), Prometheus (métriques), Grafana (dashboards)
+✅ **Documentation** : 3,600+ lignes de documentation complète
 
 ---
 

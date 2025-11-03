@@ -49,6 +49,13 @@ class Settings(BaseSettings):
     CELERY_BROKER_URL: str = "redis://:redis_pwd@redis:6379/1"
     CELERY_RESULT_BACKEND: str = "redis://:redis_pwd@redis:6379/2"
 
+    # Configuration SaaS Multi-Tenant (nouveau)
+    ENVIRONMENT: str = "development"  # development, staging, production
+    STRIPE_ENABLED: bool = False
+    STRIPE_SECRET_KEY: str | None = None
+    STRIPE_WEBHOOK_SECRET: str | None = None
+    SENTRY_DSN: str | None = None
+
     class Config:
         env_file = ".env"
         case_sensitive = True

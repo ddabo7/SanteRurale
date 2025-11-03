@@ -97,6 +97,7 @@ class User(Base, TimestampMixin):
     password_hash: Mapped[str] = mapped_column(String(500), nullable=False)
     role: Mapped[str] = mapped_column(String(50), nullable=False)  # admin, medecin, major, soignant
     site_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("sites.id"), nullable=False)
+    tenant_id: Mapped[uuid_module.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
     actif: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     # Champs pour la vérification d'email
@@ -113,6 +114,7 @@ class User(Base, TimestampMixin):
 
     # Relations
     site: Mapped["Site"] = relationship(back_populates="users")
+    tenant: Mapped["Tenant"] = relationship(back_populates="users")
 
 
 class Patient(Base, TimestampMixin):
@@ -127,6 +129,7 @@ class Patient(Base, TimestampMixin):
     telephone: Mapped[str | None] = mapped_column(String(50))
     village: Mapped[str | None] = mapped_column(String(200))
     site_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("sites.id"), nullable=False)
+    tenant_id: Mapped[uuid_module.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
     matricule: Mapped[str | None] = mapped_column(String(50), unique=True)
 
     # Audit fields
@@ -141,6 +144,7 @@ class Patient(Base, TimestampMixin):
 
     # Relations
     site: Mapped["Site"] = relationship(back_populates="patients", foreign_keys=[site_id])
+    tenant: Mapped["Tenant"] = relationship(foreign_keys=[tenant_id])
     encounters: Mapped[list["Encounter"]] = relationship(back_populates="patient", cascade="all, delete-orphan")
     created_by_user: Mapped["User"] = relationship(foreign_keys=[created_by])
     updated_by_user: Mapped["User"] = relationship(foreign_keys=[updated_by])

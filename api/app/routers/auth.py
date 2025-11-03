@@ -31,6 +31,9 @@ class SignupRequest(BaseModel):
     nom: str
     prenom: str | None = None
     telephone: str | None = None
+    role: str = "soignant"  # admin, medecin, major, soignant
+    site_id: uuid_module.UUID | None = None  # Si None, on prend le premier site
+    tenant_id: uuid_module.UUID | None = None  # ID du tenant (pour multi-tenancy)
 
 
 class LoginRequest(BaseModel):
@@ -108,15 +111,23 @@ async def signup(signup_data: SignupRequest, db: AsyncSession = Depends(get_db))
             detail="Le mot de passe doit contenir au moins un caractère spécial (!@#$%^&*)"
         )
 
-    # Récupérer le premier site disponible (pour simplifier, on assigne au premier site)
-    result = await db.execute(select(Site).limit(1))
-    site = result.scalar_one_or_none()
-
-    if not site:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Aucun site disponible. Contactez l'administrateur."
-        )
+    # Récupérer le site (fourni ou le premier disponible)
+    if signup_data.site_id:
+        result = await db.execute(select(Site).where(Site.id == signup_data.site_id))
+        site = result.scalar_one_or_none()
+        if not site:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Site invalide."
+            )
+    else:
+        result = await db.execute(select(Site).limit(1))
+        site = result.scalar_one_or_none()
+        if not site:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Aucun site disponible. Contactez l'administrateur."
+            )
 
     # Générer le token de vérification
     verification_token = secrets.token_urlsafe(32)
@@ -130,8 +141,9 @@ async def signup(signup_data: SignupRequest, db: AsyncSession = Depends(get_db))
         email=signup_data.email,
         password_hash=hash_password(signup_data.password),
         telephone=signup_data.telephone,
-        role="soignant",  # Rôle par défaut
+        role=signup_data.role,
         site_id=site.id,
+        tenant_id=signup_data.tenant_id,  # Associer au tenant
         email_verified=False,
         verification_token=verification_token,
         verification_token_expires=verification_expires,

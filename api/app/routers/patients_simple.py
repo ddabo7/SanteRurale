@@ -207,6 +207,7 @@ async def create_patient(
         telephone=patient_data.telephone,
         village=patient_data.village,
         site_id=current_user.site_id,  # Toujours le site de l'utilisateur
+        tenant_id=current_user.tenant_id,  # IMPORTANT: Associer au tenant de l'utilisateur
         matricule=matricule,  # Matricule auto-généré
         created_by=current_user.id,
         version=1,

@@ -1,0 +1,22 @@
+[Unit]
+Description=Santé Rurale API - FastAPI Application
+After=network.target postgresql.service
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/sante-rurale/api
+Environment="PATH=/var/www/sante-rurale/api/venv/bin"
+Environment="DATABASE_URL=postgresql+asyncpg://sante_rurale:YOUR_DB_PASSWORD@localhost/sante_rurale"
+Environment="ENVIRONMENT=production"
+ExecStart=/var/www/sante-rurale/api/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
