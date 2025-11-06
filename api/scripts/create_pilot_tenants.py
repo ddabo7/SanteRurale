@@ -16,13 +16,13 @@ import argparse
 # Ajouter le dossier parent au path pour pouvoir importer app
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.database import SessionLocal
+from app.database import AsyncSessionLocal
 from app.services.subscription_service import SubscriptionService
 
 
 async def create_single_pilot(name: str, slug: str, email: str, phone: str = None, city: str = None, country_code: str = "ML"):
     """Créer un seul tenant pilote"""
-    async with SessionLocal() as db:
+    async with AsyncSessionLocal() as db:
         service = SubscriptionService(db)
 
         print(f"\n📝 Création du tenant pilote: {name}")
@@ -135,7 +135,7 @@ async def list_all_tenants():
     from sqlalchemy import select
     from app.models.tenant import Tenant
 
-    async with SessionLocal() as db:
+    async with AsyncSessionLocal() as db:
         result = await db.execute(
             select(Tenant).order_by(Tenant.created_at.desc())
         )

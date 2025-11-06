@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Patient, User, Encounter, Tenant
 from app.models.tenant import Plan, Subscription, SubscriptionStatus
-from app.security import get_password_hash
+from app.security import hash_password
 
 
 @pytest.fixture
@@ -56,7 +56,7 @@ async def user1(db_session: AsyncSession, tenant1: Tenant, site):
         email="user1@tenant1.com",
         nom="User",
         prenom="One",
-        password_hash=get_password_hash("password123"),
+        password_hash=hash_password("password123"),
         role="medecin",
         tenant_id=tenant1.id,
         site_id=site.id,
@@ -75,7 +75,7 @@ async def user2(db_session: AsyncSession, tenant2: Tenant, site):
         email="user2@tenant2.com",
         nom="User",
         prenom="Two",
-        password_hash=get_password_hash("password123"),
+        password_hash=hash_password("password123"),
         role="medecin",
         tenant_id=tenant2.id,
         site_id=site.id,
