@@ -9,8 +9,9 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models import Condition, Encounter, Patient
+from app.models import Condition, Encounter, Patient, User
 from app.schemas import ReportOverview, ReportPeriod, ReferenceStats, TopDiagnostic
+from app.security import get_current_user
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
@@ -25,16 +26,21 @@ async def get_overview(
     from_date: date = Query(alias="from"),
     to_date: date = Query(alias="to"),
     site_id: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Génère un rapport d'aperçu pour une période donnée
+    Génère un rapport d'aperçu pour une période donnée (filtré par tenant)
     """
     # Construire les requêtes de base avec filtres de dates
     encounters_query = select(Encounter).where(
         Encounter.date >= from_date,
         Encounter.date <= to_date,
     )
+
+    # ISOLATION MULTI-TENANT : Filtrer par tenant_id (CRITIQUE)
+    if current_user.tenant_id:
+        encounters_query = encounters_query.where(Encounter.tenant_id == current_user.tenant_id)
 
     # Filtre par site si fourni
     if site_id:
@@ -45,6 +51,9 @@ async def get_overview(
         Encounter.date >= from_date,
         Encounter.date <= to_date,
     )
+    # ISOLATION MULTI-TENANT
+    if current_user.tenant_id:
+        total_consultations_query = total_consultations_query.where(Encounter.tenant_id == current_user.tenant_id)
     if site_id:
         total_consultations_query = total_consultations_query.where(Encounter.site_id == site_id)
 
@@ -56,6 +65,9 @@ async def get_overview(
         Encounter.date >= from_date,
         Encounter.date <= to_date,
     )
+    # ISOLATION MULTI-TENANT
+    if current_user.tenant_id:
+        total_patients_query = total_patients_query.where(Encounter.tenant_id == current_user.tenant_id)
     if site_id:
         total_patients_query = total_patients_query.where(Encounter.site_id == site_id)
 
@@ -67,6 +79,9 @@ async def get_overview(
         Patient.created_at >= datetime.combine(from_date, datetime.min.time()),
         Patient.created_at <= datetime.combine(to_date, datetime.max.time()),
     )
+    # ISOLATION MULTI-TENANT
+    if current_user.tenant_id:
+        nouveaux_patients_query = nouveaux_patients_query.where(Patient.tenant_id == current_user.tenant_id)
     if site_id:
         nouveaux_patients_query = nouveaux_patients_query.where(Patient.site_id == site_id)
 
@@ -85,6 +100,9 @@ async def get_overview(
         Encounter.date <= to_date,
         Patient.annee_naissance >= year_threshold,
     )
+    # ISOLATION MULTI-TENANT
+    if current_user.tenant_id:
+        consultations_moins_5_query = consultations_moins_5_query.where(Encounter.tenant_id == current_user.tenant_id)
     if site_id:
         consultations_moins_5_query = consultations_moins_5_query.where(Encounter.site_id == site_id)
 
@@ -107,6 +125,9 @@ async def get_overview(
         .order_by(func.count(Condition.id).desc())
         .limit(10)
     )
+    # ISOLATION MULTI-TENANT
+    if current_user.tenant_id:
+        top_diagnostics_query = top_diagnostics_query.where(Encounter.tenant_id == current_user.tenant_id)
     if site_id:
         top_diagnostics_query = top_diagnostics_query.where(Encounter.site_id == site_id)
 

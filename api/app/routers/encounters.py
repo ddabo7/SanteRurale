@@ -38,6 +38,7 @@ async def list_encounters(
     from_date: Optional[date] = Query(None),
     to_date: Optional[date] = Query(None),
     limit: int = Query(50, ge=1, le=200),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -55,6 +56,10 @@ async def list_encounters(
             selectinload(Encounter.procedures),
         )
     )
+
+    # ISOLATION MULTI-TENANT : Filtrer par tenant_id (CRITIQUE)
+    if current_user.tenant_id:
+        query = query.where(Encounter.tenant_id == current_user.tenant_id)
 
     # Filtres
     if patient_id:
@@ -85,6 +90,7 @@ async def list_encounters(
 @router.get("/{encounter_id}", response_model=EncounterOut)
 async def get_encounter(
     encounter_id: str,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -105,6 +111,10 @@ async def get_encounter(
         selectinload(Encounter.medication_requests),
         selectinload(Encounter.procedures),
     )
+
+    # ISOLATION MULTI-TENANT : Vérifier que l'encounter appartient au tenant
+    if current_user.tenant_id:
+        query = query.where(Encounter.tenant_id == current_user.tenant_id)
 
     result = await db.execute(query)
     encounter = result.scalar_one_or_none()
@@ -127,27 +137,33 @@ async def create_encounter(
     """
     Crée une nouvelle consultation
     """
-    # Vérifier que le patient existe
+    # Vérifier que le patient existe ET appartient au même tenant
     patient_query = select(Patient).where(Patient.id == encounter_data.patient_id)
+
+    # ISOLATION MULTI-TENANT : Le patient doit appartenir au même tenant
+    if current_user.tenant_id:
+        patient_query = patient_query.where(Patient.tenant_id == current_user.tenant_id)
+
     patient_result = await db.execute(patient_query)
     patient = patient_result.scalar_one_or_none()
 
     if not patient:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Patient non trouvé"
+            detail="Patient non trouvé ou n'appartient pas à votre organisation"
         )
 
     # Utiliser le site et l'user depuis le token JWT
     site_id = current_user.site_id
     user_id = current_user.id
 
-    # Créer l'encounter
+    # Créer l'encounter avec tenant_id
     new_encounter = Encounter(
         id=uuid_module.uuid4(),
         patient_id=encounter_data.patient_id,
         site_id=site_id,
         user_id=user_id,
+        tenant_id=current_user.tenant_id,  # IMPORTANT: Associer au tenant
         created_by=user_id,
         date=encounter_data.encounter_date,
         motif=encounter_data.motif,
@@ -192,15 +208,20 @@ async def create_condition(
     """
     Ajoute un diagnostic à une consultation
     """
-    # Vérifier que l'encounter existe
+    # Vérifier que l'encounter existe ET appartient au tenant
     encounter_query = select(Encounter).where(Encounter.id == condition_data.encounter_id)
+
+    # ISOLATION MULTI-TENANT : L'encounter doit appartenir au même tenant
+    if current_user.tenant_id:
+        encounter_query = encounter_query.where(Encounter.tenant_id == current_user.tenant_id)
+
     encounter_result = await db.execute(encounter_query)
     encounter = encounter_result.scalar_one_or_none()
 
     if not encounter:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Consultation non trouvée"
+            detail="Consultation non trouvée ou n'appartient pas à votre organisation"
         )
 
     new_condition = Condition(
@@ -233,15 +254,20 @@ async def create_medication_request(
     """
     Ajoute une prescription à une consultation
     """
-    # Vérifier que l'encounter existe
+    # Vérifier que l'encounter existe ET appartient au tenant
     encounter_query = select(Encounter).where(Encounter.id == medication_data.encounter_id)
+
+    # ISOLATION MULTI-TENANT : L'encounter doit appartenir au même tenant
+    if current_user.tenant_id:
+        encounter_query = encounter_query.where(Encounter.tenant_id == current_user.tenant_id)
+
     encounter_result = await db.execute(encounter_query)
     encounter = encounter_result.scalar_one_or_none()
 
     if not encounter:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Consultation non trouvée"
+            detail="Consultation non trouvée ou n'appartient pas à votre organisation"
         )
 
     new_medication = MedicationRequest(
@@ -277,15 +303,20 @@ async def create_procedure(
     """
     Ajoute un acte médical à une consultation
     """
-    # Vérifier que l'encounter existe
+    # Vérifier que l'encounter existe ET appartient au tenant
     encounter_query = select(Encounter).where(Encounter.id == procedure_data.encounter_id)
+
+    # ISOLATION MULTI-TENANT : L'encounter doit appartenir au même tenant
+    if current_user.tenant_id:
+        encounter_query = encounter_query.where(Encounter.tenant_id == current_user.tenant_id)
+
     encounter_result = await db.execute(encounter_query)
     encounter = encounter_result.scalar_one_or_none()
 
     if not encounter:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Consultation non trouvée"
+            detail="Consultation non trouvée ou n'appartient pas à votre organisation"
         )
 
     new_procedure = Procedure(

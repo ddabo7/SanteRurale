@@ -159,6 +159,9 @@ class Encounter(Base, TimestampMixin):
     site_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("sites.id"), nullable=False)
     user_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
 
+    # Multi-tenancy
+    tenant_id: Mapped[uuid_module.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
+
     # Date de la consultation
     date: Mapped[datetime] = mapped_column(Date, nullable=False)
 
@@ -192,6 +195,7 @@ class Encounter(Base, TimestampMixin):
     user: Mapped["User"] = relationship(foreign_keys=[user_id])
     created_by_user: Mapped["User"] = relationship(foreign_keys=[created_by])
     updated_by_user: Mapped["User"] = relationship(foreign_keys=[updated_by])
+    tenant: Mapped["Tenant"] = relationship(foreign_keys=[tenant_id])
     conditions: Mapped[list["Condition"]] = relationship(back_populates="encounter", cascade="all, delete-orphan")
     medication_requests: Mapped[list["MedicationRequest"]] = relationship(back_populates="encounter", cascade="all, delete-orphan")
     procedures: Mapped[list["Procedure"]] = relationship(back_populates="encounter", cascade="all, delete-orphan")

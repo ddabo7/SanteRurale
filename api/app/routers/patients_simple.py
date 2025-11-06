@@ -99,11 +99,15 @@ async def list_patients(
     Liste les patients accessibles à l'utilisateur
 
     Permissions:
-    - Admin/Médecin: tous les patients
-    - Autres: patients de leur site uniquement
+    - Admin/Médecin: tous les patients de leur tenant
+    - Autres: patients de leur site uniquement (dans leur tenant)
     """
     # Base query - exclure les patients supprimés
     query = select(Patient).where(Patient.deleted_at == None)
+
+    # ISOLATION MULTI-TENANT : Filtrer par tenant_id (CRITIQUE)
+    if current_user.tenant_id:
+        query = query.where(Patient.tenant_id == current_user.tenant_id)
 
     # Filtrer par site si pas admin/médecin
     if current_user.role not in [UserRole.ADMIN, UserRole.MEDECIN]:
@@ -156,6 +160,11 @@ async def get_patient(
         Patient.id == patient_id,
         Patient.deleted_at == None
     )
+
+    # ISOLATION MULTI-TENANT : Vérifier que le patient appartient au tenant
+    if current_user.tenant_id:
+        query = query.where(Patient.tenant_id == current_user.tenant_id)
+
     result = await db.execute(query)
     patient = result.scalar_one_or_none()
 
@@ -165,7 +174,7 @@ async def get_patient(
             detail="Patient non trouvé"
         )
 
-    # Vérifier l'accès
+    # Vérifier l'accès par site
     if current_user.role not in [UserRole.ADMIN, UserRole.MEDECIN]:
         if patient.site_id != current_user.site_id:
             raise HTTPException(
@@ -239,6 +248,11 @@ async def update_patient(
         Patient.id == patient_id,
         Patient.deleted_at == None
     )
+
+    # ISOLATION MULTI-TENANT : Vérifier que le patient appartient au tenant
+    if current_user.tenant_id:
+        query = query.where(Patient.tenant_id == current_user.tenant_id)
+
     result = await db.execute(query)
     patient = result.scalar_one_or_none()
 
@@ -248,7 +262,7 @@ async def update_patient(
             detail="Patient non trouvé"
         )
 
-    # Vérifier l'accès
+    # Vérifier l'accès par site
     if current_user.role not in [UserRole.ADMIN, UserRole.MEDECIN]:
         if patient.site_id != current_user.site_id:
             raise HTTPException(
@@ -289,6 +303,11 @@ async def delete_patient(
         Patient.id == patient_id,
         Patient.deleted_at == None
     )
+
+    # ISOLATION MULTI-TENANT : Vérifier que le patient appartient au tenant
+    if current_user.tenant_id:
+        query = query.where(Patient.tenant_id == current_user.tenant_id)
+
     result = await db.execute(query)
     patient = result.scalar_one_or_none()
 
