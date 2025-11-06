@@ -15,9 +15,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 from sqlalchemy.orm import sessionmaker
 
 from app.main import app
-from app.database import get_db, Base
+from app.database import get_db
+from app.models.base_models import Base
 from app.models import User, Role, Region, District, Site, Patient
-from app.auth import create_access_token, get_password_hash
+from app.security import create_access_token, get_password_hash
 from app.config import settings
 
 
@@ -230,7 +231,7 @@ async def test_user(db_session: AsyncSession, test_role: Role, test_site: Site) 
         prenom="User",
         email="test@example.com",
         telephone="+22312345678",
-        mot_de_passe_hash=get_password_hash("testpassword123"),
+        password_hash=get_password_hash("testpassword123"),
         role_id=test_role.id,
         site_id=test_site.id,
         actif=True,
@@ -251,7 +252,7 @@ async def admin_user(db_session: AsyncSession, admin_role: Role, test_site: Site
         prenom="Test",
         email="admin@example.com",
         telephone="+22312345679",
-        mot_de_passe_hash=get_password_hash("adminpassword123"),
+        password_hash=get_password_hash("adminpassword123"),
         role_id=admin_role.id,
         site_id=test_site.id,
         actif=True,
@@ -272,7 +273,7 @@ async def medecin_user(db_session: AsyncSession, medecin_role: Role, test_site: 
         prenom="Test",
         email="medecin@example.com",
         telephone="+22312345680",
-        mot_de_passe_hash=get_password_hash("medecinpassword123"),
+        password_hash=get_password_hash("medecinpassword123"),
         role_id=medecin_role.id,
         site_id=test_site.id,
         actif=True,
@@ -342,3 +343,23 @@ def admin_auth_headers(admin_user_token: str) -> dict:
 def medecin_auth_headers(medecin_user_token: str) -> dict:
     """Headers avec authentification médecin pour les requêtes de test."""
     return {"Authorization": f"Bearer {medecin_user_token}"}
+
+
+@pytest.fixture
+async def site(db_session: AsyncSession):
+    """Créer un site de test."""
+    from app.models import Site
+
+    site = Site(
+        id=uuid_module.uuid4(),
+        nom="Site de Test",
+        code="TEST-SITE",
+        type="cscom",
+        commune="Test Commune",
+        cercle="Test Cercle",
+        region="Test Region"
+    )
+    db_session.add(site)
+    await db_session.commit()
+    await db_session.refresh(site)
+    return site
