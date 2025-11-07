@@ -3,9 +3,10 @@
  * Initialise et gère la sync automatique dans toute l'application
  */
 
-import { createContext, useContext, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useEffect, ReactNode, useRef, useMemo, useCallback } from 'react'
 import { syncService } from '../services/syncService'
 import { useSyncStatus, useOnlineStatus } from '../hooks/useSync'
+import { useAuth } from './AuthContext'
 
 interface SyncContextValue {
   isOnline: boolean
@@ -16,33 +17,55 @@ interface SyncContextValue {
   forceSync: () => Promise<void>
 }
 
-export const SyncContext = createContext<SyncContextValue | undefined>(undefined)
+const SyncContext = createContext<SyncContextValue | undefined>(undefined)
 
 export function SyncProvider({ children }: { children: ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth()
+  const isSyncStartedRef = useRef(false)
+
+  // Hooks de synchronisation - appelés après pour éviter les re-renders avant l'auth
   const status = useSyncStatus()
   const isOnline = useOnlineStatus()
 
   useEffect(() => {
-    // Démarrer la synchronisation automatique toutes les 2 minutes
-    syncService.startAutoSync(120000)
+    // Ne rien faire pendant le chargement initial
+    if (isLoading) {
+      return
+    }
+
+    // Démarrer la synchronisation automatique uniquement si l'utilisateur est connecté
+    if (isAuthenticated && !isSyncStartedRef.current) {
+      console.log('[SyncContext] Starting auto sync')
+      syncService.startAutoSync(120000)
+      isSyncStartedRef.current = true
+    } else if (!isAuthenticated && isSyncStartedRef.current) {
+      console.log('[SyncContext] Stopping auto sync')
+      syncService.stopAutoSync()
+      isSyncStartedRef.current = false
+    }
 
     return () => {
-      syncService.stopAutoSync()
+      if (isSyncStartedRef.current) {
+        console.log('[SyncContext] Cleanup: stopping auto sync')
+        syncService.stopAutoSync()
+        isSyncStartedRef.current = false
+      }
     }
+  }, [isAuthenticated, isLoading])
+
+  const forceSync = useCallback(async () => {
+    await syncService.forceSync()
   }, [])
 
-  const forceSync = async () => {
-    await syncService.forceSync()
-  }
-
-  const value: SyncContextValue = {
+  // Utiliser useMemo pour éviter que l'objet value change à chaque render
+  const value: SyncContextValue = useMemo(() => ({
     isOnline,
     isSyncing: status.isSyncing,
     lastSync: status.lastSync,
     pendingOperations: status.pendingOperations,
     unsyncedItems: status.unsyncedItems,
     forceSync,
-  }
+  }), [isOnline, status.isSyncing, status.lastSync, status.pendingOperations, status.unsyncedItems, forceSync])
 
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>
 }

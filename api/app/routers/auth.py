@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models import Site, User
+from app.models.tenant import Tenant, Subscription
 from app.security import (
     create_access_token,
     create_refresh_token,
@@ -20,6 +21,7 @@ from app.security import (
     verify_password,
 )
 from app.services.email import send_password_reset_email, send_verification_email
+from sqlalchemy.orm import selectinload
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -127,6 +129,55 @@ async def signup(signup_data: SignupRequest, db: AsyncSession = Depends(get_db))
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Aucun site disponible. Contactez l'administrateur."
+            )
+
+    # VÉRIFIER LES QUOTAS SI TENANT SPÉCIFIÉ
+    if signup_data.tenant_id:
+        # Récupérer le tenant
+        result = await db.execute(
+            select(Tenant).where(Tenant.id == signup_data.tenant_id)
+        )
+        tenant = result.scalar_one_or_none()
+
+        if not tenant:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Tenant invalide"
+            )
+
+        if not tenant.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Ce tenant est désactivé"
+            )
+
+        # Récupérer l'abonnement avec le plan
+        result = await db.execute(
+            select(Subscription)
+            .options(selectinload(Subscription.plan))
+            .where(Subscription.tenant_id == signup_data.tenant_id)
+            .order_by(Subscription.created_at.desc())
+            .limit(1)
+        )
+        subscription = result.scalar_one_or_none()
+
+        # Déterminer le quota max users
+        if subscription and subscription.plan and subscription.plan.max_users is not None:
+            max_users = subscription.plan.max_users
+        else:
+            max_users = 5  # Quota par défaut pour pilotes
+
+        # Compter les utilisateurs actuels du tenant
+        result = await db.execute(
+            select(User).where(User.tenant_id == signup_data.tenant_id)
+        )
+        current_users_count = len(result.scalars().all())
+
+        # Vérifier le quota
+        if current_users_count >= max_users:
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail=f"Quota utilisateurs atteint ({current_users_count}/{max_users}). Veuillez passer à un plan supérieur."
             )
 
     # Générer le token de vérification

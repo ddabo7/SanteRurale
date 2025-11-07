@@ -152,8 +152,8 @@ async def check_quota(
     """
     subscription = await get_tenant_subscription(tenant.id, db)
 
-    # Pilotes : quotas du plan gratuit
-    if tenant.is_pilot or not subscription:
+    # Si pas de subscription, utiliser quotas par défaut (pilotes gratuits)
+    if not subscription or not subscription.plan:
         max_values = {
             "users": 5,
             "patients_per_month": None,  # Illimité
@@ -161,6 +161,7 @@ async def check_quota(
             "storage_gb": 10
         }
     else:
+        # Utiliser les quotas du plan de l'abonnement (même pour pilotes)
         plan = subscription.plan
         max_values = {
             "users": plan.max_users,

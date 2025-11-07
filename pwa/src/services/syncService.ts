@@ -119,8 +119,12 @@ class SyncService {
       clearInterval(this.syncInterval)
     }
 
-    // Sync immédiate au démarrage
-    this.sync()
+    // Sync immédiate au démarrage (mais seulement si on a un token)
+    db.user_session.toCollection().first().then(session => {
+      if (session?.access_token) {
+        this.sync()
+      }
+    })
 
     // Puis sync périodique
     this.syncInterval = setInterval(() => {
@@ -302,7 +306,7 @@ class SyncService {
       // TODO: Implémenter un vrai système de curseur côté serveur
 
       // Pull patients
-      const patientsResponse = await patientsService.list({ limit: 1000 })
+      const patientsResponse = await patientsService.list({ limit: 200 })
       for (const patient of patientsResponse.data || []) {
         await db.patients.put({
           ...patient,

@@ -50,6 +50,7 @@ async def get_overview(
     total_consultations_query = select(func.count(Encounter.id)).where(
         Encounter.date >= from_date,
         Encounter.date <= to_date,
+        Encounter.deleted_at == None,  # Exclure les consultations supprimées
     )
     # ISOLATION MULTI-TENANT
     if current_user.tenant_id:
@@ -64,6 +65,7 @@ async def get_overview(
     total_patients_query = select(func.count(func.distinct(Encounter.patient_id))).where(
         Encounter.date >= from_date,
         Encounter.date <= to_date,
+        Encounter.deleted_at == None,  # Exclure les consultations supprimées
     )
     # ISOLATION MULTI-TENANT
     if current_user.tenant_id:
@@ -98,6 +100,7 @@ async def get_overview(
     ).where(
         Encounter.date >= from_date,
         Encounter.date <= to_date,
+        Encounter.deleted_at == None,  # Exclure les consultations supprimées
         Patient.annee_naissance >= year_threshold,
     )
     # ISOLATION MULTI-TENANT
@@ -120,6 +123,7 @@ async def get_overview(
         .where(
             Encounter.date >= from_date,
             Encounter.date <= to_date,
+            Encounter.deleted_at == None,  # Exclure les consultations supprimées
         )
         .group_by(Condition.code_icd10, Condition.libelle)
         .order_by(func.count(Condition.id).desc())
