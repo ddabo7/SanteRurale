@@ -19,8 +19,10 @@ from app.security import (
     decode_token,
     hash_password,
     verify_password,
+    get_current_user,
 )
 from app.services.email import send_password_reset_email, send_verification_email
+from app.schemas import ProfileUpdateRequest, ChangePasswordRequest
 from sqlalchemy.orm import selectinload
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -56,11 +58,16 @@ class ResetPasswordRequest(BaseModel):
     new_password: str
 
 
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
 class UserResponse(BaseModel):
     id: str
     email: str
     nom: str
     prenom: str | None
+    telephone: str | None
     role: str
     site_id: str
     actif: bool
@@ -308,12 +315,60 @@ async def login(login_data: LoginRequest, db: AsyncSession = Depends(get_db)):
             email=user.email,
             nom=user.nom,
             prenom=user.prenom,
+            telephone=user.telephone,
             role=user.role,
             site_id=str(user.site_id),
             actif=user.actif,
             email_verified=user.email_verified,
         ),
     )
+
+
+@router.post("/refresh")
+async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
+    """
+    Rafraîchit l'access token avec un refresh token valide
+    """
+    try:
+        # Décoder le refresh token
+        payload = decode_token(request.refresh_token)
+        user_id = payload.get("sub")
+
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token invalide"
+            )
+
+        # Récupérer l'utilisateur
+        result = await db.execute(
+            select(User).where(User.id == uuid_module.UUID(user_id))
+        )
+        user = result.scalar_one_or_none()
+
+        if not user or not user.actif:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Utilisateur introuvable ou inactif"
+            )
+
+        # Créer de nouveaux tokens
+        token_data = {"sub": str(user.id), "email": user.email, "role": user.role}
+        new_access_token = create_access_token(token_data)
+        new_refresh_token = create_refresh_token(token_data)
+
+        return {
+            "access_token": new_access_token,
+            "refresh_token": new_refresh_token,
+            "token_type": "bearer",
+            "expires_in": 3600  # 1 heure en secondes
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token invalide ou expiré"
+        )
 
 
 @router.post("/forgot-password")
@@ -415,13 +470,124 @@ async def reset_password(request: ResetPasswordRequest, db: AsyncSession = Depen
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_current_user(db: AsyncSession = Depends(get_db)):
+async def get_current_user_info(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
     """
     Récupère les informations de l'utilisateur connecté
-    (à implémenter avec l'authentification par token)
     """
-    # TODO: Implémenter l'extraction du user_id depuis le token JWT
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Endpoint non implémenté"
+    # Charger le site pour la réponse complète
+    result = await db.execute(
+        select(User).options(selectinload(User.site)).where(User.id == current_user.id)
     )
+    user = result.scalar_one()
+
+    return UserResponse(
+        id=str(user.id),
+        email=user.email,
+        nom=user.nom,
+        prenom=user.prenom,
+        telephone=user.telephone,
+        role=user.role,
+        site_id=str(user.site_id),
+        actif=user.actif,
+        email_verified=user.email_verified,
+    )
+
+
+@router.patch("/profile")
+async def update_profile(
+    profile_data: ProfileUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Met à jour le profil de l'utilisateur connecté
+    """
+    # Récupérer l'utilisateur depuis la session actuelle
+    result = await db.execute(
+        select(User).where(User.id == current_user.id)
+    )
+    user = result.scalar_one()
+
+    # Vérifier si l'email est déjà utilisé par un autre utilisateur
+    if profile_data.email and profile_data.email != user.email:
+        result = await db.execute(
+            select(User).where(User.email == profile_data.email, User.id != user.id)
+        )
+        existing_user = result.scalar_one_or_none()
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cet email est déjà utilisé par un autre utilisateur"
+            )
+
+        # Si l'email change, il faut le revérifier
+        user.email = profile_data.email
+        user.email_verified = False
+        # TODO: Envoyer un email de vérification
+
+    # Mettre à jour les autres champs
+    if profile_data.nom is not None:
+        user.nom = profile_data.nom
+    if profile_data.prenom is not None:
+        user.prenom = profile_data.prenom
+    if profile_data.telephone is not None:
+        user.telephone = profile_data.telephone
+
+    await db.commit()
+    await db.refresh(user)
+
+    return {
+        "success": True,
+        "message": "Profil mis à jour avec succès",
+        "user": {
+            "id": str(user.id),
+            "email": user.email,
+            "nom": user.nom,
+            "prenom": user.prenom,
+            "telephone": user.telephone,
+            "role": user.role,
+        }
+    }
+
+
+@router.post("/change-password")
+async def change_password(
+    password_data: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Change le mot de passe de l'utilisateur connecté
+    """
+    # Récupérer l'utilisateur depuis la session actuelle
+    result = await db.execute(
+        select(User).where(User.id == current_user.id)
+    )
+    user = result.scalar_one()
+
+    # Vérifier le mot de passe actuel
+    if not verify_password(password_data.current_password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Mot de passe actuel incorrect"
+        )
+
+    # Vérifier que le nouveau mot de passe est différent de l'ancien
+    if verify_password(password_data.new_password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le nouveau mot de passe doit être différent de l'ancien"
+        )
+
+    # Mettre à jour le mot de passe
+    user.password_hash = hash_password(password_data.new_password)
+
+    await db.commit()
+
+    return {
+        "success": True,
+        "message": "Mot de passe changé avec succès"
+    }

@@ -110,4 +110,70 @@ export const authService = {
 
     return await response.json()
   },
+
+  /**
+   * Met à jour le profil de l'utilisateur
+   */
+  updateProfile: async (data: {
+    nom?: string
+    prenom?: string
+    telephone?: string
+    email?: string
+  }) => {
+    // Récupérer le token d'authentification
+    const accessToken = localStorage.getItem('access_token')
+
+    if (!accessToken) {
+      throw new Error('Non authentifié')
+    }
+
+    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.detail || 'Erreur lors de la mise à jour du profil')
+    }
+
+    return await response.json()
+  },
+
+  /**
+   * Change le mot de passe de l'utilisateur
+   */
+  changePassword: async (data: {
+    current_password: string
+    new_password: string
+  }) => {
+    // Récupérer le token d'authentification
+    const accessToken = localStorage.getItem('access_token')
+
+    if (!accessToken) {
+      throw new Error('Non authentifié')
+    }
+
+    const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.detail || 'Erreur lors du changement de mot de passe')
+    }
+
+    return await response.json()
+  },
 }

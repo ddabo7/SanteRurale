@@ -24,6 +24,7 @@
     "dexie": "^3.2.4",
     "dexie-react-hooks": "^1.1.7",
     "immer": "^10.0.3",
+    "lucide-react": "^0.553.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.65.0",

@@ -10,12 +10,14 @@ interface User {
   role: string
   site_id: string
   site_nom?: string
+  telephone?: string
 }
 
 interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
+  updateUser: (userData: Partial<User>) => Promise<void>
   isAuthenticated: boolean
   isLoading: boolean
 }
@@ -55,6 +57,7 @@ const normalizeUser = (rawUser: any): User => ({
   role: rawUser.role,
   site_id: rawUser.site_id,
   site_nom: rawUser.site_nom,
+  telephone: rawUser.telephone,
 })
 
 export const useAuth = () => {
@@ -170,12 +173,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
+  const updateUser = async (userData: Partial<User>) => {
+    if (!user) return
+
+    const updatedUser = { ...user, ...userData }
+    setUser(updatedUser)
+
+    // Mettre à jour le stockage local
+    localStorage.setItem('user', JSON.stringify(updatedUser))
+
+    // Mettre à jour IndexedDB
+    try {
+      const session = await db.user_session.toCollection().first()
+      if (session) {
+        await db.user_session.update(session.id, {
+          nom: updatedUser.nom,
+          prenom: updatedUser.prenom,
+          email: updatedUser.email,
+        })
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de la session utilisateur:', error)
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
         user,
         login,
         logout,
+        updateUser,
         isAuthenticated: !!user,
         isLoading,
       }}

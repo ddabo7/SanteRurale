@@ -85,10 +85,8 @@ async def get_current_user(
     Note: Cette fonction doit être utilisée avec Depends(get_db) séparément
     dans les endpoints pour obtenir la session de base de données
     """
-    from app.database import engine
+    from app.database import AsyncSessionLocal
     from app.models import User
-
-    token = credentials.credentials
 
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -96,25 +94,38 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
+    # Vérifier que les credentials sont présents
+    if not credentials:
+        print("DEBUG: No credentials provided")
+        raise credentials_exception
+
+    token = credentials.credentials
+    print(f"DEBUG: Token received (first 20 chars): {token[:20]}...")
+
     try:
         payload = decode_token(token)
+        print(f"DEBUG: Token payload decoded successfully: {payload.keys()}")
         user_id_str: str = payload.get("sub")
         if user_id_str is None:
+            print(f"DEBUG: No 'sub' in token payload: {payload}")
             raise credentials_exception
 
         user_id = uuid.UUID(user_id_str)
+        print(f"DEBUG: User ID from token: {user_id}")
 
-    except (JWTError, ValueError):
+    except (JWTError, ValueError) as e:
+        print(f"DEBUG: Token decode error: {type(e).__name__}: {e}")
         raise credentials_exception
 
     # Récupérer l'utilisateur depuis la base de données
-    from sqlalchemy.ext.asyncio import AsyncSession as AS
-    async with AS(engine) as session:
+    async with AsyncSessionLocal() as session:
         query = select(User).where(User.id == user_id, User.actif == True)
         result = await session.execute(query)
         user = result.scalar_one_or_none()
 
         if user is None:
+            print(f"DEBUG: No user found for ID {user_id}")
             raise credentials_exception
 
+        print(f"DEBUG: User found: {user.email}")
         return user

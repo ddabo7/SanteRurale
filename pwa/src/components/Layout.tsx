@@ -68,10 +68,19 @@ export const Layout = ({ children }: LayoutProps) => {
 
             {isAuthenticated && user && (
               <div className="flex items-center space-x-4">
-                <div className="text-sm">
+                <Link
+                  to="/subscription"
+                  className="px-3 py-2 rounded-md text-sm font-medium hover:bg-emerald-500 transition-colors"
+                >
+                  💳 Abonnement
+                </Link>
+                <Link
+                  to="/profile"
+                  className="text-sm hover:text-emerald-100 transition-colors"
+                >
                   <div className="font-medium">{user.prenom} {user.nom}</div>
                   <div className="text-emerald-200 text-xs">{user.role}</div>
-                </div>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 rounded-md text-sm font-medium transition-colors"

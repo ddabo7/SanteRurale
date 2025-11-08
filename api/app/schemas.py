@@ -80,6 +80,33 @@ class RefreshRequest(BaseModel):
     refresh_token: str
 
 
+class ProfileUpdateRequest(BaseModel):
+    """Mise à jour du profil utilisateur"""
+    nom: Optional[str] = Field(None, min_length=2, max_length=100)
+    prenom: Optional[str] = Field(None, max_length=100)
+    telephone: Optional[str] = Field(None, max_length=20)
+    email: Optional[EmailStr] = None
+
+
+class ChangePasswordRequest(BaseModel):
+    """Changement de mot de passe"""
+    current_password: str = Field(min_length=8)
+    new_password: str = Field(min_length=8)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password_strength(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Le mot de passe doit contenir au moins 8 caractères")
+        if not any(c.isupper() for c in v):
+            raise ValueError("Le mot de passe doit contenir au moins une majuscule")
+        if not any(c.isdigit() for c in v):
+            raise ValueError("Le mot de passe doit contenir au moins un chiffre")
+        if not any(c in "!@#$%^&*" for c in v):
+            raise ValueError("Le mot de passe doit contenir au moins un caractère spécial (!@#$%^&*)")
+        return v
+
+
 # ===========================================================================
 # USER SCHEMAS
 # ===========================================================================

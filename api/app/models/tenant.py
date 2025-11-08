@@ -85,6 +85,7 @@ class Tenant(Base):
     address = Column(String(500))
     city = Column(String(100))
     country_code = Column(String(2))  # ISO 3166-1 alpha-2 (ML, SN, BF, etc.)
+    currency = Column(String(3), default="XOF")  # ISO 4217 (XOF, EUR, USD, GNF, etc.)
 
     # Statut
     is_active = Column(Boolean, default=True)

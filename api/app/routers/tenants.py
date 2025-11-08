@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, EmailStr, Field
 import uuid
@@ -42,6 +43,7 @@ class TenantResponse(BaseModel):
     email: str
     is_active: bool
     is_pilot: bool
+    currency: str
     created_at: datetime
 
     class Config:
@@ -153,6 +155,7 @@ async def get_my_subscription(
     """Récupère l'abonnement actuel du tenant"""
     result = await db.execute(
         select(Subscription)
+        .options(selectinload(Subscription.plan))
         .where(Subscription.tenant_id == tenant.id)
         .order_by(Subscription.created_at.desc())
         .limit(1)
@@ -165,7 +168,27 @@ async def get_my_subscription(
             detail="Aucun abonnement actif"
         )
 
-    return subscription
+    # Construire manuellement la réponse pour éviter les problèmes de lazy loading
+    return SubscriptionResponse(
+        id=subscription.id,
+        status=subscription.status,
+        current_period_start=subscription.current_period_start,
+        current_period_end=subscription.current_period_end,
+        trial_end=subscription.trial_end,
+        plan=PlanResponse(
+            id=subscription.plan.id,
+            code=subscription.plan.code,
+            name=subscription.plan.name,
+            description=subscription.plan.description,
+            price_monthly=float(subscription.plan.price_monthly),
+            price_yearly=float(subscription.plan.price_yearly) if subscription.plan.price_yearly else None,
+            max_users=subscription.plan.max_users,
+            max_patients_per_month=subscription.plan.max_patients_per_month,
+            max_sites=subscription.plan.max_sites,
+            max_storage_gb=subscription.plan.max_storage_gb,
+            features=subscription.plan.features if subscription.plan.features else []
+        )
+    )
 
 
 @router.get("/me/usage", response_model=UsageStatsResponse)
@@ -180,6 +203,7 @@ async def get_my_usage(
     # Récupérer les quotas du plan
     result = await db.execute(
         select(Subscription)
+        .options(selectinload(Subscription.plan))
         .where(Subscription.tenant_id == tenant.id)
         .order_by(Subscription.created_at.desc())
         .limit(1)
@@ -282,7 +306,35 @@ async def upgrade_subscription(
         new_plan_code=new_plan_code
     )
 
-    return updated_subscription
+    # Recharger avec la relation plan
+    result = await db.execute(
+        select(Subscription)
+        .options(selectinload(Subscription.plan))
+        .where(Subscription.id == updated_subscription.id)
+    )
+    subscription_with_plan = result.scalar_one()
+
+    # Construire manuellement la réponse
+    return SubscriptionResponse(
+        id=subscription_with_plan.id,
+        status=subscription_with_plan.status,
+        current_period_start=subscription_with_plan.current_period_start,
+        current_period_end=subscription_with_plan.current_period_end,
+        trial_end=subscription_with_plan.trial_end,
+        plan=PlanResponse(
+            id=subscription_with_plan.plan.id,
+            code=subscription_with_plan.plan.code,
+            name=subscription_with_plan.plan.name,
+            description=subscription_with_plan.plan.description,
+            price_monthly=float(subscription_with_plan.plan.price_monthly),
+            price_yearly=float(subscription_with_plan.plan.price_yearly) if subscription_with_plan.plan.price_yearly else None,
+            max_users=subscription_with_plan.plan.max_users,
+            max_patients_per_month=subscription_with_plan.plan.max_patients_per_month,
+            max_sites=subscription_with_plan.plan.max_sites,
+            max_storage_gb=subscription_with_plan.plan.max_storage_gb,
+            features=subscription_with_plan.plan.features if subscription_with_plan.plan.features else []
+        )
+    )
 
 
 @router.post("/me/subscription/cancel")

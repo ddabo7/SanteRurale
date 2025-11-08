@@ -16,6 +16,8 @@ import { ConsultationsPage } from './pages/ConsultationsPage'
 import { ConsultationFormPage } from './pages/ConsultationFormPage'
 import { ConsultationDetailsPage } from './pages/ConsultationDetailsPage'
 import { RapportsPage } from './pages/RapportsPage'
+import { ProfilePage } from './pages/ProfilePage'
+import { SubscriptionPage } from './pages/SubscriptionPage'
 
 function App() {
   return (
@@ -116,6 +118,28 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <RapportsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ProfilePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/subscription"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <SubscriptionPage />
                 </Layout>
               </ProtectedRoute>
             }

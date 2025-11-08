@@ -53,6 +53,17 @@ class SubscriptionService:
         )
         free_plan = result.scalar_one()
 
+        # Déterminer la devise selon le pays
+        country_code = kwargs.get('country_code', 'ML')
+        currency_map = {
+            'ML': 'XOF', 'SN': 'XOF', 'BF': 'XOF', 'CI': 'XOF',
+            'NE': 'XOF', 'TG': 'XOF', 'BJ': 'XOF',  # FCFA Ouest
+            'GN': 'GNF',  # Franc Guinéen
+            'FR': 'EUR', 'BE': 'EUR', 'LU': 'EUR',  # Euro
+            'US': 'USD',  # Dollar
+        }
+        currency = currency_map.get(country_code, 'XOF')
+
         # Créer le tenant
         tenant = Tenant(
             name=name,
@@ -60,6 +71,7 @@ class SubscriptionService:
             email=email,
             is_pilot=True,
             is_active=True,
+            currency=currency,
             **kwargs
         )
         self.db.add(tenant)
