@@ -143,18 +143,16 @@ export interface SyncMeta {
 }
 
 /**
- * User session
+ * User session (sans les tokens - ils sont dans les cookies HttpOnly)
  */
 export interface UserSession {
   id: string
   email: string
   nom: string
   prenom?: string
+  telephone?: string
   role: string
   site_id: string
-  access_token: string
-  refresh_token: string
-  expires_at: string // ISO datetime
 }
 
 // ===========================================================================
@@ -178,6 +176,7 @@ export class SanteDB extends Dexie {
   constructor() {
     super('SanteRurale')
 
+    // Version 1 - Schéma initial
     this.version(1).stores({
       // Index: champs indexés pour recherche rapide
       patients: 'id, nom, prenom, telephone, village, site_id, created_at, _synced',
@@ -191,6 +190,29 @@ export class SanteDB extends Dexie {
       outbox: 'id, entity, idempotency_key, created_at, processed',
       sync_meta: 'key',
       user_session: 'id',
+    })
+
+    // Version 2 - Migration vers cookies HttpOnly (suppression des tokens)
+    this.version(2).stores({
+      // Les stores restent identiques, mais on nettoie les données sensibles
+      patients: 'id, nom, prenom, telephone, village, site_id, created_at, _synced',
+      encounters: 'id, patient_id, site_id, user_id, date, created_at, _synced',
+      conditions: 'id, encounter_id, libelle, created_at, _synced',
+      medication_requests: 'id, encounter_id, medicament, created_at, _synced',
+      procedures: 'id, encounter_id, type, created_at, _synced',
+      references: 'id, encounter_id, statut, created_at, _synced',
+      attachments: 'id, patient_id, encounter_id, filename, created_at',
+
+      outbox: 'id, entity, idempotency_key, created_at, processed',
+      sync_meta: 'key',
+      user_session: 'id',
+    }).upgrade(async () => {
+      // Nettoyer les anciens tokens du localStorage lors de la migration
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
+        localStorage.removeItem('user')
+      }
     })
   }
 

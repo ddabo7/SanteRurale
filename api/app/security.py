@@ -5,8 +5,9 @@ from datetime import datetime, timedelta
 from typing import Any
 import uuid
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from typing import Optional
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from sqlalchemy import select
@@ -73,14 +74,16 @@ def decode_token(token: str) -> dict[str, Any]:
 # DEPENDENCIES FOR AUTHENTICATION
 # ===========================================================================
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ):
     """
     Récupère l'utilisateur actuellement authentifié à partir du token JWT
+    Le token peut provenir soit d'un cookie HttpOnly, soit du header Authorization
 
     Note: Cette fonction doit être utilisée avec Depends(get_db) séparément
     dans les endpoints pour obtenir la session de base de données
@@ -94,27 +97,25 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    # Vérifier que les credentials sont présents
-    if not credentials:
-        print("DEBUG: No credentials provided")
-        raise credentials_exception
+    # Essayer de récupérer le token depuis le cookie en premier
+    token = request.cookies.get("access_token")
 
-    token = credentials.credentials
-    print(f"DEBUG: Token received (first 20 chars): {token[:20]}...")
+    # Si pas de cookie, essayer le header Authorization (pour rétrocompatibilité)
+    if not token and credentials:
+        token = credentials.credentials
+
+    if not token:
+        raise credentials_exception
 
     try:
         payload = decode_token(token)
-        print(f"DEBUG: Token payload decoded successfully: {payload.keys()}")
         user_id_str: str = payload.get("sub")
         if user_id_str is None:
-            print(f"DEBUG: No 'sub' in token payload: {payload}")
             raise credentials_exception
 
         user_id = uuid.UUID(user_id_str)
-        print(f"DEBUG: User ID from token: {user_id}")
 
     except (JWTError, ValueError) as e:
-        print(f"DEBUG: Token decode error: {type(e).__name__}: {e}")
         raise credentials_exception
 
     # Récupérer l'utilisateur depuis la base de données
@@ -124,8 +125,6 @@ async def get_current_user(
         user = result.scalar_one_or_none()
 
         if user is None:
-            print(f"DEBUG: No user found for ID {user_id}")
             raise credentials_exception
 
-        print(f"DEBUG: User found: {user.email}")
         return user

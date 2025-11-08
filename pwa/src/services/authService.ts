@@ -7,6 +7,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 export const authService = {
   /**
    * Authentifie un utilisateur avec email et mot de passe
+   * Les tokens sont stockés dans des cookies HttpOnly par le serveur
    */
   login: async (email: string, password: string) => {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -14,6 +15,7 @@ export const authService = {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include', // Important : permet d'envoyer et recevoir les cookies
       body: JSON.stringify({ email, password }),
     })
 
@@ -113,6 +115,7 @@ export const authService = {
 
   /**
    * Met à jour le profil de l'utilisateur
+   * Les tokens sont automatiquement envoyés via les cookies HttpOnly
    */
   updateProfile: async (data: {
     nom?: string
@@ -120,20 +123,12 @@ export const authService = {
     telephone?: string
     email?: string
   }) => {
-    // Récupérer le token d'authentification
-    const accessToken = localStorage.getItem('access_token')
-
-    if (!accessToken) {
-      throw new Error('Non authentifié')
-    }
-
     const response = await fetch(`${API_BASE_URL}/auth/profile`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
       },
-      credentials: 'include',
+      credentials: 'include', // Envoie automatiquement les cookies (dont access_token)
       body: JSON.stringify(data),
     })
 
@@ -147,25 +142,18 @@ export const authService = {
 
   /**
    * Change le mot de passe de l'utilisateur
+   * Les tokens sont automatiquement envoyés via les cookies HttpOnly
    */
   changePassword: async (data: {
     current_password: string
     new_password: string
   }) => {
-    // Récupérer le token d'authentification
-    const accessToken = localStorage.getItem('access_token')
-
-    if (!accessToken) {
-      throw new Error('Non authentifié')
-    }
-
     const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
       },
-      credentials: 'include',
+      credentials: 'include', // Envoie automatiquement les cookies (dont access_token)
       body: JSON.stringify(data),
     })
 

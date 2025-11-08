@@ -5,7 +5,7 @@ import secrets
 import uuid as uuid_module
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,6 +26,14 @@ from app.schemas import ProfileUpdateRequest, ChangePasswordRequest
 from sqlalchemy.orm import selectinload
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+# Configuration des cookies sécurisés
+import os
+COOKIE_SECURE = os.getenv("ENVIRONMENT", "development") == "production"  # False en dev, True en prod
+COOKIE_HTTPONLY = True
+COOKIE_SAMESITE = "lax"
+COOKIE_MAX_AGE_ACCESS = 3600  # 1 heure
+COOKIE_MAX_AGE_REFRESH = 2592000  # 30 jours
 
 
 # Schémas Pydantic
@@ -266,9 +274,9 @@ async def verify_email(request: VerifyEmailRequest, db: AsyncSession = Depends(g
 
 
 @router.post("/login", response_model=LoginResponse)
-async def login(login_data: LoginRequest, db: AsyncSession = Depends(get_db)):
+async def login(login_data: LoginRequest, response: Response, db: AsyncSession = Depends(get_db)):
     """
-    Connexion d'un utilisateur
+    Connexion d'un utilisateur avec cookies HttpOnly sécurisés
     """
     # Trouver l'utilisateur par email
     result = await db.execute(select(User).where(User.email == login_data.email))
@@ -306,7 +314,25 @@ async def login(login_data: LoginRequest, db: AsyncSession = Depends(get_db)):
     access_token = create_access_token(token_data)
     refresh_token = create_refresh_token(token_data)
 
-    # Retourner la réponse
+    # Stocker les tokens dans des cookies HttpOnly sécurisés
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=COOKIE_HTTPONLY,
+        secure=COOKIE_SECURE,
+        samesite=COOKIE_SAMESITE,
+        max_age=COOKIE_MAX_AGE_ACCESS,
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=COOKIE_HTTPONLY,
+        secure=COOKIE_SECURE,
+        samesite=COOKIE_SAMESITE,
+        max_age=COOKIE_MAX_AGE_REFRESH,
+    )
+
+    # Retourner la réponse (SANS les tokens pour compatibilité, mais on va les retirer ensuite)
     return LoginResponse(
         access_token=access_token,
         refresh_token=refresh_token,
@@ -590,4 +616,19 @@ async def change_password(
     return {
         "success": True,
         "message": "Mot de passe changé avec succès"
+    }
+
+
+@router.post("/logout")
+async def logout(response: Response):
+    """
+    Déconnecte l'utilisateur en supprimant les cookies
+    """
+    # Supprimer les cookies en les définissant avec max_age=0
+    response.delete_cookie(key="access_token")
+    response.delete_cookie(key="refresh_token")
+
+    return {
+        "success": True,
+        "message": "Déconnexion réussie"
     }

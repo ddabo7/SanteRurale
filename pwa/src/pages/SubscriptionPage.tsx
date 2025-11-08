@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '../contexts/AuthContext'
 import { formatCurrency } from '../utils/currency'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
@@ -42,7 +41,6 @@ interface UsageStats {
 }
 
 export const SubscriptionPage = () => {
-  const { user } = useAuth()
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [usage, setUsage] = useState<UsageStats | null>(null)
   const [plans, setPlans] = useState<Plan[]>([])
@@ -56,14 +54,8 @@ export const SubscriptionPage = () => {
 
   const fetchData = async () => {
     try {
-      const accessToken = localStorage.getItem('access_token')
-      if (!accessToken) {
-        setError('Non authentifié')
-        return
-      }
-
+      // Les cookies HttpOnly sont automatiquement envoyés avec credentials: 'include'
       const headers = {
-        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       }
 
@@ -129,10 +121,8 @@ export const SubscriptionPage = () => {
     setSuccess(null)
 
     try {
-      const accessToken = localStorage.getItem('access_token')
-      if (!accessToken) {
-        setError('Non authentifié')
-        return
+      const headers = {
+        'Content-Type': 'application/json',
       }
 
       // Si on a déjà un abonnement, on change de plan (upgrade)
@@ -141,11 +131,8 @@ export const SubscriptionPage = () => {
           `${API_BASE_URL}/tenants/me/subscription/upgrade?new_plan_code=${selectedPlan.code}`,
           {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
+            headers,
+            credentials: 'include', // Envoie automatiquement les cookies
           }
         )
 
@@ -159,11 +146,8 @@ export const SubscriptionPage = () => {
         // Sinon, on souscrit à un nouveau plan
         const response = await fetch(`${API_BASE_URL}/tenants/me/subscribe`, {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
+          headers,
+          credentials: 'include', // Envoie automatiquement les cookies
           body: JSON.stringify({ plan_code: selectedPlan.code }),
         })
 
@@ -195,19 +179,12 @@ export const SubscriptionPage = () => {
     setSuccess(null)
 
     try {
-      const accessToken = localStorage.getItem('access_token')
-      if (!accessToken) {
-        setError('Non authentifié')
-        return
-      }
-
       const response = await fetch(`${API_BASE_URL}/tenants/me/subscription/cancel`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
+        credentials: 'include', // Envoie automatiquement les cookies
       })
 
       if (!response.ok) {

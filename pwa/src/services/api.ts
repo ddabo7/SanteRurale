@@ -24,6 +24,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000, // 30 secondes
+  withCredentials: true, // IMPORTANT: Envoie les cookies HttpOnly automatiquement
   headers: {
     'Content-Type': 'application/json',
   },
@@ -35,13 +36,9 @@ export const apiClient: AxiosInstance = axios.create({
 
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    // Ajouter le token JWT si disponible
-    const session = await db.user_session.toCollection().first()
-
-    if (session?.access_token) {
-      config.headers.Authorization = `Bearer ${session.access_token}`
-    }
-
+    // Les tokens sont maintenant dans des cookies HttpOnly
+    // Ils sont automatiquement envoyés grâce à withCredentials: true
+    // Plus besoin d'ajouter le header Authorization manuellement
     return config
   },
   (error) => {
@@ -52,18 +49,6 @@ apiClient.interceptors.request.use(
 // ===========================================================================
 // INTERCEPTEURS RESPONSE
 // ===========================================================================
-
-let isRefreshing = false
-let refreshSubscribers: Array<(token: string) => void> = []
-
-function subscribeTokenRefresh(cb: (token: string) => void) {
-  refreshSubscribers.push(cb)
-}
-
-function onRefreshed(token: string) {
-  refreshSubscribers.forEach(cb => cb(token))
-  refreshSubscribers = []
-}
 
 apiClient.interceptors.response.use(
   (response) => {
@@ -79,63 +64,13 @@ apiClient.interceptors.response.use(
     return response
   },
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
-
-    // 401 Unauthorized - Token expiré
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        // Attendre que le refresh soit terminé
-        return new Promise((resolve) => {
-          subscribeTokenRefresh((token: string) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`
-            resolve(apiClient(originalRequest))
-          })
-        })
-      }
-
-      originalRequest._retry = true
-      isRefreshing = true
-
-      try {
-        const session = await db.user_session.toCollection().first()
-
-        if (!session?.refresh_token) {
-          throw new Error('No refresh token available')
-        }
-
-        // Appeler /auth/refresh
-        const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-          refresh_token: session.refresh_token,
-        })
-
-        const { access_token, refresh_token, expires_in } = response.data
-
-        // Mettre à jour la session locale
-        const expiresAt = new Date()
-        expiresAt.setSeconds(expiresAt.getSeconds() + expires_in)
-
-        await db.user_session.put({
-          ...session,
-          access_token,
-          refresh_token,
-          expires_at: expiresAt.toISOString(),
-        })
-
-        isRefreshing = false
-        onRefreshed(access_token)
-
-        // Retry la requête originale
-        originalRequest.headers.Authorization = `Bearer ${access_token}`
-        return apiClient(originalRequest)
-      } catch (refreshError) {
-        isRefreshing = false
-
-        // Échec du refresh -> déconnexion
-        await db.user_session.clear()
-        window.location.href = '/login'
-
-        return Promise.reject(refreshError)
-      }
+    // 401 Unauthorized - Session expirée, rediriger vers login
+    if (error.response?.status === 401) {
+      // Les cookies HttpOnly ont expiré, le backend gère le refresh automatiquement
+      // Si on reçoit un 401, c'est que la session est vraiment expirée
+      await db.user_session.clear()
+      window.location.href = '/login'
+      return Promise.reject(error)
     }
 
     // Autres erreurs
@@ -162,8 +97,9 @@ export const authService = {
     return response.data
   },
 
-  async logout(refreshToken: string) {
-    await apiClient.post('/auth/logout', { refresh_token: refreshToken })
+  async logout() {
+    // Les cookies HttpOnly seront automatiquement supprimés par le backend
+    await apiClient.post('/auth/logout')
   },
 
   async getMe() {
