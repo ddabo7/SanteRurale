@@ -212,7 +212,17 @@ export const SubscriptionPage = () => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Gestion de l'abonnement</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Gestion de l'abonnement</h1>
+        {subscription?.plan.code === 'free' && (
+          <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            Phase Pilote - Gratuit
+          </span>
+        )}
+      </div>
 
       {/* Messages */}
       {success && (
@@ -349,16 +359,60 @@ export const SubscriptionPage = () => {
           <h2 className="text-xl font-semibold text-gray-900">Plans disponibles</h2>
         </div>
         <div className="p-6">
+          {/* Bannière Phase Pilote */}
+          {subscription?.plan.code === 'free' && (
+            <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-5">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-4 flex-1">
+                  <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                    🎯 Programme Pilote - Testez Gratuitement
+                  </h3>
+                  <p className="text-blue-800 mb-3">
+                    Vous êtes dans le programme pilote avec des <strong>limites strictes</strong> pour tester le système.
+                    Passez à un plan payant en Phase 2 pour débloquer toutes les fonctionnalités.
+                  </p>
+                  <div className="text-sm text-blue-700">
+                    <p className="font-medium mb-2">⚠️ Limitations du plan gratuit :</p>
+                    <ul className="list-disc list-inside space-y-1 ml-2 mb-3">
+                      <li><strong>2 utilisateurs maximum</strong> (vs 5-20+ en payant)</li>
+                      <li><strong>50 patients/mois maximum</strong> (vs 200-illimité)</li>
+                      <li><strong>1 GB stockage</strong> (~500 photos, vs 10-200 GB)</li>
+                      <li><strong>1 site uniquement</strong> (vs multi-sites en Pro)</li>
+                      <li>Support communautaire uniquement (vs support prioritaire)</li>
+                    </ul>
+                    <p className="font-medium text-blue-900">
+                      💡 Passez au Plan Starter (50€/mois) pour : 5 utilisateurs, 200 patients/mois, 10 GB stockage
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {plans.map((plan) => (
               <div
                 key={plan.id}
-                className={`border rounded-lg p-6 ${
+                className={`border rounded-lg p-6 relative ${
                   subscription?.plan.code === plan.code
                     ? 'border-emerald-500 bg-emerald-50'
+                    : plan.price_monthly > 0 && subscription?.plan.code === 'free'
+                    ? 'border-gray-200 opacity-75'
                     : 'border-gray-200'
                 }`}
               >
+                {plan.price_monthly > 0 && subscription?.plan.code === 'free' && (
+                  <div className="absolute top-3 right-3">
+                    <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-200 text-gray-700">
+                      Phase 2
+                    </span>
+                  </div>
+                )}
                 <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
                 <p className="text-gray-600 mt-2 text-sm">{plan.description}</p>
 
@@ -444,6 +498,15 @@ export const SubscriptionPage = () => {
                     className="mt-6 w-full bg-gray-300 text-gray-600 px-4 py-2 rounded-lg font-medium cursor-not-allowed"
                   >
                     Plan actuel
+                  </button>
+                ) : plan.price_monthly > 0 && subscription?.plan.code === 'free' ? (
+                  // Plans payants désactivés pendant la phase pilote
+                  <button
+                    disabled
+                    className="mt-6 w-full bg-gray-300 text-gray-600 px-4 py-2 rounded-lg font-medium cursor-not-allowed"
+                    title="Disponible prochainement - Phase 2"
+                  >
+                    Bientôt disponible
                   </button>
                 ) : (
                   <button
