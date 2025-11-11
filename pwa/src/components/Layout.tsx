@@ -1,21 +1,16 @@
 import { ReactNode } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { SyncIndicator } from './SyncIndicator'
+import { UserMenu } from './UserMenu'
 
 interface LayoutProps {
   children: ReactNode
 }
 
 export const Layout = ({ children }: LayoutProps) => {
-  const { user, logout, isAuthenticated } = useAuth()
-  const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
   const location = useLocation()
-
-  const handleLogout = async () => {
-    await logout()
-    navigate('/login')
-  }
 
   const isActive = (path: string) => location.pathname === path
 
@@ -66,29 +61,7 @@ export const Layout = ({ children }: LayoutProps) => {
               )}
             </div>
 
-            {isAuthenticated && user && (
-              <div className="flex items-center space-x-4">
-                <Link
-                  to="/subscription"
-                  className="px-3 py-2 rounded-md text-sm font-medium hover:bg-emerald-500 transition-colors"
-                >
-                  💳 Abonnement
-                </Link>
-                <Link
-                  to="/profile"
-                  className="text-sm hover:text-emerald-100 transition-colors"
-                >
-                  <div className="font-medium">{user.prenom} {user.nom}</div>
-                  <div className="text-emerald-200 text-xs">{user.role}</div>
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 rounded-md text-sm font-medium transition-colors"
-                >
-                  🚪 Déconnexion
-                </button>
-              </div>
-            )}
+            {isAuthenticated && <UserMenu />}
           </div>
         </div>
       </header>
