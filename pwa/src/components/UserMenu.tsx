@@ -35,12 +35,24 @@ export const UserMenu = () => {
 
   return (
     <div className="relative" ref={menuRef}>
-      {/* Bouton menu hamburger */}
+      {/* Bouton menu avec avatar */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-emerald-500 transition-colors"
         aria-label="Menu utilisateur"
       >
+        {/* Avatar */}
+        {user.avatar_url ? (
+          <img
+            src={user.avatar_url}
+            alt={`${user.prenom} ${user.nom}`}
+            className="w-10 h-10 rounded-full object-cover border-2 border-white"
+          />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-emerald-700 flex items-center justify-center text-white font-semibold border-2 border-white">
+            {user.prenom?.[0]}{user.nom?.[0]}
+          </div>
+        )}
         <div className="text-left">
           <div className="font-medium text-sm">{user.prenom} {user.nom}</div>
           <div className="text-emerald-200 text-xs">{user.role}</div>
@@ -62,8 +74,8 @@ export const UserMenu = () => {
                 {user.prenom} {user.nom}
               </p>
               <p className="text-xs text-gray-500">{user.role}</p>
-              {user.site && (
-                <p className="text-xs text-gray-500 mt-1">📍 {user.site.nom}</p>
+              {user.site_nom && (
+                <p className="text-xs text-gray-500 mt-1">📍 {user.site_nom}</p>
               )}
             </div>
 

@@ -80,6 +80,7 @@ class UserResponse(BaseModel):
     site_id: str
     actif: bool
     email_verified: bool
+    avatar_url: str | None = None
 
 
 class LoginResponse(BaseModel):
@@ -519,6 +520,7 @@ async def get_current_user_info(
         site_id=str(user.site_id),
         actif=user.actif,
         email_verified=user.email_verified,
+        avatar_url=user.avatar_url,
     )
 
 
@@ -561,6 +563,8 @@ async def update_profile(
         user.prenom = profile_data.prenom
     if profile_data.telephone is not None:
         user.telephone = profile_data.telephone
+    if profile_data.avatar_url is not None:
+        user.avatar_url = profile_data.avatar_url
 
     await db.commit()
     await db.refresh(user)
@@ -575,6 +579,7 @@ async def update_profile(
             "prenom": user.prenom,
             "telephone": user.telephone,
             "role": user.role,
+            "avatar_url": user.avatar_url,
         }
     }
 

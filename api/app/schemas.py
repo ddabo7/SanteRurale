@@ -86,6 +86,7 @@ class ProfileUpdateRequest(BaseModel):
     prenom: Optional[str] = Field(None, max_length=100)
     telephone: Optional[str] = Field(None, max_length=20)
     email: Optional[EmailStr] = None
+    avatar_url: Optional[str] = None
 
 
 class ChangePasswordRequest(BaseModel):

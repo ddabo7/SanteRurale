@@ -11,6 +11,7 @@ interface User {
   site_id: string
   site_nom?: string
   telephone?: string
+  avatar_url?: string
 }
 
 interface AuthContextType {
@@ -33,6 +34,7 @@ const normalizeUser = (rawUser: any): User => ({
   site_id: rawUser.site_id,
   site_nom: rawUser.site_nom,
   telephone: rawUser.telephone,
+  avatar_url: rawUser.avatar_url,
 })
 
 export const useAuth = () => {

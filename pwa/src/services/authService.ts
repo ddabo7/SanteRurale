@@ -122,6 +122,7 @@ export const authService = {
     prenom?: string
     telephone?: string
     email?: string
+    avatar_url?: string
   }) => {
     const response = await fetch(`${API_BASE_URL}/auth/profile`, {
       method: 'PATCH',

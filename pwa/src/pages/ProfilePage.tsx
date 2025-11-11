@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { authService } from '../services/authService'
-import { User, Mail, Phone, Shield, Lock, Key, Edit2, Check, X } from 'lucide-react'
+import { User, Mail, Phone, Shield, Lock, Key, Edit2, Check, X, Camera, Upload } from 'lucide-react'
 
 export const ProfilePage = () => {
   const { user, updateUser } = useAuth()
@@ -9,6 +9,7 @@ export const ProfilePage = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
   // Formulaire de profil
   const [formData, setFormData] = useState({
@@ -61,6 +62,53 @@ export const ProfilePage = () => {
       setError(err.message || 'Erreur lors de la mise à jour du profil')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Vérifier que c'est une image
+    if (!file.type.startsWith('image/')) {
+      setError('Veuillez sélectionner une image')
+      return
+    }
+
+    // Vérifier la taille (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('La photo ne doit pas dépasser 5 MB')
+      return
+    }
+
+    setUploadingAvatar(true)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      // Convertir l'image en base64 data URL
+      const reader = new FileReader()
+      reader.onloadend = async () => {
+        const dataUrl = reader.result as string
+
+        // Mettre à jour le profil avec la nouvelle photo
+        await authService.updateProfile({ avatar_url: dataUrl })
+
+        setSuccess('Photo de profil mise à jour avec succès')
+
+        // Mettre à jour le contexte utilisateur
+        if (updateUser) {
+          updateUser({
+            ...user,
+            avatar_url: dataUrl,
+          })
+        }
+      }
+      reader.readAsDataURL(file)
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors de la mise à jour de la photo')
+    } finally {
+      setUploadingAvatar(false)
     }
   }
 
@@ -139,6 +187,67 @@ export const ProfilePage = () => {
           <span>{error}</span>
         </div>
       )}
+
+      {/* Section Photo de profil */}
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6 border border-gray-100">
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-purple-100">
+          <div className="flex items-center space-x-3">
+            <div className="bg-purple-600 p-2 rounded-lg">
+              <Camera className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Photo de profil</h2>
+              <p className="text-sm text-gray-600 mt-0.5">Ajoutez une photo pour personnaliser votre profil</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <div className="flex items-center space-x-6">
+            {/* Avatar actuel */}
+            <div className="relative">
+              {user.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={`${user.prenom} ${user.nom}`}
+                  className="w-24 h-24 rounded-full object-cover border-4 border-purple-200"
+                />
+              ) : (
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-3xl font-bold border-4 border-purple-200">
+                  {user.prenom?.[0]}{user.nom?.[0]}
+                </div>
+              )}
+              {uploadingAvatar && (
+                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                </div>
+              )}
+            </div>
+
+            {/* Bouton pour changer la photo */}
+            <div className="flex-1">
+              <label
+                htmlFor="avatar-upload"
+                className="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-2.5 rounded-lg font-medium cursor-pointer transition-all shadow-md hover:shadow-lg disabled:opacity-50"
+              >
+                <Upload className="w-4 h-4" />
+                <span>{uploadingAvatar ? 'Upload en cours...' : 'Changer la photo'}</span>
+              </label>
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                disabled={uploadingAvatar}
+                className="hidden"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                JPG, PNG ou GIF. Max 5 MB.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Section Informations personnelles */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6 border border-gray-100">

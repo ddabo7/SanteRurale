@@ -111,6 +111,7 @@ class User(Base, TimestampMixin):
 
     # Informations supplémentaires optionnelles
     telephone: Mapped[str | None] = mapped_column(String(50))
+    avatar_url: Mapped[str | None] = mapped_column(Text)
 
     # Relations
     site: Mapped["Site"] = relationship(back_populates="users")
