@@ -136,6 +136,11 @@ services:
       S3_BUCKET_NAME: sante-rurale
       AWS_ACCESS_KEY_ID: minioadmin
       AWS_SECRET_ACCESS_KEY: minioadmin123
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+      MINIO_BUCKET: sante-rurale-uploads
+      MINIO_ENABLED: "true"
 
       # Security
       SECRET_KEY: dev_secret_key_change_in_production

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { patientsService } from '../services/api'
+import { FileUpload } from '../components/FileUpload'
+import { FileList } from '../components/FileList'
 
 export const PatientFormPage = () => {
   const { id } = useParams()
@@ -19,6 +21,7 @@ export const PatientFormPage = () => {
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [uploadRefresh, setUploadRefresh] = useState(0)
 
   useEffect(() => {
     if (isEditMode && id) {
@@ -219,6 +222,32 @@ export const PatientFormPage = () => {
               placeholder="Nom du village"
             />
           </div>
+
+          {/* Photo et documents du patient */}
+          {isEditMode && id && (
+            <div className="border-t pt-6 mt-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                📎 Documents du patient
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Ajoutez des photos, documents d'identité, certificats médicaux, etc.
+              </p>
+
+              <FileUpload
+                patientId={id}
+                onUploadSuccess={() => setUploadRefresh(prev => prev + 1)}
+                accept="image/*,.pdf,.doc,.docx"
+                maxSizeMB={10}
+              />
+
+              <div className="mt-4">
+                <FileList
+                  patientId={id}
+                  refreshTrigger={uploadRefresh}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Buttons */}
           <div className="flex space-x-4 pt-4">

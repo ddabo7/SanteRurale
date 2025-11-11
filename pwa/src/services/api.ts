@@ -200,3 +200,44 @@ export const dhis2Service = {
     return response.data
   },
 }
+
+export const attachmentsService = {
+  async upload(file: File, patientId?: string, encounterId?: string) {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const params = new URLSearchParams()
+    if (patientId) params.append('patient_id', patientId)
+    if (encounterId) params.append('encounter_id', encounterId)
+
+    const response = await apiClient.post(`/attachments/upload?${params.toString()}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
+
+  async list(patientId?: string, encounterId?: string) {
+    const params = new URLSearchParams()
+    if (patientId) params.append('patient_id', patientId)
+    if (encounterId) params.append('encounter_id', encounterId)
+
+    const response = await apiClient.get(`/attachments?${params.toString()}`)
+    return response.data
+  },
+
+  async getStorageStats() {
+    const response = await apiClient.get('/attachments/storage-stats')
+    return response.data
+  },
+
+  getDownloadUrl(attachmentId: string) {
+    return `${apiClient.defaults.baseURL}/attachments/${attachmentId}/download`
+  },
+
+  async delete(attachmentId: string) {
+    const response = await apiClient.delete(`/attachments/${attachmentId}`)
+    return response.data
+  },
+}

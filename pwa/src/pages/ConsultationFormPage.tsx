@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { encountersService, patientsService, conditionsService, medicationsService, proceduresService } from '../services/api'
+import { FileUpload } from '../components/FileUpload'
+import { FileList } from '../components/FileList'
 
 interface Patient {
   id: string
@@ -42,6 +44,8 @@ export const ConsultationFormPage = () => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [uploadRefresh, setUploadRefresh] = useState(0)
+  const [createdEncounterId, setCreatedEncounterId] = useState<string | null>(null)
 
   // Données de la consultation
   const [formData, setFormData] = useState({
@@ -108,6 +112,9 @@ export const ConsultationFormPage = () => {
 
       const encounter = await encountersService.create(encounterData)
 
+      // Sauvegarder l'ID pour permettre l'upload de fichiers
+      setCreatedEncounterId(encounter.id)
+
       // Ajouter les diagnostics
       for (const condition of conditions) {
         if (condition.libelle.trim()) {
@@ -138,8 +145,8 @@ export const ConsultationFormPage = () => {
         }
       }
 
-      // Rediriger vers la liste des consultations
-      navigate('/consultations')
+      // Ne pas rediriger immédiatement - permettre l'upload
+      // navigate('/consultations')
     } catch (error: any) {
       console.error('Erreur sauvegarde consultation:', error)
       if (error.response?.data?.detail) {
@@ -569,7 +576,7 @@ export const ConsultationFormPage = () => {
           <div className="flex space-x-4 pt-4 border-t">
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !!createdEncounterId}
               className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
             >
               {isLoading ? 'Enregistrement...' : isEditMode ? 'Modifier' : 'Enregistrer la consultation'}
@@ -579,10 +586,48 @@ export const ConsultationFormPage = () => {
               onClick={() => navigate('/consultations')}
               className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
             >
-              Annuler
+              {createdEncounterId ? 'Terminer' : 'Annuler'}
             </button>
           </div>
         </form>
+
+        {/* Section d'upload après création */}
+        {createdEncounterId && (
+          <div className="mt-8 pt-8 border-t">
+            <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-6">
+              <p className="font-medium mb-1">✅ Consultation enregistrée avec succès!</p>
+              <p className="text-sm">Vous pouvez maintenant ajouter des documents médicaux (radios, résultats d'analyses, etc.)</p>
+            </div>
+
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              📎 Documents médicaux
+            </h3>
+
+            <FileUpload
+              encounterId={createdEncounterId}
+              onUploadSuccess={() => setUploadRefresh(prev => prev + 1)}
+              accept="image/*,.pdf,.doc,.docx"
+              maxSizeMB={10}
+            />
+
+            <div className="mt-4">
+              <FileList
+                encounterId={createdEncounterId}
+                refreshTrigger={uploadRefresh}
+              />
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={() => navigate('/consultations')}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+              >
+                Retour à la liste des consultations
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

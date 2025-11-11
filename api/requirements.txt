@@ -30,6 +30,7 @@ ruff==0.14.2
 # Utilities
 python-dateutil==2.8.2
 phonenumbers==8.13.29
+minio==7.2.5
 
 # Types
 types-python-dateutil==2.8.19.20240106

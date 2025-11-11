@@ -89,6 +89,20 @@ export const SubscriptionPage = () => {
 
       if (usageResponse.ok) {
         const usageData = await usageResponse.json()
+
+        // Récupérer aussi les stats de stockage réelles
+        const storageResponse = await fetch(`${API_BASE_URL}/attachments/storage-stats`, {
+          headers,
+          credentials: 'include',
+        })
+
+        if (storageResponse.ok) {
+          const storageData = await storageResponse.json()
+          // Fusionner les stats de stockage avec les stats d'utilisation
+          usageData.storage_used_mb = Math.round(storageData.total_gb * 1024)
+          usageData.quotas.max_storage_gb = storageData.quota_gb
+        }
+
         setUsage(usageData)
       }
 

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { encountersService } from '../services/api'
+import { FileList } from '../components/FileList'
+import { downloadPrescriptionPDF } from '../utils/pdfGenerator'
 
 interface EncounterDetails {
   id: string
@@ -115,6 +117,43 @@ export const ConsultationDetailsPage = () => {
     return null
   }
 
+  const handleDownloadPDF = () => {
+    if (!encounter || !encounter.patient) return
+
+    // Récupérer le nom du site et du médecin depuis localStorage
+    const userStr = localStorage.getItem('user')
+    const user = userStr ? JSON.parse(userStr) : null
+    const doctorName = user ? `${user.prenom} ${user.nom}` : 'Non spécifié'
+    const siteName = user?.site?.nom || 'Centre de Santé'
+
+    const prescriptionData = {
+      patient: {
+        nom: encounter.patient.nom,
+        prenom: encounter.patient.prenom,
+        sexe: encounter.patient.sexe,
+        annee_naissance: encounter.patient.annee_naissance,
+        telephone: encounter.patient.telephone,
+        village: encounter.patient.village,
+      },
+      date: encounter.date,
+      conditions: encounter.conditions?.map(c => ({
+        libelle: c.libelle,
+        notes: c.notes,
+      })) || [],
+      medications: encounter.medication_requests?.map(m => ({
+        medicament: m.medicament,
+        posologie: m.posologie,
+        duree_jours: m.duree_jours,
+        notes: m.notes,
+      })) || [],
+      notes: encounter.notes,
+      doctorName,
+      siteName,
+    }
+
+    downloadPrescriptionPDF(prescriptionData)
+  }
+
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto p-8 text-center">
@@ -158,6 +197,13 @@ export const ConsultationDetailsPage = () => {
               Créée le {formatDateTime(encounter.created_at)}
             </p>
           </div>
+          <button
+            onClick={handleDownloadPDF}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors inline-flex items-center"
+          >
+            <span className="mr-2">📄</span>
+            Télécharger ordonnance (PDF)
+          </button>
         </div>
       </div>
 
@@ -345,6 +391,12 @@ export const ConsultationDetailsPage = () => {
               <p className="text-gray-700 whitespace-pre-line">{encounter.notes}</p>
             </div>
           )}
+
+          {/* Documents médicaux */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">📎 Documents médicaux</h2>
+            <FileList encounterId={encounter.id} />
+          </div>
         </div>
       </div>
     </div>
