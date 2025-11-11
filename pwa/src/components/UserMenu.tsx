@@ -86,6 +86,21 @@ export const UserMenu = () => {
               Abonnement
             </Link>
 
+            {/* Lien Admin - visible uniquement pour les admins */}
+            {user.role === 'admin' && (
+              <>
+                <div className="border-t border-gray-100"></div>
+                <Link
+                  to="/admin"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 transition-colors font-medium"
+                >
+                  <span className="mr-3">📊</span>
+                  Dashboard Admin
+                </Link>
+              </>
+            )}
+
             <div className="border-t border-gray-100"></div>
 
             <button

@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import auth, encounters, reports, tenants, attachments
+from app.routers import auth, encounters, reports, tenants, attachments, admin
 from app.routers import patients_simple as patients
 
 # Créer l'application FastAPI
@@ -32,6 +32,7 @@ app.include_router(encounters.router, prefix=settings.API_V1_STR)
 app.include_router(reports.router, prefix=settings.API_V1_STR)
 app.include_router(tenants.router)  # Déjà préfixé avec /api/tenants dans le router
 app.include_router(attachments.router, prefix=settings.API_V1_STR)
+app.include_router(admin.router, prefix=settings.API_V1_STR)
 
 
 @app.get("/")

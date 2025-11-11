@@ -18,6 +18,7 @@ import { ConsultationDetailsPage } from './pages/ConsultationDetailsPage'
 import { RapportsPage } from './pages/RapportsPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { SubscriptionPage } from './pages/SubscriptionPage'
+import { AdminDashboardPage } from './pages/AdminDashboardPage'
 
 function App() {
   return (
@@ -140,6 +141,17 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <SubscriptionPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <AdminDashboardPage />
                 </Layout>
               </ProtectedRoute>
             }
