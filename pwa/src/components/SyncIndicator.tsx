@@ -15,33 +15,51 @@ export const SyncIndicator = () => {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed bottom-4 right-4 z-50 animate-slideInFromRight">
       <div
         className={`
-          flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg text-sm font-medium
-          ${isOnline ? 'bg-white border border-gray-200' : 'bg-orange-100 border border-orange-300'}
+          flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl text-sm font-semibold backdrop-blur-lg border-2 transition-all transform hover:scale-105
+          ${isOnline ? 'bg-white/95 border-blue-200' : 'bg-orange-100/95 border-orange-300'}
         `}
       >
-        {/* Indicateur de connectivité */}
-        <div
-          className={`
-            w-2 h-2 rounded-full
-            ${isOnline ? 'bg-green-500' : 'bg-orange-500'}
-          `}
-        />
-
-        {/* Message */}
-        <span className={isOnline ? 'text-gray-700' : 'text-orange-800'}>
-          {status.isSyncing && 'Synchronisation...'}
-          {!status.isSyncing && isOnline && status.pendingOperations > 0 && (
-            `${status.pendingOperations} opération(s) en attente`
+        {/* Indicateur de connectivité avec animation */}
+        <div className="relative">
+          <div
+            className={`
+              w-3 h-3 rounded-full animate-pulse
+              ${isOnline ? 'bg-green-500' : 'bg-orange-500'}
+            `}
+          />
+          {isOnline && (
+            <div className="absolute inset-0 w-3 h-3 rounded-full bg-green-400 animate-ping opacity-75" />
           )}
-          {!status.isSyncing && !isOnline && 'Mode hors ligne'}
+        </div>
+
+        {/* Message avec icônes */}
+        <span className={`flex items-center gap-2 ${isOnline ? 'text-gray-800' : 'text-orange-800'}`}>
+          {status.isSyncing && (
+            <>
+              <span>🔄</span>
+              <span>Synchronisation...</span>
+            </>
+          )}
+          {!status.isSyncing && isOnline && status.pendingOperations > 0 && (
+            <>
+              <span>⏳</span>
+              <span>{status.pendingOperations} en attente</span>
+            </>
+          )}
+          {!status.isSyncing && !isOnline && (
+            <>
+              <span>📱</span>
+              <span>Mode hors ligne</span>
+            </>
+          )}
         </span>
 
-        {/* Spinner pendant la sync */}
+        {/* Spinner pendant la sync avec gradient */}
         {status.isSyncing && (
-          <svg className="animate-spin h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24">
+          <svg className="animate-spin h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path
               className="opacity-75"
@@ -51,9 +69,9 @@ export const SyncIndicator = () => {
           </svg>
         )}
 
-        {/* Nombre d'éléments non synchronisés */}
+        {/* Nombre d'éléments non synchronisés avec badge animé */}
         {status.unsyncedItems > 0 && !status.isSyncing && (
-          <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs">
+          <span className="ml-1 px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full text-xs font-bold shadow-lg animate-bounce">
             {status.unsyncedItems}
           </span>
         )}

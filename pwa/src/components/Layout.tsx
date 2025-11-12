@@ -15,47 +15,59 @@ export const Layout = ({ children }: LayoutProps) => {
   const isActive = (path: string) => location.pathname === path
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-emerald-600 text-white shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
+      {/* Header avec gradient moderne */}
+      <header className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 text-white shadow-2xl sticky top-0 z-50 backdrop-blur-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <Link to="/" className="flex items-center">
-                <span className="text-2xl font-bold">🏥 Santé Rurale</span>
+              <Link to="/" className="flex items-center group">
+                <span className="text-2xl font-bold flex items-center gap-2 transition-transform group-hover:scale-105">
+                  <span className="text-3xl">🏥</span>
+                  <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-lg">Santé Rurale</span>
+                </span>
               </Link>
 
               {isAuthenticated && (
-                <nav className="ml-10 flex space-x-4">
+                <nav className="ml-10 flex space-x-2">
                   <Link
                     to="/patients"
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all transform hover:scale-105 ${
                       isActive('/patients')
-                        ? 'bg-emerald-700'
-                        : 'hover:bg-emerald-500'
+                        ? 'bg-white/30 backdrop-blur-md shadow-lg'
+                        : 'hover:bg-white/20 backdrop-blur-sm'
                     }`}
                   >
-                    👥 Patients
+                    <span className="flex items-center gap-2">
+                      <span className="text-lg">👥</span>
+                      Patients
+                    </span>
                   </Link>
                   <Link
                     to="/consultations"
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all transform hover:scale-105 ${
                       isActive('/consultations')
-                        ? 'bg-emerald-700'
-                        : 'hover:bg-emerald-500'
+                        ? 'bg-white/30 backdrop-blur-md shadow-lg'
+                        : 'hover:bg-white/20 backdrop-blur-sm'
                     }`}
                   >
-                    🩺 Consultations
+                    <span className="flex items-center gap-2">
+                      <span className="text-lg">🩺</span>
+                      Consultations
+                    </span>
                   </Link>
                   <Link
                     to="/rapports"
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all transform hover:scale-105 ${
                       isActive('/rapports')
-                        ? 'bg-emerald-700'
-                        : 'hover:bg-emerald-500'
+                        ? 'bg-white/30 backdrop-blur-md shadow-lg'
+                        : 'hover:bg-white/20 backdrop-blur-sm'
                     }`}
                   >
-                    📊 Rapports
+                    <span className="flex items-center gap-2">
+                      <span className="text-lg">📊</span>
+                      Rapports
+                    </span>
                   </Link>
                 </nav>
               )}
@@ -66,22 +78,32 @@ export const Layout = ({ children }: LayoutProps) => {
         </div>
       </header>
 
-      {/* Main content */}
+      {/* Main content avec padding et background amélioré */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
+        <div className="animate-fadeIn">
+          {children}
+        </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center text-sm text-gray-500">
-            <p>© 2025 Santé Rurale</p>
-            <div className="flex space-x-4">
-              <span className="flex items-center">
-                <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
-                  navigator.onLine ? 'bg-green-500' : 'bg-red-500'
+      {/* Footer moderne avec gradient */}
+      <footer className="bg-gradient-to-r from-gray-50 to-gray-100 border-t border-gray-200 mt-auto backdrop-blur-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🏥</span>
+              <div>
+                <p className="text-sm font-semibold text-gray-700">© 2025 Santé Rurale</p>
+                <p className="text-xs text-gray-500">Plateforme de gestion de santé</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-gray-200">
+                <span className={`inline-block w-2 h-2 rounded-full animate-pulse ${
+                  navigator.onLine ? 'bg-green-500' : 'bg-orange-500'
                 }`}></span>
-                {navigator.onLine ? 'En ligne' : 'Hors-ligne'}
+                <span className="text-sm font-medium text-gray-700">
+                  {navigator.onLine ? '✓ En ligne' : '⚠ Hors-ligne'}
+                </span>
               </span>
             </div>
           </div>
