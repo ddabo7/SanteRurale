@@ -17,7 +17,7 @@ interface SyncContextValue {
   forceSync: () => Promise<void>
 }
 
-const SyncContext = createContext<SyncContextValue | undefined>(undefined)
+export const SyncContext = createContext<SyncContextValue | undefined>(undefined)
 
 export function SyncProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()

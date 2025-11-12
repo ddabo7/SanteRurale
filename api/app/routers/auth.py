@@ -347,6 +347,7 @@ async def login(login_data: LoginRequest, response: Response, db: AsyncSession =
             site_id=str(user.site_id),
             actif=user.actif,
             email_verified=user.email_verified,
+            avatar_url=user.avatar_url,
         ),
     )
 

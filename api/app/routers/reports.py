@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models import Condition, Encounter, Patient, User
+from app.models.base_models import Reference, ReferenceStatutEnum
 from app.schemas import ReportOverview, ReportPeriod, ReferenceStats, TopDiagnostic
 from app.security import get_current_user
 
@@ -147,13 +148,79 @@ async def get_overview(
         for row in top_diagnostics_raw
     ]
 
-    # 6. Statistiques de références (pour l'instant, on retourne des valeurs à 0)
-    # TODO: Implémenter quand le modèle Reference sera créé
+    # 6. Statistiques de références
+    # Total des références
+    total_references_query = select(func.count(Reference.id)).join(
+        Encounter, Reference.encounter_id == Encounter.id
+    ).where(
+        Encounter.date >= from_date,
+        Encounter.date <= to_date,
+        Encounter.deleted_at == None,
+    )
+    if current_user.tenant_id:
+        total_references_query = total_references_query.where(Encounter.tenant_id == current_user.tenant_id)
+    if site_id:
+        total_references_query = total_references_query.where(Encounter.site_id == site_id)
+
+    result = await db.execute(total_references_query)
+    total_references = result.scalar() or 0
+
+    # Références confirmées
+    confirmes_query = select(func.count(Reference.id)).join(
+        Encounter, Reference.encounter_id == Encounter.id
+    ).where(
+        Encounter.date >= from_date,
+        Encounter.date <= to_date,
+        Encounter.deleted_at == None,
+        Reference.statut == ReferenceStatutEnum.confirme,
+    )
+    if current_user.tenant_id:
+        confirmes_query = confirmes_query.where(Encounter.tenant_id == current_user.tenant_id)
+    if site_id:
+        confirmes_query = confirmes_query.where(Encounter.site_id == site_id)
+
+    result = await db.execute(confirmes_query)
+    confirmes = result.scalar() or 0
+
+    # Références complétées
+    completes_query = select(func.count(Reference.id)).join(
+        Encounter, Reference.encounter_id == Encounter.id
+    ).where(
+        Encounter.date >= from_date,
+        Encounter.date <= to_date,
+        Encounter.deleted_at == None,
+        Reference.statut == ReferenceStatutEnum.complete,
+    )
+    if current_user.tenant_id:
+        completes_query = completes_query.where(Encounter.tenant_id == current_user.tenant_id)
+    if site_id:
+        completes_query = completes_query.where(Encounter.site_id == site_id)
+
+    result = await db.execute(completes_query)
+    completes = result.scalar() or 0
+
+    # Références en attente
+    en_attente_query = select(func.count(Reference.id)).join(
+        Encounter, Reference.encounter_id == Encounter.id
+    ).where(
+        Encounter.date >= from_date,
+        Encounter.date <= to_date,
+        Encounter.deleted_at == None,
+        Reference.statut == ReferenceStatutEnum.en_attente,
+    )
+    if current_user.tenant_id:
+        en_attente_query = en_attente_query.where(Encounter.tenant_id == current_user.tenant_id)
+    if site_id:
+        en_attente_query = en_attente_query.where(Encounter.site_id == site_id)
+
+    result = await db.execute(en_attente_query)
+    en_attente = result.scalar() or 0
+
     references = ReferenceStats(
-        total=0,
-        confirmes=0,
-        completes=0,
-        en_attente=0,
+        total=total_references,
+        confirmes=confirmes,
+        completes=completes,
+        en_attente=en_attente,
     )
 
     return ReportOverview(

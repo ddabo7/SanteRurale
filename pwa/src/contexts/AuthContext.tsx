@@ -65,6 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               role: session.role,
               site_id: session.site_id,
               telephone: session.telephone,
+              avatar_url: session.avatar_url,
             })
           )
         }
@@ -96,6 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         telephone: normalizedUser.telephone,
         role: normalizedUser.role,
         site_id: normalizedUser.site_id,
+        avatar_url: normalizedUser.avatar_url,
       })
 
       setUser(normalizedUser)
@@ -143,6 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           prenom: updatedUser.prenom,
           telephone: updatedUser.telephone,
           email: updatedUser.email,
+          avatar_url: updatedUser.avatar_url,
         })
       }
     } catch (error) {

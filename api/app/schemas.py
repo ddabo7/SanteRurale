@@ -225,10 +225,10 @@ class EncounterBase(BaseSchema):
     patient_id: UUID
     encounter_date: date = Field(default_factory=lambda: datetime.now().date(), serialization_alias="date", validation_alias="date")
     motif: Optional[str] = None
-    temperature: Optional[Decimal] = Field(None, ge=30.0, le=45.0)
+    temperature: Optional[Decimal] = Field(None, ge=25.0, le=45.0)  # Permettre hypothermie
     pouls: Optional[int] = Field(None, ge=20, le=300)
     pression_systolique: Optional[int] = Field(None, ge=50, le=250)
-    pression_diastolique: Optional[int] = Field(None, ge=30, le=150)
+    pression_diastolique: Optional[int] = Field(None, ge=20, le=150)  # Permettre valeurs basses
     poids: Optional[Decimal] = Field(None, ge=0.5, le=300)
     taille: Optional[int] = Field(None, ge=30, le=250)
     notes: Optional[str] = None
@@ -252,7 +252,7 @@ class EncounterCreate(EncounterBase):
 
 class EncounterUpdate(BaseModel):
     motif: Optional[str] = None
-    temperature: Optional[Decimal] = Field(None, ge=30.0, le=45.0)
+    temperature: Optional[Decimal] = Field(None, ge=25.0, le=45.0)
     pouls: Optional[int] = Field(None, ge=20, le=300)
     pression_systolique: Optional[int] = None
     pression_diastolique: Optional[int] = None

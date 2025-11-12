@@ -17,6 +17,14 @@ class SexeEnum(str, enum.Enum):
     F = "F"
 
 
+# Enum pour le statut des références
+class ReferenceStatutEnum(str, enum.Enum):
+    en_attente = "en_attente"
+    confirme = "confirme"
+    complete = "complete"
+    annule = "annule"
+
+
 class Base(DeclarativeBase):
     """Classe de base pour tous les modèles"""
     pass
@@ -200,6 +208,7 @@ class Encounter(Base, TimestampMixin):
     conditions: Mapped[list["Condition"]] = relationship(back_populates="encounter", cascade="all, delete-orphan")
     medication_requests: Mapped[list["MedicationRequest"]] = relationship(back_populates="encounter", cascade="all, delete-orphan")
     procedures: Mapped[list["Procedure"]] = relationship(back_populates="encounter", cascade="all, delete-orphan")
+    references: Mapped[list["Reference"]] = relationship(back_populates="encounter", cascade="all, delete-orphan")
 
 
 class Condition(Base):
@@ -261,3 +270,20 @@ class Procedure(Base):
 
     # Relation
     encounter: Mapped["Encounter"] = relationship(back_populates="procedures")
+
+
+class Reference(Base, TimestampMixin):
+    """Modèle pour les références/évacuations"""
+    __tablename__ = "references"
+
+    id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid_module.uuid4)
+    encounter_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("encounters.id"), nullable=False)
+
+    destination: Mapped[str] = mapped_column(String(300), nullable=False)
+    raison: Mapped[str] = mapped_column(Text, nullable=False)
+    statut: Mapped[ReferenceStatutEnum] = mapped_column(SQLEnum(ReferenceStatutEnum), nullable=False, default=ReferenceStatutEnum.en_attente)
+    eta: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    notes: Mapped[str | None] = mapped_column(Text)
+
+    # Relation
+    encounter: Mapped["Encounter"] = relationship(back_populates="references")

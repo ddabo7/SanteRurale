@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { encountersService, patientsService, conditionsService, medicationsService, proceduresService } from '../services/api'
+import { encountersService, patientsService, conditionsService, medicationsService, proceduresService, referencesService } from '../services/api'
 import { FileUpload } from '../components/FileUpload'
 import { FileList } from '../components/FileList'
 
@@ -31,6 +31,14 @@ interface Procedure {
   type: string
   description?: string
   resultat?: string
+}
+
+interface Reference {
+  destination: string
+  raison: string
+  statut: 'en_attente' | 'confirme' | 'complete' | 'annule'
+  eta?: string
+  notes?: string
 }
 
 export const ConsultationFormPage = () => {
@@ -65,6 +73,16 @@ export const ConsultationFormPage = () => {
   const [conditions, setConditions] = useState<Condition[]>([])
   const [medications, setMedications] = useState<Medication[]>([])
   const [procedures, setProcedures] = useState<Procedure[]>([])
+
+  // Référence/Évacuation
+  const [hasReference, setHasReference] = useState(false)
+  const [reference, setReference] = useState<Reference>({
+    destination: '',
+    raison: '',
+    statut: 'en_attente',
+    eta: '',
+    notes: '',
+  })
 
   useEffect(() => {
     loadPatients()
@@ -145,8 +163,20 @@ export const ConsultationFormPage = () => {
         }
       }
 
-      // Ne pas rediriger immédiatement - permettre l'upload
-      // navigate('/consultations')
+      // Ajouter la référence/évacuation si nécessaire
+      if (hasReference && reference.destination.trim() && reference.raison.trim()) {
+        await referencesService.create({
+          encounter_id: encounter.id,
+          destination: reference.destination,
+          raison: reference.raison,
+          statut: reference.statut,
+          eta: reference.eta || undefined,
+          notes: reference.notes || undefined,
+        })
+      }
+
+      // Rediriger vers la liste des consultations
+      navigate('/consultations')
     } catch (error: any) {
       console.error('Erreur sauvegarde consultation:', error)
       if (error.response?.data?.detail) {
@@ -555,6 +585,99 @@ export const ConsultationFormPage = () => {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Référence/Évacuation */}
+          <div className="border-t pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">🚑 Référence / Évacuation</h3>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={hasReference}
+                  onChange={(e) => setHasReference(e.target.checked)}
+                  className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Patient à évacuer/référer
+                </span>
+              </label>
+            </div>
+
+            {hasReference && (
+              <div className="space-y-4 bg-red-50 p-4 rounded-lg border border-red-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Destination <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={reference.destination}
+                      onChange={(e) => setReference({ ...reference, destination: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      placeholder="Ex: Hôpital de Bamako, Centre de santé de référence..."
+                      required={hasReference}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Statut
+                    </label>
+                    <select
+                      value={reference.statut}
+                      onChange={(e) => setReference({ ...reference, statut: e.target.value as Reference['statut'] })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    >
+                      <option value="en_attente">En attente</option>
+                      <option value="confirme">Confirmée</option>
+                      <option value="complete">Complétée</option>
+                      <option value="annule">Annulée</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Raison de l'évacuation <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={reference.raison}
+                    onChange={(e) => setReference({ ...reference, raison: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    placeholder="Ex: Complications nécessitant chirurgie, Accouchement à risque..."
+                    required={hasReference}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Heure d'arrivée estimée (ETA)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={reference.eta}
+                    onChange={(e) => setReference({ ...reference, eta: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Notes complémentaires
+                  </label>
+                  <textarea
+                    value={reference.notes}
+                    onChange={(e) => setReference({ ...reference, notes: e.target.value })}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    placeholder="Informations supplémentaires, contact du centre de destination..."
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Notes */}

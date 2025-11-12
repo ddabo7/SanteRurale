@@ -50,6 +50,14 @@ interface EncounterDetails {
     description?: string
     resultat?: string
   }>
+  reference?: {
+    id: string
+    destination: string
+    raison: string
+    statut: 'en_attente' | 'confirme' | 'complete' | 'annule'
+    eta?: string
+    notes?: string
+  }
   created_at: string
   updated_at: string
 }
@@ -384,6 +392,51 @@ export const ConsultationDetailsPage = () => {
             </div>
           )}
 
+          {/* Référence/Évacuation */}
+          {encounter.reference && (
+            <div className="bg-red-50 border-2 border-red-200 rounded-lg shadow p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <span className="mr-2">🚑</span>
+                Référence / Évacuation
+                <span className={`ml-auto text-sm px-3 py-1 rounded-full ${
+                  encounter.reference.statut === 'complete' ? 'bg-green-100 text-green-800' :
+                  encounter.reference.statut === 'confirme' ? 'bg-blue-100 text-blue-800' :
+                  encounter.reference.statut === 'annule' ? 'bg-gray-100 text-gray-800' :
+                  'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {encounter.reference.statut === 'en_attente' ? 'En attente' :
+                   encounter.reference.statut === 'confirme' ? 'Confirmée' :
+                   encounter.reference.statut === 'complete' ? 'Complétée' :
+                   'Annulée'}
+                </span>
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm text-gray-500 mb-1">Destination</div>
+                  <div className="font-medium text-gray-900">{encounter.reference.destination}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-500 mb-1">Raison</div>
+                  <div className="font-medium text-gray-900">{encounter.reference.raison}</div>
+                </div>
+                {encounter.reference.eta && (
+                  <div>
+                    <div className="text-sm text-gray-500 mb-1">Heure d'arrivée estimée</div>
+                    <div className="font-medium text-gray-900">
+                      {new Date(encounter.reference.eta).toLocaleString('fr-FR')}
+                    </div>
+                  </div>
+                )}
+                {encounter.reference.notes && (
+                  <div className="md:col-span-2">
+                    <div className="text-sm text-gray-500 mb-1">Notes</div>
+                    <div className="text-gray-700">{encounter.reference.notes}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Notes */}
           {encounter.notes && (
             <div className="bg-white rounded-lg shadow p-6">
@@ -394,8 +447,8 @@ export const ConsultationDetailsPage = () => {
 
           {/* Documents médicaux */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">📎 Documents médicaux</h2>
-            <FileList encounterId={encounter.id} />
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">📎 Documents médicaux du patient</h2>
+            <FileList patientId={encounter.patient_id} />
           </div>
         </div>
       </div>

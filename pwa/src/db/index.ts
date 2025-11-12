@@ -153,6 +153,7 @@ export interface UserSession {
   telephone?: string
   role: string
   site_id: string
+  avatar_url?: string
 }
 
 // ===========================================================================

@@ -119,9 +119,9 @@ class SyncService {
       clearInterval(this.syncInterval)
     }
 
-    // Sync immédiate au démarrage (mais seulement si on a un token)
+    // Sync immédiate au démarrage (mais seulement si on a une session)
     db.user_session.toCollection().first().then(session => {
-      if (session?.access_token) {
+      if (session?.id) {
         this.sync()
       }
     })
@@ -168,6 +168,15 @@ class SyncService {
       errors: [],
     }
 
+    // Timeout de sécurité: forcer reset après 60 secondes
+    const timeoutId = setTimeout(() => {
+      if (this.isSyncing) {
+        console.error('Sync timeout after 60s, forcing reset')
+        this.isSyncing = false
+        this.notifyStatusChange()
+      }
+    }, 60000)
+
     try {
       // 1. Pousser les modifications locales (outbox)
       const pushResult = await this.pushLocalChanges()
@@ -197,6 +206,7 @@ class SyncService {
       result.success = false
       result.errors.push(error.message)
     } finally {
+      clearTimeout(timeoutId)
       this.isSyncing = false
       this.notifyStatusChange()
     }
@@ -299,14 +309,21 @@ class SyncService {
     const result: SyncResult = { success: true, synced: 0, failed: 0, errors: [] }
 
     try {
-      // Récupérer le curseur de dernière sync
-      const cursor = await db.getLastSyncCursor()
+      // Vérifier si on a déjà synchronisé récemment (éviter les syncs trop fréquentes)
+      const lastSyncMeta = await db.sync_meta.get('last_sync_time')
+      if (lastSyncMeta) {
+        const lastSync = new Date(lastSyncMeta.value)
+        const timeSinceLastSync = Date.now() - lastSync.getTime()
+        const minSyncInterval = 30000 // 30 secondes minimum entre deux syncs
 
-      // Pour le moment, on fait un pull simple de toutes les données
-      // TODO: Implémenter un vrai système de curseur côté serveur
+        if (timeSinceLastSync < minSyncInterval) {
+          console.log(`Skipping pull, last sync was ${Math.round(timeSinceLastSync / 1000)}s ago`)
+          return result
+        }
+      }
 
-      // Pull patients
-      const patientsResponse = await patientsService.list({ limit: 200 })
+      // Pull patients (limité à 50 pour éviter les timeouts)
+      const patientsResponse = await patientsService.list({ limit: 50 })
       for (const patient of patientsResponse.data || []) {
         await db.patients.put({
           ...patient,
@@ -315,12 +332,12 @@ class SyncService {
         result.synced++
       }
 
-      // Pull encounters (derniers 30 jours)
-      const thirtyDaysAgo = new Date()
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      // Pull encounters (derniers 7 jours seulement pour réduire la charge)
+      const sevenDaysAgo = new Date()
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
       const encountersResponse = await encountersService.list({
-        from_date: thirtyDaysAgo.toISOString().split('T')[0],
+        from_date: sevenDaysAgo.toISOString().split('T')[0],
       })
 
       for (const encounter of encountersResponse || []) {
@@ -335,6 +352,7 @@ class SyncService {
       console.error('Pull error:', error)
       result.failed++
       result.errors.push(error.message)
+      // Ne pas relancer l'erreur, juste la logger
     }
 
     return result

@@ -92,15 +92,14 @@ export const ProfilePage = () => {
         const dataUrl = reader.result as string
 
         // Mettre à jour le profil avec la nouvelle photo
-        await authService.updateProfile({ avatar_url: dataUrl })
+        const response = await authService.updateProfile({ avatar_url: dataUrl })
 
         setSuccess('Photo de profil mise à jour avec succès')
 
-        // Mettre à jour le contexte utilisateur
-        if (updateUser) {
+        // Mettre à jour le contexte utilisateur avec la réponse du serveur
+        if (updateUser && response.user) {
           updateUser({
-            ...user,
-            avatar_url: dataUrl,
+            avatar_url: response.user.avatar_url,
           })
         }
       }
