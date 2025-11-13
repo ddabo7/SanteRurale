@@ -110,6 +110,14 @@ export const UserMenu = () => {
                   <span className="mr-3">📊</span>
                   Dashboard Admin
                 </Link>
+                <Link
+                  to="/admin/feedbacks"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 transition-colors font-medium"
+                >
+                  <span className="mr-3">💬</span>
+                  Feedbacks Utilisateurs
+                </Link>
               </>
             )}
 

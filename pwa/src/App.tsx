@@ -19,6 +19,8 @@ import { RapportsPage } from './pages/RapportsPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { SubscriptionPage } from './pages/SubscriptionPage'
 import { AdminDashboardPage } from './pages/AdminDashboardPage'
+import { AdminFeedbackPage } from './pages/AdminFeedbackPage'
+import { FeedbackPage } from './pages/FeedbackPage'
 
 function App() {
   return (
@@ -153,6 +155,24 @@ function App() {
                 <Layout>
                   <AdminDashboardPage />
                 </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/feedback"
+            element={
+              <ProtectedRoute>
+                <FeedbackPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/feedbacks"
+            element={
+              <ProtectedRoute>
+                <AdminFeedbackPage />
               </ProtectedRoute>
             }
           />

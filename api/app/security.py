@@ -128,3 +128,20 @@ async def get_current_user(
             raise credentials_exception
 
         return user
+
+
+async def get_current_admin_user(
+    current_user = Depends(get_current_user),
+):
+    """
+    Récupère l'utilisateur actuellement authentifié et vérifie qu'il est admin
+
+    Raises:
+        HTTPException: Si l'utilisateur n'est pas admin
+    """
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Accès réservé aux administrateurs"
+        )
+    return current_user

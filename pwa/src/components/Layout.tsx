@@ -97,6 +97,15 @@ export const Layout = ({ children }: LayoutProps) => {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              {isAuthenticated && (
+                <Link
+                  to="/feedback"
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full shadow-md hover:shadow-lg transition-all transform hover:scale-105"
+                >
+                  <span>💬</span>
+                  <span className="text-sm font-medium">Feedback</span>
+                </Link>
+              )}
               <span className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-gray-200">
                 <span className={`inline-block w-2 h-2 rounded-full animate-pulse ${
                   navigator.onLine ? 'bg-green-500' : 'bg-orange-500'
