@@ -92,8 +92,8 @@ export const Layout = ({ children }: LayoutProps) => {
             <div className="flex items-center gap-2">
               <span className="text-2xl">🏥</span>
               <div>
-                <p className="text-sm font-semibold text-gray-700">© 2025 Santé Rurale</p>
-                <p className="text-xs text-gray-500">Plateforme de gestion de santé</p>
+                <p className="text-sm font-semibold text-gray-700">© 2025 Santé Rurale. Tous droits réservés.</p>
+                <p className="text-xs text-gray-500">Plateforme de gestion de santé en zones rurales</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
