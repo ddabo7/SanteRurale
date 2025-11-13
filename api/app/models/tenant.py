@@ -45,7 +45,7 @@ class Plan(Base):
 
     # Quotas et limitations
     max_users = Column(Integer)  # null = illimité
-    max_patients_per_month = Column(Integer)  # null = illimité
+    max_patients_total = Column(Integer)  # Nombre total de patients maximum (null = illimité)
     max_sites = Column(Integer, default=1)
     max_storage_gb = Column(Integer, default=5)
 

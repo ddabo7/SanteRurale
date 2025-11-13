@@ -12,8 +12,10 @@ from sqlalchemy.orm import selectinload
 
 from app.database import get_db
 from app.models import Patient, User, Site
+from app.models.tenant import Tenant
 from app.schemas import PatientCreate, PatientUpdate, PatientOut, UserRole
 from app.security import get_current_user
+from app.dependencies.tenant import check_quota, get_current_tenant
 
 router = APIRouter(prefix="/patients", tags=["Patients"])
 
@@ -193,6 +195,7 @@ async def get_patient(
 async def create_patient(
     patient_data: PatientCreate,
     current_user: User = Depends(get_current_user),
+    current_tenant: Tenant = Depends(get_current_tenant),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -203,6 +206,17 @@ async def create_patient(
     - 2025: année
     - 0001: numéro séquentiel
     """
+    # Vérifier le quota de patients TOTAL (pas par mois!)
+    total_patients_result = await db.execute(
+        select(func.count(Patient.id))
+        .where(Patient.tenant_id == current_tenant.id)
+        .where(Patient.deleted_at.is_(None))
+    )
+    total_patients = total_patients_result.scalar()
+
+    # Vérifier si le tenant peut créer un nouveau patient
+    await check_quota(current_tenant, "patients_total", total_patients, db)
+
     # Générer le matricule basé sur le village
     matricule = await generate_matricule(db, patient_data.village, datetime.now().year)
 
