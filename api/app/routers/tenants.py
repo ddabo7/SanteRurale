@@ -79,13 +79,14 @@ class PlanResponse(BaseModel):
     price_monthly: float
     price_yearly: Optional[float]
     max_users: Optional[int]
-    max_patients_per_month: Optional[int]
+    max_patients_total: Optional[int] = Field(None, serialization_alias='max_patients_per_month')
     max_sites: Optional[int]
     max_storage_gb: Optional[int]
     features: List[str]
 
     class Config:
         from_attributes = True
+        populate_by_name = True
 
 
 class UsageStatsResponse(BaseModel):
@@ -183,7 +184,7 @@ async def get_my_subscription(
             price_monthly=float(subscription.plan.price_monthly),
             price_yearly=float(subscription.plan.price_yearly) if subscription.plan.price_yearly else None,
             max_users=subscription.plan.max_users,
-            max_patients_per_month=subscription.plan.max_patients_per_month,
+            max_patients_total=subscription.plan.max_patients_total,
             max_sites=subscription.plan.max_sites,
             max_storage_gb=subscription.plan.max_storage_gb,
             features=subscription.plan.features if subscription.plan.features else []
@@ -214,7 +215,7 @@ async def get_my_usage(
     if subscription and subscription.plan:
         quotas = {
             "max_users": subscription.plan.max_users,
-            "max_patients_per_month": subscription.plan.max_patients_per_month,
+            "max_patients_per_month": subscription.plan.max_patients_total,
             "max_sites": subscription.plan.max_sites,
             "max_storage_gb": subscription.plan.max_storage_gb,
         }
@@ -329,7 +330,7 @@ async def upgrade_subscription(
             price_monthly=float(subscription_with_plan.plan.price_monthly),
             price_yearly=float(subscription_with_plan.plan.price_yearly) if subscription_with_plan.plan.price_yearly else None,
             max_users=subscription_with_plan.plan.max_users,
-            max_patients_per_month=subscription_with_plan.plan.max_patients_per_month,
+            max_patients_total=subscription_with_plan.plan.max_patients_total,
             max_sites=subscription_with_plan.plan.max_sites,
             max_storage_gb=subscription_with_plan.plan.max_storage_gb,
             features=subscription_with_plan.plan.features if subscription_with_plan.plan.features else []

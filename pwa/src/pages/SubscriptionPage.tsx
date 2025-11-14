@@ -49,12 +49,13 @@ export const SubscriptionPage = () => {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
+  const [showPlansModal, setShowPlansModal] = useState(false)
   const [showSubscribeModal, setShowSubscribeModal] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null)
+  const [activeTab, setActiveTab] = useState<'overview' | 'usage'>('overview')
 
   const fetchData = async () => {
     try {
-      // Les cookies HttpOnly sont automatiquement envoyés avec credentials: 'include'
       const headers = {
         'Content-Type': 'application/json',
       }
@@ -79,6 +80,11 @@ export const SubscriptionPage = () => {
       if (subResponse.ok) {
         const subData = await subResponse.json()
         setSubscription(subData)
+      } else if (subResponse.status === 401 || subResponse.status === 403) {
+        setError('Vous devez être connecté pour accéder à cette page')
+        return
+      } else if (subResponse.status === 404) {
+        console.log('Aucun abonnement actif')
       }
 
       // Récupérer les statistiques d'utilisation
@@ -98,7 +104,6 @@ export const SubscriptionPage = () => {
 
         if (storageResponse.ok) {
           const storageData = await storageResponse.json()
-          // Fusionner les stats de stockage avec les stats d'utilisation
           usageData.storage_used_mb = Math.round(storageData.total_gb * 1024)
           usageData.quotas.max_storage_gb = storageData.quota_gb
         }
@@ -139,14 +144,13 @@ export const SubscriptionPage = () => {
         'Content-Type': 'application/json',
       }
 
-      // Si on a déjà un abonnement, on change de plan (upgrade)
       if (subscription) {
         const response = await fetch(
           `${API_BASE_URL}/tenants/me/subscription/upgrade?new_plan_code=${selectedPlan.code}`,
           {
             method: 'POST',
             headers,
-            credentials: 'include', // Envoie automatiquement les cookies
+            credentials: 'include',
           }
         )
 
@@ -157,11 +161,10 @@ export const SubscriptionPage = () => {
 
         setSuccess(`Votre plan a été changé avec succès vers ${selectedPlan.name} !`)
       } else {
-        // Sinon, on souscrit à un nouveau plan
         const response = await fetch(`${API_BASE_URL}/tenants/me/subscribe`, {
           method: 'POST',
           headers,
-          credentials: 'include', // Envoie automatiquement les cookies
+          credentials: 'include',
           body: JSON.stringify({ plan_code: selectedPlan.code }),
         })
 
@@ -174,6 +177,7 @@ export const SubscriptionPage = () => {
       }
 
       setShowSubscribeModal(false)
+      setShowPlansModal(false)
       setSelectedPlan(null)
       await fetchData()
     } catch (err: any) {
@@ -198,12 +202,12 @@ export const SubscriptionPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // Envoie automatiquement les cookies
+        credentials: 'include',
       })
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.detail || 'Erreur lors de l\'annulation')
+        throw new Error(errorData.detail || "Erreur lors de l'annulation")
       }
 
       setSuccess('Abonnement annulé avec succès')
@@ -215,346 +219,401 @@ export const SubscriptionPage = () => {
     }
   }
 
+  const getUsagePercentage = (current: number, max: number | null) => {
+    if (!max) return 0
+    return Math.min((current / max) * 100, 100)
+  }
+
+  const getUsageColor = (percentage: number) => {
+    if (percentage >= 90) return 'bg-red-500'
+    if (percentage >= 70) return 'bg-yellow-500'
+    return 'bg-emerald-500'
+  }
 
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="text-gray-500">Chargement...</div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Gestion de l'abonnement</h1>
-        {subscription?.plan.code === 'free' && (
-          <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
-            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-            Phase Pilote - Gratuit
-          </span>
-        )}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Abonnement</h1>
+            <p className="mt-2 text-gray-600">Gérez votre plan et suivez votre utilisation</p>
+          </div>
+          {subscription?.plan.code === 'free' && (
+            <button
+              onClick={() => setShowPlansModal(true)}
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+              Passer à un plan payant
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Messages */}
       {success && (
-        <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
-          {success}
+        <div className="mb-6 bg-green-50 border-l-4 border-green-400 p-4 rounded-r-lg">
+          <div className="flex">
+            <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <p className="ml-3 text-sm text-green-700 font-medium">{success}</p>
+          </div>
         </div>
       )}
 
       {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
-          {error}
+        <div className="mb-6 bg-red-50 border-l-4 border-red-400 p-4 rounded-r-lg">
+          <div className="flex">
+            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <p className="ml-3 text-sm text-red-700 font-medium">{error}</p>
+          </div>
         </div>
       )}
 
-      {/* Abonnement actuel */}
-      <div className="bg-white rounded-lg shadow mb-6">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Abonnement actuel</h2>
-        </div>
-        <div className="p-6">
-          {subscription ? (
-            <div className="space-y-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-2xl font-bold text-emerald-600">{subscription.plan.name}</h3>
-                  <p className="text-gray-600 mt-1">{subscription.plan.description}</p>
-                  <div className="mt-4 flex items-baseline space-x-2">
-                    <span className="text-3xl font-bold text-gray-900">
-                      {formatCurrency(subscription.plan.price_monthly, currency)}
-                    </span>
-                    <span className="text-gray-500">/mois</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span
-                    className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                      subscription.status === 'active'
-                        ? 'bg-green-100 text-green-800'
-                        : subscription.status === 'canceled'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}
-                  >
-                    {subscription.status === 'active' ? 'Actif' : subscription.status}
-                  </span>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Depuis le {new Date(subscription.start_date).toLocaleDateString('fr-FR')}
-                  </p>
-                  {subscription.end_date && (
-                    <p className="text-sm text-gray-500">
-                      Jusqu'au {new Date(subscription.end_date).toLocaleDateString('fr-FR')}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {subscription.status === 'active' && !subscription.canceled_at && (
-                <button
-                  onClick={handleCancel}
-                  disabled={actionLoading}
-                  className="mt-4 text-red-600 hover:text-red-700 font-medium disabled:opacity-50"
-                >
-                  Annuler l'abonnement
-                </button>
-              )}
+      {/* Tabs */}
+      <div className="mb-6 border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+              activeTab === 'overview'
+                ? 'border-emerald-600 text-emerald-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Vue d'ensemble
             </div>
-          ) : (
-            <p className="text-gray-500">Aucun abonnement actif</p>
-          )}
-        </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('usage')}
+            className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+              activeTab === 'usage'
+                ? 'border-emerald-600 text-emerald-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Utilisation
+            </div>
+          </button>
+        </nav>
       </div>
 
-      {/* Statistiques d'utilisation */}
-      {usage && subscription && (
-        <div className="bg-white rounded-lg shadow mb-6">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Utilisation</h2>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600">Utilisateurs actifs</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {usage.active_users}
-                  {usage.quotas.max_users && (
-                    <span className="text-sm text-gray-500 font-normal">
-                      {' '}
-                      / {usage.quotas.max_users}
+      {/* Overview Tab */}
+      {activeTab === 'overview' && subscription && (
+        <div className="space-y-6">
+          {/* Current Plan Card */}
+          <div className="bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 rounded-2xl shadow-xl overflow-hidden">
+            <div className="p-8 text-white">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-full p-3">
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-white/80">Plan actuel</span>
+                      <h2 className="text-3xl font-bold">{subscription.plan.name}</h2>
+                    </div>
+                  </div>
+
+                  <p className="text-white/90 text-lg mb-6">{subscription.plan.description}</p>
+
+                  <div className="flex items-baseline space-x-3">
+                    <span className="text-5xl font-bold">{formatCurrency(subscription.plan.price_monthly, currency)}</span>
+                    <span className="text-xl text-white/80">/mois</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-end space-y-3">
+                  <span
+                    className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
+                      subscription.status === 'active'
+                        ? 'bg-white text-emerald-600'
+                        : 'bg-white/20 backdrop-blur-sm text-white'
+                    }`}
+                  >
+                    {subscription.status === 'active' ? '✓ Actif' : subscription.status}
+                  </span>
+
+                  {subscription.plan.code === 'free' && (
+                    <span className="inline-flex items-center px-4 py-2 rounded-full text-xs font-medium bg-yellow-400 text-yellow-900">
+                      Phase Pilote
                     </span>
                   )}
-                </p>
+                </div>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600">Patients ce mois</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {usage.patients_this_month}
-                  {usage.quotas.max_patients_per_month && (
-                    <span className="text-sm text-gray-500 font-normal">
-                      {' '}
-                      / {usage.quotas.max_patients_per_month}
-                    </span>
-                  )}
-                </p>
+              {/* Quick Stats */}
+              <div className="mt-8 grid grid-cols-3 gap-4">
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                  <p className="text-white/70 text-sm">Utilisateurs</p>
+                  <p className="text-2xl font-bold mt-1">
+                    {subscription.plan.max_users === null ? '∞' : subscription.plan.max_users}
+                  </p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                  <p className="text-white/70 text-sm">Patients</p>
+                  <p className="text-2xl font-bold mt-1">
+                    {subscription.plan.max_patients_per_month === null ? '∞' : subscription.plan.max_patients_per_month}
+                  </p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                  <p className="text-white/70 text-sm">Stockage</p>
+                  <p className="text-2xl font-bold mt-1">{subscription.plan.max_storage_gb} GB</p>
+                </div>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600">Consultations ce mois</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {usage.encounters_this_month}
-                </p>
-              </div>
-
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600">Stockage</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {(usage.storage_used_mb / 1024).toFixed(1)} GB
-                  {usage.quotas.max_storage_gb && (
-                    <span className="text-sm text-gray-500 font-normal">
-                      {' '}
-                      / {usage.quotas.max_storage_gb} GB
-                    </span>
-                  )}
-                </p>
+              {/* Actions */}
+              <div className="mt-8 flex items-center space-x-4">
+                {subscription.plan.code === 'free' ? (
+                  <button
+                    onClick={() => setShowPlansModal(true)}
+                    className="bg-white text-emerald-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg"
+                  >
+                    Passer à un plan supérieur
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setShowPlansModal(true)}
+                      className="bg-white text-emerald-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+                    >
+                      Changer de plan
+                    </button>
+                    {subscription.status === 'active' && !subscription.canceled_at && (
+                      <button
+                        onClick={handleCancel}
+                        disabled={actionLoading}
+                        className="bg-white/10 backdrop-blur-sm text-white px-6 py-3 rounded-lg font-medium hover:bg-white/20 transition-colors disabled:opacity-50"
+                      >
+                        Annuler l'abonnement
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </div>
+
+          {/* Features */}
+          {subscription.plan.features && subscription.plan.features.length > 0 && (
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Fonctionnalités incluses</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {subscription.plan.features.map((feature, idx) => (
+                  <div key={idx} className="flex items-center space-x-2 text-gray-700">
+                    <svg className="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-sm">{feature}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Plans disponibles */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Plans disponibles</h2>
-        </div>
-        <div className="p-6">
-          {/* Bannière Phase Pilote */}
+      {/* Usage Tab */}
+      {activeTab === 'usage' && usage && (
+        <div className="space-y-6">
+          {/* Phase Pilote Warning */}
           {subscription?.plan.code === 'free' && (
-            <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-5">
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-400 rounded-r-xl p-6">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
-                  <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  <svg className="h-6 w-6 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <div className="ml-4 flex-1">
-                  <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                    🎯 Programme Pilote - Testez Gratuitement
+                  <h3 className="text-lg font-semibold text-amber-900 mb-2">
+                    Limitations du plan gratuit
                   </h3>
-                  <p className="text-blue-800 mb-3">
-                    Vous êtes dans le programme pilote avec des <strong>limites strictes</strong> pour tester le système.
-                    Passez à un plan payant en Phase 2 pour débloquer toutes les fonctionnalités.
+                  <p className="text-amber-800 mb-3">
+                    Vous êtes actuellement sur le plan pilote gratuit avec des quotas limités. Passez à un plan payant pour débloquer plus de capacités.
                   </p>
-                  <div className="text-sm text-blue-700">
-                    <p className="font-medium mb-2">⚠️ Limitations du plan gratuit :</p>
-                    <ul className="list-disc list-inside space-y-1 ml-2 mb-3">
-                      <li><strong>2 utilisateurs maximum</strong> (vs 5-20+ en payant)</li>
-                      <li><strong>50 patients/mois maximum</strong> (vs 200-illimité)</li>
-                      <li><strong>1 GB stockage</strong> (~500 photos, vs 10-200 GB)</li>
-                      <li><strong>1 site uniquement</strong> (vs multi-sites en Pro)</li>
-                      <li>Support communautaire uniquement (vs support prioritaire)</li>
-                    </ul>
-                    <p className="font-medium text-blue-900">
-                      💡 Passez au Plan Starter (50€/mois) pour : 5 utilisateurs, 200 patients/mois, 10 GB stockage
-                    </p>
-                  </div>
+                  <button
+                    onClick={() => setShowPlansModal(true)}
+                    className="inline-flex items-center px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-medium transition-colors"
+                  >
+                    Voir les plans
+                    <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {plans.map((plan) => (
-              <div
-                key={plan.id}
-                className={`border rounded-lg p-6 relative ${
-                  subscription?.plan.code === plan.code
-                    ? 'border-emerald-500 bg-emerald-50'
-                    : plan.price_monthly > 0 && subscription?.plan.code === 'free'
-                    ? 'border-gray-200 opacity-75'
-                    : 'border-gray-200'
-                }`}
-              >
-                {plan.price_monthly > 0 && subscription?.plan.code === 'free' && (
-                  <div className="absolute top-3 right-3">
-                    <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-200 text-gray-700">
-                      Phase 2
-                    </span>
+          {/* Usage Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Utilisateurs */}
+            <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-blue-100 rounded-lg p-3">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
                   </div>
-                )}
-                <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
-                <p className="text-gray-600 mt-2 text-sm">{plan.description}</p>
-
-                <div className="mt-4 flex items-baseline space-x-2">
-                  <span className="text-3xl font-bold text-gray-900">
-                    {formatCurrency(plan.price_monthly, currency)}
-                  </span>
-                  <span className="text-gray-500">/mois</span>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Utilisateurs actifs</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {usage.active_users}
+                      {usage.quotas.max_users && (
+                        <span className="text-base text-gray-500 font-normal"> / {usage.quotas.max_users}</span>
+                      )}
+                    </p>
+                  </div>
                 </div>
-
-                <ul className="mt-6 space-y-3">
-                  {plan.max_users && (
-                    <li className="flex items-center text-sm text-gray-600">
-                      <svg
-                        className="w-5 h-5 text-emerald-500 mr-2"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      {plan.max_users === -1 ? 'Utilisateurs illimités' : `${plan.max_users} utilisateurs`}
-                    </li>
-                  )}
-                  {plan.max_patients_per_month && (
-                    <li className="flex items-center text-sm text-gray-600">
-                      <svg
-                        className="w-5 h-5 text-emerald-500 mr-2"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      {plan.max_patients_per_month === -1
-                        ? 'Patients illimités'
-                        : `${plan.max_patients_per_month} patients/mois`}
-                    </li>
-                  )}
-                  {plan.max_storage_gb && (
-                    <li className="flex items-center text-sm text-gray-600">
-                      <svg
-                        className="w-5 h-5 text-emerald-500 mr-2"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      {plan.max_storage_gb} GB stockage
-                    </li>
-                  )}
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center text-sm text-gray-600">
-                      <svg
-                        className="w-5 h-5 text-emerald-500 mr-2"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                {subscription?.plan.code === plan.code ? (
-                  <button
-                    disabled
-                    className="mt-6 w-full bg-gray-300 text-gray-600 px-4 py-2 rounded-lg font-medium cursor-not-allowed"
-                  >
-                    Plan actuel
-                  </button>
-                ) : plan.price_monthly > 0 && subscription?.plan.code === 'free' ? (
-                  // Plans payants désactivés pendant la phase pilote
-                  <button
-                    disabled
-                    className="mt-6 w-full bg-gray-300 text-gray-600 px-4 py-2 rounded-lg font-medium cursor-not-allowed"
-                    title="Disponible prochainement - Phase 2"
-                  >
-                    Bientôt disponible
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setSelectedPlan(plan)
-                      setShowSubscribeModal(true)
-                    }}
-                    disabled={actionLoading}
-                    className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium disabled:opacity-50 transition-colors"
-                  >
-                    {subscription ? 'Changer de plan' : 'Souscrire'}
-                  </button>
-                )}
               </div>
-            ))}
+              {usage.quotas.max_users && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                    <span>Utilisation</span>
+                    <span className="font-semibold">{getUsagePercentage(usage.active_users, usage.quotas.max_users).toFixed(0)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${getUsageColor(getUsagePercentage(usage.active_users, usage.quotas.max_users))}`}
+                      style={{ width: `${getUsagePercentage(usage.active_users, usage.quotas.max_users)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Patients */}
+            <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-green-100 rounded-lg p-3">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Patients ce mois</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {usage.patients_this_month}
+                      {usage.quotas.max_patients_per_month && (
+                        <span className="text-base text-gray-500 font-normal"> / {usage.quotas.max_patients_per_month}</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              {usage.quotas.max_patients_per_month && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                    <span>Utilisation</span>
+                    <span className="font-semibold">{getUsagePercentage(usage.patients_this_month, usage.quotas.max_patients_per_month).toFixed(0)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${getUsageColor(getUsagePercentage(usage.patients_this_month, usage.quotas.max_patients_per_month))}`}
+                      style={{ width: `${getUsagePercentage(usage.patients_this_month, usage.quotas.max_patients_per_month)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Consultations */}
+            <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-purple-100 rounded-lg p-3">
+                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Consultations ce mois</p>
+                    <p className="text-2xl font-bold text-gray-900">{usage.encounters_this_month}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Stockage */}
+            <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-orange-100 rounded-lg p-3">
+                    <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Stockage utilisé</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {(usage.storage_used_mb / 1024).toFixed(1)} GB
+                      {usage.quotas.max_storage_gb && (
+                        <span className="text-base text-gray-500 font-normal"> / {usage.quotas.max_storage_gb} GB</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              {usage.quotas.max_storage_gb && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                    <span>Utilisation</span>
+                    <span className="font-semibold">{getUsagePercentage(usage.storage_used_mb / 1024, usage.quotas.max_storage_gb).toFixed(0)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${getUsageColor(getUsagePercentage(usage.storage_used_mb / 1024, usage.quotas.max_storage_gb))}`}
+                      style={{ width: `${getUsagePercentage(usage.storage_used_mb / 1024, usage.quotas.max_storage_gb)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Modale de souscription */}
-      {showSubscribeModal && selectedPlan && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900">
-                {subscription ? 'Changer de plan' : 'Souscrire à un plan'}
-              </h2>
+      {/* Plans Modal */}
+      {showPlansModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full my-8">
+            {/* Modal Header */}
+            <div className="px-8 py-6 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-emerald-50 to-teal-50">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900">Choisissez votre plan</h2>
+                <p className="text-gray-600 mt-1">Sélectionnez le plan qui correspond à vos besoins</p>
+              </div>
               <button
-                onClick={() => {
-                  setShowSubscribeModal(false)
-                  setSelectedPlan(null)
-                }}
-                className="text-gray-400 hover:text-gray-600"
+                onClick={() => setShowPlansModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-white rounded-lg"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -562,87 +621,168 @@ export const SubscriptionPage = () => {
               </button>
             </div>
 
-            {/* Body */}
-            <div className="px-6 py-6">
-              {/* Résumé du plan sélectionné */}
-              <div className="bg-emerald-50 rounded-lg p-6 mb-6">
-                <h3 className="text-xl font-bold text-emerald-900 mb-2">{selectedPlan.name}</h3>
-                <p className="text-emerald-700 mb-4">{selectedPlan.description}</p>
-                <div className="flex items-baseline space-x-2">
-                  <span className="text-4xl font-bold text-emerald-900">
-                    {formatCurrency(selectedPlan.price_monthly, currency)}
-                  </span>
-                  <span className="text-emerald-700">/mois</span>
-                </div>
+            {/* Plans Grid */}
+            <div className="p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {plans.map((plan) => {
+                  const isCurrentPlan = subscription?.plan.code === plan.code
+                  const isPilot = subscription?.plan.code === 'free'
+                  const isPaidPlan = plan.price_monthly > 0
+                  const isDisabled = isPaidPlan && isPilot
 
-                {/* Fonctionnalités incluses */}
-                <div className="mt-6">
-                  <h4 className="font-semibold text-emerald-900 mb-3">Ce qui est inclus :</h4>
-                  <ul className="space-y-2">
-                    {selectedPlan.max_users && (
-                      <li className="flex items-center text-emerald-800">
-                        <svg className="w-5 h-5 text-emerald-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                        {selectedPlan.max_users === -1 ? 'Utilisateurs illimités' : `${selectedPlan.max_users} utilisateurs`}
-                      </li>
-                    )}
-                    {selectedPlan.max_patients_per_month && (
-                      <li className="flex items-center text-emerald-800">
-                        <svg className="w-5 h-5 text-emerald-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                        {selectedPlan.max_patients_per_month === -1 ? 'Patients illimités' : `${selectedPlan.max_patients_per_month} patients/mois`}
-                      </li>
-                    )}
-                    {selectedPlan.max_storage_gb && (
-                      <li className="flex items-center text-emerald-800">
-                        <svg className="w-5 h-5 text-emerald-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                        {selectedPlan.max_storage_gb} GB de stockage
-                      </li>
-                    )}
-                    {selectedPlan.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-center text-emerald-800">
-                        <svg className="w-5 h-5 text-emerald-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
+                  return (
+                    <div
+                      key={plan.id}
+                      className={`relative rounded-xl border-2 p-6 transition-all hover:shadow-xl ${
+                        isCurrentPlan
+                          ? 'border-emerald-500 bg-emerald-50 shadow-lg'
+                          : isDisabled
+                          ? 'border-gray-200 bg-gray-50 opacity-60'
+                          : 'border-gray-200 bg-white hover:border-emerald-300'
+                      }`}
+                    >
+                      {isCurrentPlan && (
+                        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                          <span className="bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                            PLAN ACTUEL
+                          </span>
+                        </div>
+                      )}
+
+                      {isPaidPlan && isPilot && (
+                        <div className="absolute -top-3 right-3">
+                          <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                            Phase 2
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="text-center mb-6">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                        <p className="text-sm text-gray-600 mb-4 h-10">{plan.description}</p>
+                        <div className="mb-4">
+                          <span className="text-4xl font-bold text-gray-900">
+                            {formatCurrency(plan.price_monthly, currency)}
+                          </span>
+                          <span className="text-gray-500 text-sm">/mois</span>
+                        </div>
+                      </div>
+
+                      <ul className="space-y-3 mb-6">
+                        {plan.max_users && (
+                          <li className="flex items-start text-sm">
+                            <svg className="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-gray-700">
+                              {plan.max_users === -1 ? 'Utilisateurs illimités' : `${plan.max_users} utilisateurs`}
+                            </span>
+                          </li>
+                        )}
+                        {plan.max_patients_per_month && (
+                          <li className="flex items-start text-sm">
+                            <svg className="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-gray-700">
+                              {plan.max_patients_per_month === -1 ? 'Patients illimités' : `${plan.max_patients_per_month} patients`}
+                            </span>
+                          </li>
+                        )}
+                        {plan.max_storage_gb && (
+                          <li className="flex items-start text-sm">
+                            <svg className="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-gray-700">{plan.max_storage_gb} GB stockage</span>
+                          </li>
+                        )}
+                      </ul>
+
+                      <button
+                        onClick={() => {
+                          if (!isCurrentPlan && !isDisabled) {
+                            setSelectedPlan(plan)
+                            setShowSubscribeModal(true)
+                          }
+                        }}
+                        disabled={isCurrentPlan || isDisabled || actionLoading}
+                        className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${
+                          isCurrentPlan
+                            ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                            : isDisabled
+                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-lg hover:shadow-xl'
+                        }`}
+                      >
+                        {isCurrentPlan
+                          ? 'Plan actuel'
+                          : isDisabled
+                          ? 'Bientôt disponible'
+                          : subscription
+                          ? 'Changer'
+                          : 'Choisir'}
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Subscription Confirmation Modal */}
+      {showSubscribeModal && selectedPlan && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-teal-50">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {subscription ? 'Changer de plan' : 'Confirmer votre abonnement'}
+              </h2>
+            </div>
+
+            {/* Body */}
+            <div className="px-8 py-6">
+              {/* Plan Summary */}
+              <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl p-6 mb-6 text-white">
+                <h3 className="text-2xl font-bold mb-2">{selectedPlan.name}</h3>
+                <p className="text-white/90 mb-4">{selectedPlan.description}</p>
+                <div className="flex items-baseline space-x-2">
+                  <span className="text-5xl font-bold">{formatCurrency(selectedPlan.price_monthly, currency)}</span>
+                  <span className="text-xl">/mois</span>
                 </div>
               </div>
 
-              {/* Information de changement de plan */}
+              {/* Change Info */}
               {subscription && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                   <div className="flex items-start">
-                    <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                     </svg>
-                    <div className="flex-1">
+                    <div>
                       <h4 className="font-semibold text-blue-900 mb-1">Changement de plan</h4>
                       <p className="text-sm text-blue-800">
                         Vous passez de <strong>{subscription.plan.name}</strong> à <strong>{selectedPlan.name}</strong>.
-                        Le changement prendra effet immédiatement et vous serez facturé au prorata.
+                        {selectedPlan.price_monthly > 0 && ' Le changement prendra effet immédiatement.'}
                       </p>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Note pour les plans gratuits */}
+              {/* Free Plan Note */}
               {selectedPlan.price_monthly === 0 && (
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
                   <p className="text-sm text-gray-700">
-                    <strong>Note :</strong> Ce plan est gratuit dans le cadre du programme pilote. Vous ne serez pas facturé.
+                    <strong>Note :</strong> Ce plan est gratuit dans le cadre du programme pilote.
                   </p>
                 </div>
               )}
 
-              {/* Simulateur de paiement (pour les plans payants) */}
+              {/* Payment Info for Paid Plans */}
               {selectedPlan.price_monthly > 0 && (
                 <div className="border border-gray-200 rounded-lg p-6 mb-6">
                   <h4 className="font-semibold text-gray-900 mb-4">Informations de paiement</h4>
@@ -651,10 +791,10 @@ export const SubscriptionPage = () => {
                       <svg className="w-5 h-5 text-yellow-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                       </svg>
-                      <div className="flex-1">
+                      <div>
                         <h5 className="font-semibold text-yellow-900 mb-1">Intégration Stripe en cours</h5>
                         <p className="text-sm text-yellow-800">
-                          Le système de paiement sera activé prochainement. Pour l'instant, les plans payants sont accessibles gratuitement pendant la phase pilote.
+                          Le système de paiement sera activé prochainement. Pour l'instant, ce plan est accessible gratuitement pendant la phase pilote.
                         </p>
                       </div>
                     </div>
@@ -662,16 +802,12 @@ export const SubscriptionPage = () => {
                 </div>
               )}
 
-              {/* Conditions */}
-              <div className="text-sm text-gray-600 mb-6">
+              {/* Terms */}
+              <div className="text-sm text-gray-600">
                 <p>
-                  En souscrivant, vous acceptez nos{' '}
+                  En confirmant, vous acceptez nos{' '}
                   <a href="#" className="text-emerald-600 hover:text-emerald-700 underline">
                     conditions d'utilisation
-                  </a>{' '}
-                  et notre{' '}
-                  <a href="#" className="text-emerald-600 hover:text-emerald-700 underline">
-                    politique de confidentialité
                   </a>
                   .
                 </p>
@@ -679,23 +815,33 @@ export const SubscriptionPage = () => {
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+            <div className="px-8 py-6 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
               <button
                 onClick={() => {
                   setShowSubscribeModal(false)
                   setSelectedPlan(null)
                 }}
                 disabled={actionLoading}
-                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 font-medium disabled:opacity-50"
+                className="px-6 py-3 border-2 border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 font-semibold disabled:opacity-50 transition-colors"
               >
                 Annuler
               </button>
               <button
                 onClick={handleConfirmSubscription}
                 disabled={actionLoading}
-                className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium disabled:opacity-50"
+                className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-lg font-semibold disabled:opacity-50 shadow-lg transition-all"
               >
-                {actionLoading ? 'Traitement...' : subscription ? 'Confirmer le changement' : 'Confirmer la souscription'}
+                {actionLoading ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Traitement...
+                  </span>
+                ) : (
+                  subscription ? 'Confirmer le changement' : 'Confirmer la souscription'
+                )}
               </button>
             </div>
           </div>
