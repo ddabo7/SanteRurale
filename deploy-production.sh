@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 
 # Variables de configuration
 DOMAIN="santerurale.io"
-EMAIL="djibril.dabo@santerurale.io"
+EMAIL="no-reply@santerurale.io"
 APP_DIR="/opt/sante-rurale"
 REPO_URL="https://github.com/votre-username/sante-rurale.git"  # À MODIFIER
 
