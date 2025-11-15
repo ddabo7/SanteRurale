@@ -23,16 +23,26 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api"
 
     # Configuration CORS
-    CORS_ORIGINS: list[str] = [
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:5175",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174",
-        "http://127.0.0.1:5175",
-        "http://127.0.0.1:3000",
-    ]
+    # Peut être surchargé par ALLOWED_ORIGINS dans .env (séparé par des virgules)
+    ALLOWED_ORIGINS: str | None = None
+
+    @property
+    def CORS_ORIGINS(self) -> list[str]:
+        """Retourne la liste des origines CORS autorisées"""
+        if self.ALLOWED_ORIGINS:
+            # Si ALLOWED_ORIGINS est défini dans .env, l'utiliser
+            return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
+        # Sinon, utiliser les valeurs par défaut pour le développement
+        return [
+            "http://localhost:5173",
+            "http://localhost:5174",
+            "http://localhost:5175",
+            "http://localhost:3000",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:5174",
+            "http://127.0.0.1:5175",
+            "http://127.0.0.1:3000",
+        ]
 
     # Configuration Email
     EMAIL_HOST: str = "smtp.gmail.com"
