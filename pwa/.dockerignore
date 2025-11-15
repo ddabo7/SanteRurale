@@ -63,7 +63,8 @@ logs/
 
 # Environnement (géré par Docker Compose)
 .env
-.env.*
+.env.local
+.env.development
 
 # Fichiers de lock (on garde package-lock.json)
 yarn.lock
