@@ -36,8 +36,8 @@ class Feedback(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     # Type et catégorie - utiliser ENUM PostgreSQL natif, pas les enums Python
-    type = Column(ENUM('bug', 'feature_request', 'improvement', 'general', 'complaint', name='feedbacktype', create_type=False), nullable=False, default="general", server_default="general")
-    status = Column(ENUM('new', 'in_progress', 'resolved', 'closed', name='feedbackstatus', create_type=False), nullable=False, default="new", server_default="new")
+    type = Column(ENUM('bug', 'feature_request', 'improvement', 'general', 'complaint', name='feedbacktype', create_type=True), nullable=False, default="general", server_default="general")
+    status = Column(ENUM('new', 'in_progress', 'resolved', 'closed', name='feedbackstatus', create_type=True), nullable=False, default="new", server_default="new")
 
     # Contenu
     subject = Column(String(255), nullable=False)
