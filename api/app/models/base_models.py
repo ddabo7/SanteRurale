@@ -287,3 +287,35 @@ class Reference(Base, TimestampMixin):
 
     # Relation
     encounter: Mapped["Encounter"] = relationship(back_populates="references")
+
+
+class Attachment(Base, TimestampMixin):
+    """Modèle pour les pièces jointes (fichiers uploadés)"""
+    __tablename__ = "attachments"
+
+    id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid_module.uuid4)
+
+    # Lien vers patient ou encounter (au moins un doit être fourni)
+    patient_id: Mapped[uuid_module.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("patients.id"))
+    encounter_id: Mapped[uuid_module.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("encounters.id"))
+
+    # Informations du fichier
+    filename: Mapped[str] = mapped_column(String(500), nullable=False)
+    mime_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    # Stockage S3/MinIO
+    s3_key: Mapped[str | None] = mapped_column(String(1000))
+    s3_bucket: Mapped[str | None] = mapped_column(String(200))
+
+    # Statut
+    uploaded: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    uploaded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    # Audit
+    created_by: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+
+    # Relations
+    patient: Mapped[Optional["Patient"]] = relationship(foreign_keys=[patient_id])
+    encounter: Mapped[Optional["Encounter"]] = relationship(foreign_keys=[encounter_id])
+    created_by_user: Mapped["User"] = relationship(foreign_keys=[created_by])
