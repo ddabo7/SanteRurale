@@ -33,7 +33,7 @@ export default defineConfig({
       },
     },
 
-    // Compression et obfuscation maximale avec Terser
+    // Compression et obfuscation avec Terser (mode sûr pour React)
     minify: 'terser',
     terserOptions: {
       compress: {
@@ -43,11 +43,8 @@ export default defineConfig({
         passes: 2,                // Passer 2 fois pour une meilleure compression
       },
       mangle: {
-        toplevel: true,          // Obfusquer les noms de variables au niveau global
         safari10: true,          // Compatibilité Safari 10+
-        properties: {
-          regex: /^_/,           // Obfusquer les propriétés commençant par _
-        },
+        // Note: toplevel désactivé pour éviter de casser React/libs externes
       },
       format: {
         comments: false,         // Supprimer tous les commentaires
