@@ -5,9 +5,6 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  define: {
-    'import.meta.env.VITE_API_URL': JSON.stringify('http://localhost:8000/api'),
-  },
   plugins: [
     react(),
   ],
