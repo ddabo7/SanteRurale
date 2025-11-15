@@ -166,7 +166,7 @@ async def get_feedback_stats(
 
     # Total
     total_result = await db.execute(select(func.count(Feedback.id)))
-    total = total_result.scalar()
+    total = total_result.scalar() or 0
 
     # Par type (row[0] est déjà une string maintenant, pas un enum)
     by_type_result = await db.execute(
@@ -189,7 +189,7 @@ async def get_feedback_stats(
         select(func.count(Feedback.id))
         .where(Feedback.created_at >= yesterday)
     )
-    recent_count = recent_result.scalar()
+    recent_count = recent_result.scalar() or 0
 
     return FeedbackStats(
         total=total,
