@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mode hors ligne - Santé Rurale</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .offline-container {
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .retry-button {
+            margin-top: 30px;
+            padding: 15px 40px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .retry-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .retry-button:active {
+            transform: translateY(0);
+        }
+
+        .status {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="icon">📡</div>
+        <h1>Mode hors ligne</h1>
+        <p>Vous n'êtes pas connecté à Internet.</p>
+        <p>Veuillez vérifier votre connexion réseau et réessayer.</p>
+        <button class="retry-button" onclick="window.location.reload()">
+            Réessayer
+        </button>
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        // Vérifier la connexion périodiquement
+        function checkConnection() {
+            if (navigator.onLine) {
+                document.getElementById('status').textContent = '✓ Connexion détectée...';
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                document.getElementById('status').textContent = '✗ Pas de connexion';
+            }
+        }
+
+        // Vérifier toutes les 5 secondes
+        setInterval(checkConnection, 5000);
+        checkConnection();
+
+        // Écouter les changements de statut de connexion
+        window.addEventListener('online', () => {
+            document.getElementById('status').textContent = '✓ Connexion rétablie!';
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        });
+
+        window.addEventListener('offline', () => {
+            document.getElementById('status').textContent = '✗ Connexion perdue';
+        });
+    </script>
+</body>
+</html>
