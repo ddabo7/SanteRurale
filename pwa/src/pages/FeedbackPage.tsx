@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Layout } from '../components/Layout'
-import { apiClient } from '../lib/api-client'
+import { apiClient } from '../services/api'
 
 type FeedbackType = 'bug' | 'feature_request' | 'improvement' | 'general' | 'complaint'
 

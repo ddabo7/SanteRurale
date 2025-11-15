@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Layout } from '../components/Layout'
-import { apiClient } from '../lib/api-client'
+import { apiClient } from '../services/api'
 
 interface Feedback {
   id: number
