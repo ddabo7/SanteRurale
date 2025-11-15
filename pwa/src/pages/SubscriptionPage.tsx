@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { formatCurrency } from '../utils/currency'
+import { getCachedOrDetectCurrency } from '../utils/geolocation'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
@@ -60,6 +61,9 @@ export const SubscriptionPage = () => {
         'Content-Type': 'application/json',
       }
 
+      // Détecter automatiquement la devise basée sur la localisation
+      const detectedCurrency = await getCachedOrDetectCurrency()
+
       // Récupérer les infos du tenant (pour la devise)
       const tenantResponse = await fetch(`${API_BASE_URL}/tenants/me`, {
         headers,
@@ -68,7 +72,11 @@ export const SubscriptionPage = () => {
 
       if (tenantResponse.ok) {
         const tenantData = await tenantResponse.json()
-        setCurrency(tenantData.currency || 'XOF')
+        // Utiliser la devise du tenant si définie, sinon celle détectée
+        setCurrency(tenantData.currency || detectedCurrency)
+      } else {
+        // Si pas de tenant, utiliser la devise détectée
+        setCurrency(detectedCurrency)
       }
 
       // Récupérer l'abonnement actuel
