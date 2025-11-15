@@ -33,26 +33,8 @@ export default defineConfig({
       },
     },
 
-    // Compression et obfuscation maximale
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,      // Supprimer tous les console.log
-        drop_debugger: true,      // Supprimer debugger
-        pure_funcs: ['console.info', 'console.debug', 'console.warn'], // Supprimer d'autres console
-        passes: 2,                // Passer 2 fois pour une meilleure compression
-      },
-      mangle: {
-        toplevel: true,          // Obfusquer les noms de variables au niveau global
-        safari10: true,          // Compatibilité Safari 10+
-        properties: {
-          regex: /^_/,           // Obfusquer les propriétés commençant par _
-        },
-      },
-      format: {
-        comments: false,         // Supprimer tous les commentaires
-      },
-    },
+    // Minification avec esbuild (plus rapide et plus sûr que terser)
+    minify: 'esbuild',
 
     // Désactiver les source maps en production pour plus de sécurité
     sourcemap: false,
