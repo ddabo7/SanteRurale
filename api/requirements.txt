@@ -32,6 +32,10 @@ python-dateutil==2.8.2
 phonenumbers==8.13.29
 minio==7.2.5
 
+# Celery (Tâches asynchrones)
+celery==5.3.6
+redis==5.0.1
+
 # Types
 types-python-dateutil==2.8.19.20240106
 types-pytz==2024.1.0.20240203
