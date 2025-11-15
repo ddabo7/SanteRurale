@@ -48,8 +48,8 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
 # ===========================================================================
 FROM base AS builder
 
-# Installer uniquement les dépendances de production
-RUN npm ci --only=production
+# Installer TOUTES les dépendances (incluant devDependencies pour le build)
+RUN npm ci
 
 # Copier tout le code source
 COPY . .
