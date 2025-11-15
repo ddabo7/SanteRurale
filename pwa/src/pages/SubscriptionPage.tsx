@@ -61,23 +61,16 @@ export const SubscriptionPage = () => {
         'Content-Type': 'application/json',
       }
 
-      // Détecter automatiquement la devise basée sur la localisation
+      // Détecter automatiquement la devise basée sur la localisation de l'utilisateur
+      // TOUJOURS utiliser la devise détectée (pas celle du tenant)
       const detectedCurrency = await getCachedOrDetectCurrency()
+      setCurrency(detectedCurrency)
 
-      // Récupérer les infos du tenant (pour la devise)
+      // Récupérer les infos du tenant
       const tenantResponse = await fetch(`${API_BASE_URL}/tenants/me`, {
         headers,
         credentials: 'include',
       })
-
-      if (tenantResponse.ok) {
-        const tenantData = await tenantResponse.json()
-        // Utiliser la devise du tenant si définie, sinon celle détectée
-        setCurrency(tenantData.currency || detectedCurrency)
-      } else {
-        // Si pas de tenant, utiliser la devise détectée
-        setCurrency(detectedCurrency)
-      }
 
       // Récupérer l'abonnement actuel
       const subResponse = await fetch(`${API_BASE_URL}/tenants/me/subscription`, {

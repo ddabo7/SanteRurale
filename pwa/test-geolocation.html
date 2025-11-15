@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Détection de Devise</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+        .info-box {
+            background: #f7f9fc;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .info-box strong {
+            color: #667eea;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .success {
+            background: #10b981;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .error {
+            background: #ef4444;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 Test de Détection de Devise par Géolocalisation</h1>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Détection de votre localisation en cours...</p>
+        </div>
+
+        <div id="results" style="display: none;">
+            <div class="info-box">
+                <strong>🌐 Pays détecté:</strong>
+                <span id="country">-</span>
+            </div>
+
+            <div class="info-box">
+                <strong>🏴 Code pays:</strong>
+                <span id="countryCode">-</span>
+            </div>
+
+            <div class="info-box">
+                <strong>💰 Devise détectée:</strong>
+                <span id="currency" style="font-size: 1.2em; font-weight: bold;">-</span>
+            </div>
+
+            <div class="info-box">
+                <strong>🕐 Fuseau horaire:</strong>
+                <span id="timezone">-</span>
+            </div>
+
+            <div class="info-box">
+                <strong>📡 Méthode de détection:</strong>
+                <span id="method">-</span>
+            </div>
+
+            <div class="info-box">
+                <strong>💾 Cache:</strong>
+                <span id="cache">-</span>
+            </div>
+
+            <button class="btn" onclick="clearCacheAndReload()">🔄 Vider le cache et recharger</button>
+        </div>
+
+        <div id="error" style="display: none;" class="error">
+            <strong>❌ Erreur:</strong>
+            <span id="errorMessage"></span>
+        </div>
+
+        <div style="margin-top: 30px; padding: 15px; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
+            <strong>ℹ️ Note:</strong> Cette détection utilise l'API ipapi.co (gratuite) pour détecter votre pays via votre adresse IP, puis détermine automatiquement la devise appropriée.
+        </div>
+    </div>
+
+    <script type="module">
+        import { getCachedOrDetectCurrency, getGeolocationInfo } from '/src/utils/geolocation.ts';
+
+        async function testGeolocation() {
+            try {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('results').style.display = 'none';
+                document.getElementById('error').style.display = 'none';
+
+                // Vérifier si en cache
+                const cached = localStorage.getItem('user_detected_currency');
+                let isFromCache = false;
+                if (cached) {
+                    const { currency, timestamp } = JSON.parse(cached);
+                    const age = Math.floor((Date.now() - timestamp) / 1000 / 60); // en minutes
+                    document.getElementById('cache').textContent = `Oui (il y a ${age} minutes)`;
+                    isFromCache = true;
+                } else {
+                    document.getElementById('cache').textContent = 'Non (première détection)';
+                }
+
+                // Détecter la devise
+                const detectedCurrency = await getCachedOrDetectCurrency();
+
+                // Obtenir les infos complètes
+                const geoInfo = await getGeolocationInfo();
+
+                // Afficher les résultats
+                document.getElementById('country').textContent = geoInfo.country;
+                document.getElementById('countryCode').textContent = geoInfo.countryCode;
+                document.getElementById('currency').textContent = geoInfo.currency;
+                document.getElementById('timezone').textContent = geoInfo.timezone;
+                document.getElementById('method').textContent = isFromCache ? 'Cache localStorage' : 'API ipapi.co + Timezone fallback';
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('results').style.display = 'block';
+
+                console.log('✅ Détection réussie:', {
+                    country: geoInfo.country,
+                    countryCode: geoInfo.countryCode,
+                    currency: geoInfo.currency,
+                    timezone: geoInfo.timezone,
+                    fromCache: isFromCache
+                });
+
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('errorMessage').textContent = error.message;
+                console.error('❌ Erreur:', error);
+            }
+        }
+
+        window.clearCacheAndReload = function() {
+            localStorage.removeItem('user_detected_currency');
+            location.reload();
+        }
+
+        // Lancer le test au chargement
+        testGeolocation();
+    </script>
+</body>
+</html>
