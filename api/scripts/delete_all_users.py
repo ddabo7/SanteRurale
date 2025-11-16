@@ -83,9 +83,11 @@ async def delete_all_users():
             for table in tables_to_truncate:
                 try:
                     await db.execute(text(f"TRUNCATE TABLE {table} CASCADE"))
+                    await db.commit()  # Commit après chaque table
                     print(f"   ✓ Table '{table}' vidée")
                 except Exception as e:
-                    print(f"   ⚠️  Erreur sur table '{table}': {e}")
+                    await db.rollback()  # Rollback en cas d'erreur pour continuer
+                    print(f"   ⚠️  Table '{table}' n'existe pas ou erreur (ignorée)")
 
             print("   Étape 2/5: Suppression des utilisateurs...")
             # Maintenant supprimer les utilisateurs
