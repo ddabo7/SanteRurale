@@ -315,10 +315,11 @@ services:
     networks:
       - sante_network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:80/ 2>&1 | grep -q '200\\|301\\|302' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 10s
     deploy:
       resources:
         limits:
