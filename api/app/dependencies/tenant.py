@@ -6,6 +6,7 @@ from typing import Optional
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.database import get_db
 from app.models.tenant import Tenant, Subscription, SubscriptionStatus
@@ -84,6 +85,7 @@ async def get_tenant_subscription(
     """Récupère l'abonnement actuel d'un tenant"""
     result = await db.execute(
         select(Subscription)
+        .options(selectinload(Subscription.plan))  # ✅ Charger la relation plan
         .where(Subscription.tenant_id == tenant_id)
         .order_by(Subscription.created_at.desc())
         .limit(1)

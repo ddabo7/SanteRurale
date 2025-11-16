@@ -130,7 +130,7 @@ export interface OutboxOperation {
   attempts: number
   last_error?: string
   created_at: string
-  processed?: boolean
+  processed?: number // 0 = non traité, 1 = traité (Dexie utilise des nombres pour indexation)
 }
 
 /**
@@ -237,7 +237,7 @@ export class SanteDB extends Dexie {
       payload,
       attempts: 0,
       created_at: new Date().toISOString(),
-      processed: false,
+      processed: 0, // 0 = non traité, 1 = traité
     }
 
     await this.outbox.add(op)
@@ -257,7 +257,7 @@ export class SanteDB extends Dexie {
    * Marquer une opération comme traitée
    */
   async markOperationProcessed(id: string): Promise<void> {
-    await this.outbox.update(id, { processed: true })
+    await this.outbox.update(id, { processed: 1 })
   }
 
   /**
@@ -302,7 +302,7 @@ export class SanteDB extends Dexie {
     await this.outbox
       .where('created_at')
       .below(thirtyDaysAgo.toISOString())
-      .and(op => op.processed === true)
+      .and(op => op.processed === 1)
       .delete()
   }
 

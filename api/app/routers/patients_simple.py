@@ -212,7 +212,7 @@ async def create_patient(
         .where(Patient.tenant_id == current_tenant.id)
         .where(Patient.deleted_at.is_(None))
     )
-    total_patients = total_patients_result.scalar()
+    total_patients = total_patients_result.scalar_one()
 
     # Vérifier si le tenant peut créer un nouveau patient
     await check_quota(current_tenant, "patients_total", total_patients, db)
