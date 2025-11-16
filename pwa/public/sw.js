@@ -125,22 +125,51 @@ async function safeHandler(request, handler) {
     const response = await handler();
     return response;
   } catch (error) {
-    console.error('[SW] Erreur dans le handler:', error);
-    // Si l'erreur provient d'une stratégie, faire un fetch direct sans cache
-    try {
-      return await fetch(request);
-    } catch (fetchError) {
-      console.error('[SW] Fetch direct échoué également:', fetchError);
-      // Retourner une réponse d'erreur appropriée
-      return new Response(
-        JSON.stringify({ error: 'Service temporairement indisponible' }),
-        {
-          status: 503,
-          statusText: 'Service Unavailable',
-          headers: { 'Content-Type': 'application/json' }
+    console.warn('[SW] Erreur dans le handler, tentative de fetch direct:', error.message);
+
+    // Réessayer avec fetch direct (2 tentatives avec délai)
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        console.log(`[SW] Tentative ${attempt}/2 de fetch direct pour:`, request.url);
+        const response = await fetch(request);
+
+        if (response.ok || response.status < 500) {
+          console.log('[SW] Fetch direct réussi');
+          return response;
         }
-      );
+
+        // Si erreur 5xx, attendre avant de réessayer
+        if (attempt < 2) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      } catch (fetchError) {
+        console.warn(`[SW] Tentative ${attempt}/2 échouée:`, fetchError.message);
+
+        // Si c'est la dernière tentative, vérifier le cache en dernier recours
+        if (attempt === 2) {
+          try {
+            const cachedResponse = await caches.match(request);
+            if (cachedResponse) {
+              console.log('[SW] Utilisation du cache en dernier recours');
+              return cachedResponse;
+            }
+          } catch (cacheError) {
+            console.error('[SW] Cache également inaccessible:', cacheError);
+          }
+        }
+      }
     }
+
+    // Toutes les tentatives ont échoué
+    console.error('[SW] Toutes les tentatives ont échoué pour:', request.url);
+    return new Response(
+      JSON.stringify({ error: 'Service temporairement indisponible' }),
+      {
+        status: 503,
+        statusText: 'Service Unavailable',
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 }
 
