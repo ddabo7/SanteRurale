@@ -175,6 +175,9 @@ services:
       ENABLE_AUDIT_LOGS: "true"
       ENABLE_OFFLINE_SYNC: "true"
 
+      # Frontend URL (for email verification links)
+      FRONTEND_URL: ${FRONTEND_URL}
+
       # DHIS2
       DHIS2_BASE_URL: ${DHIS2_BASE_URL}
       DHIS2_USERNAME: ${DHIS2_USERNAME}
