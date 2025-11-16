@@ -77,12 +77,13 @@ self.addEventListener('activate', (event) => {
 // Interception des requêtes
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  const url = new URL(request.url);
 
   // Ignorer les requêtes non-HTTP/HTTPS
   if (!request.url.startsWith('http')) {
     return;
   }
+
+  const url = new URL(request.url);
 
   // Stratégie pour les requêtes API
   if (url.pathname.startsWith('/api/')) {
@@ -92,29 +93,56 @@ self.addEventListener('fetch', (event) => {
       url.pathname.includes('/encounters') ||
       url.pathname.includes('/plans')
     )) {
-      event.respondWith(staleWhileRevalidate(request));
+      event.respondWith(safeHandler(request, () => staleWhileRevalidate(request)));
       return;
     }
     // Network First pour les autres API (POST, PUT, DELETE)
-    event.respondWith(networkFirstStrategy(request));
+    event.respondWith(safeHandler(request, () => networkFirstStrategy(request)));
     return;
   }
 
   // Stratégie pour les assets statiques (Cache First)
   if (isStaticAsset(url.pathname)) {
-    event.respondWith(cacheFirstStrategy(request));
+    event.respondWith(safeHandler(request, () => cacheFirstStrategy(request)));
     return;
   }
 
   // Stratégie pour les pages HTML (Network First avec fallback)
   if (request.headers.get('accept')?.includes('text/html')) {
-    event.respondWith(networkFirstWithOfflineFallback(request));
+    event.respondWith(safeHandler(request, () => networkFirstWithOfflineFallback(request)));
     return;
   }
 
   // Par défaut: Network First
-  event.respondWith(networkFirstStrategy(request));
+  event.respondWith(safeHandler(request, () => networkFirstStrategy(request)));
 });
+
+/**
+ * Safe Handler: Wrapper pour capturer toutes les erreurs et toujours retourner une réponse
+ */
+async function safeHandler(request, handler) {
+  try {
+    const response = await handler();
+    return response;
+  } catch (error) {
+    console.error('[SW] Erreur dans le handler:', error);
+    // Si l'erreur provient d'une stratégie, faire un fetch direct sans cache
+    try {
+      return await fetch(request);
+    } catch (fetchError) {
+      console.error('[SW] Fetch direct échoué également:', fetchError);
+      // Retourner une réponse d'erreur appropriée
+      return new Response(
+        JSON.stringify({ error: 'Service temporairement indisponible' }),
+        {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+  }
+}
 
 /**
  * Stratégie Cache First: Chercher d'abord dans le cache
