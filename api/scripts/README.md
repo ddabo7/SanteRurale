@@ -10,6 +10,43 @@ Ce dossier contient des scripts CLI pour les tâches administratives sensibles q
 
 ## 📜 Scripts Disponibles
 
+### `delete_all_users.py` - Supprimer tous les utilisateurs
+
+⚠️ **ATTENTION: Script DESTRUCTIF et IRRÉVERSIBLE!**
+
+Supprime TOUS les utilisateurs de la base de données. Utilisez ce script uniquement pour nettoyer une base de données de test ou réinitialiser complètement le système.
+
+#### Usage
+
+```bash
+# Depuis le répertoire api/
+python scripts/delete_all_users.py
+```
+
+#### En production (Docker)
+
+```bash
+# Sur le serveur de production
+cd /opt/santerurale
+docker exec -it sante_api_prod python scripts/delete_all_users.py
+```
+
+#### Fonctionnalités
+
+- ✅ Liste tous les utilisateurs avant suppression
+- ✅ Demande double confirmation (très importante!)
+- ✅ Affiche le nombre d'utilisateurs supprimés
+- ✅ Suggère les prochaines étapes après suppression
+
+#### ⚠️ Précautions
+
+1. **FAITES UN BACKUP** de la base de données avant d'exécuter ce script
+2. Assurez-vous que vous voulez **vraiment** supprimer tous les utilisateurs
+3. Cette opération est **IRRÉVERSIBLE**
+4. Tapez exactement `SUPPRIMER TOUT` pour confirmer la suppression
+
+---
+
 ### `create_admin.py` - Créer un compte administrateur
 
 Crée un compte utilisateur avec le rôle `admin` qui a accès au dashboard administrateur global.
