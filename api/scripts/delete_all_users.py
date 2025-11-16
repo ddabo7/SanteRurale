@@ -20,7 +20,7 @@ from pathlib import Path
 # Ajouter le répertoire parent au PYTHONPATH
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -64,8 +64,34 @@ async def delete_all_users():
                 print("❌ Annulé par l'utilisateur")
                 return False
 
-            # Supprimer tous les utilisateurs
+            print("\n🗑️  Suppression en cours...")
+            print("   Étape 1/5: Suppression des données liées aux utilisateurs...")
+
+            # Supprimer toutes les données qui référencent les users
+            # ATTENTION: Ceci supprime TOUTES les données de TOUTES les tables!
+            tables_to_truncate = [
+                'encounters',
+                'conditions',
+                'medications',
+                'procedures',
+                'attachments',
+                'patients',
+                'audit_logs',
+                'feedback',
+            ]
+
+            for table in tables_to_truncate:
+                try:
+                    await db.execute(text(f"TRUNCATE TABLE {table} CASCADE"))
+                    print(f"   ✓ Table '{table}' vidée")
+                except Exception as e:
+                    print(f"   ⚠️  Erreur sur table '{table}': {e}")
+
+            print("   Étape 2/5: Suppression des utilisateurs...")
+            # Maintenant supprimer les utilisateurs
             await db.execute(delete(User))
+
+            print("   Étape 3/5: Commit des changements...")
             await db.commit()
 
             print(f"\n✅ {user_count} utilisateur(s) supprimé(s) avec succès!")
@@ -88,14 +114,23 @@ async def delete_all_users():
 def main():
     """Point d'entrée du script"""
     print("=" * 80)
-    print("⚠️  SUPPRESSION DE TOUS LES UTILISATEURS")
+    print("⚠️  SUPPRESSION COMPLÈTE DE TOUTES LES DONNÉES")
     print("=" * 80)
     print("\n🔴 ATTENTION: Cette opération est DESTRUCTIVE et IRRÉVERSIBLE!")
-    print("Tous les comptes utilisateurs seront définitivement supprimés.")
-    print("\n💡 Utilisez ce script uniquement si vous voulez:")
-    print("   - Nettoyer les comptes de test/développement")
+    print("\n📋 Ce script va supprimer:")
+    print("   ❌ Tous les utilisateurs (admins, médecins, soignants)")
+    print("   ❌ Tous les patients")
+    print("   ❌ Toutes les consultations (encounters)")
+    print("   ❌ Tous les diagnostics (conditions)")
+    print("   ❌ Tous les médicaments (medications)")
+    print("   ❌ Toutes les procédures (procedures)")
+    print("   ❌ Tous les fichiers attachés (attachments)")
+    print("   ❌ Tous les logs d'audit (audit_logs)")
+    print("   ❌ Tous les feedbacks")
+    print("\n💡 Utilisez ce script UNIQUEMENT pour:")
+    print("   - Nettoyer une base de données de test/développement")
     print("   - Réinitialiser complètement le système")
-    print("   - Repartir sur une base de données propre")
+    print("   - Repartir sur une base de données 100% propre")
     print("\n" + "=" * 80)
 
     # Première confirmation
