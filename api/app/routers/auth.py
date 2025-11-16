@@ -129,6 +129,14 @@ async def signup(signup_data: SignupRequest, db: AsyncSession = Depends(get_db))
             detail="Le mot de passe doit contenir au moins un caractère spécial (!@#$%^&*)"
         )
 
+    # 🔒 SÉCURITÉ: Empêcher la création de comptes avec des rôles protégés
+    PROTECTED_ROLES = {"admin", "super_admin", "system"}
+    if signup_data.role in PROTECTED_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Vous ne pouvez pas créer un compte avec ce rôle. Contactez l'administrateur système."
+        )
+
     # Récupérer le site (fourni ou le premier disponible)
     if signup_data.site_id:
         result = await db.execute(select(Site).where(Site.id == signup_data.site_id))
