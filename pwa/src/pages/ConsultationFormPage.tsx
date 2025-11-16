@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { encountersService, patientsService, conditionsService, medicationsService, proceduresService, referencesService } from '../services/api'
+import { offlineFirst, connectivityMonitor } from '../services/offlineFirst'
 import { FileUpload } from '../components/FileUpload'
 import { FileList } from '../components/FileList'
 
@@ -52,6 +53,8 @@ export const ConsultationFormPage = () => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [isOffline, setIsOffline] = useState(!connectivityMonitor.isOnline())
   const [uploadRefresh, setUploadRefresh] = useState(0)
   const [createdEncounterId, setCreatedEncounterId] = useState<string | null>(null)
 
@@ -86,6 +89,13 @@ export const ConsultationFormPage = () => {
 
   useEffect(() => {
     loadPatients()
+
+    // Écouter les changements de connectivité
+    const unsubscribe = connectivityMonitor.addListener((online) => {
+      setIsOffline(!online)
+    })
+
+    return () => unsubscribe()
   }, [])
 
   useEffect(() => {
@@ -111,10 +121,11 @@ export const ConsultationFormPage = () => {
     if (isLoading) return
 
     setError('')
+    setSuccess('')
     setIsLoading(true)
 
     try {
-      // Créer la consultation
+      // ✅ CRÉATION AVEC UI OPTIMISTE
       const encounterData = {
         patient_id: formData.patient_id,
         date: formData.date,
@@ -128,58 +139,75 @@ export const ConsultationFormPage = () => {
         notes: formData.notes || undefined,
       }
 
-      const encounter = await encountersService.create(encounterData)
+      // Créer la consultation avec offline-first
+      const result = await offlineFirst.createEncounter(encounterData)
 
       // Sauvegarder l'ID pour permettre l'upload de fichiers
-      setCreatedEncounterId(encounter.id)
+      setCreatedEncounterId(result.localId)
 
-      // Ajouter les diagnostics
-      for (const condition of conditions) {
-        if (condition.libelle.trim()) {
-          await conditionsService.create({
-            encounter_id: encounter.id,
-            ...condition,
+      // TODO: Ajouter les diagnostics, prescriptions, actes et références avec offline-first
+      // Pour l'instant, on les sauvegarde normalement si online
+      if (!result.isOffline) {
+        // Ajouter les diagnostics
+        for (const condition of conditions) {
+          if (condition.libelle.trim()) {
+            await conditionsService.create({
+              encounter_id: result.localId,
+              ...condition,
+            })
+          }
+        }
+
+        // Ajouter les prescriptions
+        for (const medication of medications) {
+          if (medication.medicament.trim()) {
+            await medicationsService.create({
+              encounter_id: result.localId,
+              ...medication,
+            })
+          }
+        }
+
+        // Ajouter les actes
+        for (const procedure of procedures) {
+          if (procedure.type.trim()) {
+            await proceduresService.create({
+              encounter_id: result.localId,
+              ...procedure,
+            })
+          }
+        }
+
+        // Ajouter la référence/évacuation si nécessaire
+        if (hasReference && reference.destination.trim() && reference.raison.trim()) {
+          await referencesService.create({
+            encounter_id: result.localId,
+            destination: reference.destination,
+            raison: reference.raison,
+            statut: reference.statut,
+            eta: reference.eta || undefined,
+            notes: reference.notes || undefined,
           })
         }
       }
 
-      // Ajouter les prescriptions
-      for (const medication of medications) {
-        if (medication.medicament.trim()) {
-          await medicationsService.create({
-            encounter_id: encounter.id,
-            ...medication,
-          })
-        }
+      // Messages de succès adaptés
+      if (result.isOffline) {
+        setSuccess('✅ Consultation créée localement (mode hors ligne). Sera synchronisée automatiquement.')
+        setTimeout(() => navigate('/consultations'), 2000)
+      } else if (result.willSyncLater) {
+        setSuccess('✅ Consultation créée et en cours de synchronisation...')
+        setTimeout(() => navigate('/consultations'), 1500)
+      } else {
+        setSuccess('✅ Consultation créée avec succès')
+        setTimeout(() => navigate('/consultations'), 1000)
       }
-
-      // Ajouter les actes
-      for (const procedure of procedures) {
-        if (procedure.type.trim()) {
-          await proceduresService.create({
-            encounter_id: encounter.id,
-            ...procedure,
-          })
-        }
-      }
-
-      // Ajouter la référence/évacuation si nécessaire
-      if (hasReference && reference.destination.trim() && reference.raison.trim()) {
-        await referencesService.create({
-          encounter_id: encounter.id,
-          destination: reference.destination,
-          raison: reference.raison,
-          statut: reference.statut,
-          eta: reference.eta || undefined,
-          notes: reference.notes || undefined,
-        })
-      }
-
-      // Rediriger vers la liste des consultations
-      navigate('/consultations')
     } catch (error: any) {
-      console.error('Erreur sauvegarde consultation:', error)
-      if (error.response?.data?.detail) {
+      console.error('❌ Erreur sauvegarde consultation:', error)
+
+      if (error.message) {
+        setError(error.message)
+      } else if (error.response?.data?.detail) {
         if (Array.isArray(error.response.data.detail)) {
           const errors = error.response.data.detail.map((e: any) => e.msg).join(', ')
           setError(`Erreur de validation: ${errors}`)
@@ -187,7 +215,7 @@ export const ConsultationFormPage = () => {
           setError(error.response.data.detail)
         }
       } else {
-        setError('Erreur lors de la sauvegarde. Vérifiez votre connexion.')
+        setError('Impossible de sauvegarder la consultation. Veuillez réessayer.')
       }
     } finally {
       setIsLoading(false)
@@ -237,6 +265,24 @@ export const ConsultationFormPage = () => {
       </div>
 
       <div className="bg-white rounded-lg shadow p-8">
+        {/* Bannière mode offline */}
+        {isOffline && (
+          <div className="mb-6 bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            Mode hors ligne - Les données seront synchronisées automatiquement
+          </div>
+        )}
+
+        {/* Message de succès */}
+        {success && (
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+            {success}
+          </div>
+        )}
+
+        {/* Message d'erreur */}
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
             {error}

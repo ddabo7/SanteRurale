@@ -1,0 +1,747 @@
+/**
+ * Service Offline-First unifié avec UI Optimiste
+ *
+ * Architecture:
+ * 1. Écriture locale immédiate (IndexedDB) - UI réactive instantanément
+ * 2. Ajout à l'outbox queue avec idempotency key
+ * 3. Synchronisation en arrière-plan avec retry intelligent
+ * 4. Résolution de conflits automatique (Last-Write-Wins)
+ * 5. Background Sync API pour sync même quand app fermée
+ */
+
+import { db, OutboxOperation } from '../db'
+import {
+  patientsService,
+  encountersService,
+  conditionsService,
+  medicationsService,
+  proceduresService
+} from './api'
+import { v4 as uuidv4 } from 'uuid'
+
+// ===========================================================================
+// TYPES
+// ===========================================================================
+
+export interface OfflineWriteResult<T = any> {
+  success: boolean
+  localId: string
+  data: T
+  isOffline: boolean
+  willSyncLater: boolean
+}
+
+export interface SyncResult {
+  success: boolean
+  synced: number
+  failed: number
+  conflicts: number
+  errors: string[]
+}
+
+export interface ConflictResolution {
+  strategy: 'last-write-wins' | 'first-write-wins' | 'manual'
+  resolvedData?: any
+}
+
+// ===========================================================================
+// DÉTECTION DE CONNECTIVITÉ AMÉLIORÉE
+// ===========================================================================
+
+class ConnectivityMonitor {
+  private isOnlineState = navigator.onLine
+  private listeners: Set<(isOnline: boolean) => void> = new Set()
+  private checkInterval: NodeJS.Timeout | null = null
+
+  constructor() {
+    // Listeners natifs
+    window.addEventListener('online', this.handleOnline)
+    window.addEventListener('offline', this.handleOffline)
+
+    // Vérification périodique (toutes les 30s)
+    this.startPeriodicCheck()
+  }
+
+  private startPeriodicCheck() {
+    this.checkInterval = setInterval(() => {
+      this.checkConnectivity()
+    }, 30000)
+  }
+
+  private handleOnline = () => {
+    if (!this.isOnlineState) {
+      this.isOnlineState = true
+      this.notifyListeners(true)
+      console.log('📡 Connexion rétablie')
+    }
+  }
+
+  private handleOffline = () => {
+    if (this.isOnlineState) {
+      this.isOnlineState = false
+      this.notifyListeners(false)
+      console.log('📡 Connexion perdue - Mode offline activé')
+    }
+  }
+
+  private notifyListeners(isOnline: boolean) {
+    this.listeners.forEach(listener => listener(isOnline))
+  }
+
+  isOnline(): boolean {
+    return this.isOnlineState
+  }
+
+  addListener(listener: (isOnline: boolean) => void): () => void {
+    this.listeners.add(listener)
+    // Appeler immédiatement avec l'état actuel
+    listener(this.isOnlineState)
+
+    return () => {
+      this.listeners.delete(listener)
+    }
+  }
+
+  async checkConnectivity(): Promise<boolean> {
+    if (!navigator.onLine) {
+      if (this.isOnlineState) {
+        this.handleOffline()
+      }
+      return false
+    }
+
+    try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 3000)
+
+      const response = await fetch('/api/health', {
+        method: 'HEAD',
+        signal: controller.signal,
+        cache: 'no-cache',
+      })
+
+      clearTimeout(timeoutId)
+
+      const isOnline = response.ok
+      if (isOnline && !this.isOnlineState) {
+        this.handleOnline()
+      } else if (!isOnline && this.isOnlineState) {
+        this.handleOffline()
+      }
+
+      return isOnline
+    } catch {
+      if (this.isOnlineState) {
+        this.handleOffline()
+      }
+      return false
+    }
+  }
+
+  destroy() {
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval)
+    }
+    window.removeEventListener('online', this.handleOnline)
+    window.removeEventListener('offline', this.handleOffline)
+  }
+}
+
+export const connectivityMonitor = new ConnectivityMonitor()
+
+// ===========================================================================
+// EXPONENTIAL BACKOFF
+// ===========================================================================
+
+class ExponentialBackoff {
+  private static readonly BASE_DELAY = 1000 // 1 seconde
+  private static readonly MAX_DELAY = 300000 // 5 minutes
+  private static readonly JITTER_FACTOR = 0.1
+
+  /**
+   * Calcule le délai avant la prochaine tentative
+   * @param attempt Numéro de tentative (0-indexed)
+   * @returns Délai en millisecondes
+   */
+  static calculateDelay(attempt: number): number {
+    // Formule: min(MAX_DELAY, BASE_DELAY * 2^attempt) + jitter
+    const exponentialDelay = Math.min(
+      this.MAX_DELAY,
+      this.BASE_DELAY * Math.pow(2, attempt)
+    )
+
+    // Ajouter un jitter aléatoire (+/- 10%)
+    const jitter = exponentialDelay * this.JITTER_FACTOR * (Math.random() * 2 - 1)
+
+    return Math.floor(exponentialDelay + jitter)
+  }
+
+  /**
+   * Détermine si on doit réessayer cette opération
+   */
+  static shouldRetry(attempts: number, maxAttempts: number = 10): boolean {
+    return attempts < maxAttempts
+  }
+
+  /**
+   * Attend le délai calculé
+   */
+  static async wait(attempt: number): Promise<void> {
+    const delay = this.calculateDelay(attempt)
+    console.log(`⏱️  Retry in ${Math.round(delay / 1000)}s (attempt ${attempt + 1})`)
+    return new Promise(resolve => setTimeout(resolve, delay))
+  }
+}
+
+// ===========================================================================
+// RÉSOLUTION DE CONFLITS
+// ===========================================================================
+
+class ConflictResolver {
+  /**
+   * Résout un conflit avec stratégie Last-Write-Wins
+   * Compare les timestamps et garde la version la plus récente
+   */
+  static resolveLastWriteWins(
+    localData: any,
+    serverData: any
+  ): ConflictResolution {
+    const localTimestamp = new Date(localData.updated_at || localData.created_at || 0).getTime()
+    const serverTimestamp = new Date(serverData.updated_at || serverData.created_at || 0).getTime()
+
+    if (localTimestamp >= serverTimestamp) {
+      console.log('✅ Conflit résolu: version locale retenue (plus récente)')
+      return {
+        strategy: 'last-write-wins',
+        resolvedData: localData,
+      }
+    } else {
+      console.log('✅ Conflit résolu: version serveur retenue (plus récente)')
+      return {
+        strategy: 'last-write-wins',
+        resolvedData: serverData,
+      }
+    }
+  }
+
+  /**
+   * Résout un conflit avec stratégie First-Write-Wins
+   * Garde toujours la version serveur
+   */
+  static resolveFirstWriteWins(serverData: any): ConflictResolution {
+    console.log('✅ Conflit résolu: version serveur retenue (first-write-wins)')
+    return {
+      strategy: 'first-write-wins',
+      resolvedData: serverData,
+    }
+  }
+}
+
+// ===========================================================================
+// SERVICE DE SYNCHRONISATION OFFLINE-FIRST
+// ===========================================================================
+
+class OfflineFirstService {
+  private isSyncing = false
+  private syncInterval: NodeJS.Timeout | null = null
+  private retryTimeouts = new Map<string, NodeJS.Timeout>()
+
+  constructor() {
+    // Démarrer auto-sync quand connexion rétablie
+    connectivityMonitor.addListener((isOnline) => {
+      if (isOnline && !this.isSyncing) {
+        console.log('🔄 Connexion rétablie - Démarrage de la synchronisation...')
+        this.sync()
+      }
+    })
+
+    // Enregistrer le Service Worker avec Background Sync
+    this.registerBackgroundSync()
+  }
+
+  // =========================================================================
+  // ÉCRITURE OPTIMISTE (PATIENTS)
+  // =========================================================================
+
+  async createPatient(data: any): Promise<OfflineWriteResult> {
+    const localId = uuidv4()
+    const timestamp = new Date().toISOString()
+    const isOffline = !connectivityMonitor.isOnline()
+
+    const patientData = {
+      id: localId,
+      ...data,
+      created_at: timestamp,
+      updated_at: timestamp,
+      version: 1,
+      _synced: false,
+      _local_id: localId,
+    }
+
+    try {
+      // 1. Écriture locale IMMÉDIATE (UI Optimiste)
+      await db.patients.add(patientData)
+      console.log('✅ Patient sauvegardé localement:', localId)
+
+      // 2. Ajouter à l'outbox queue
+      await db.addToOutbox('create', 'patient', {
+        ...data,
+        id: localId,
+      }, localId)
+
+      // 3. Sync immédiate si online
+      if (!isOffline) {
+        // Sync en arrière-plan (non-bloquant)
+        this.sync().catch(err => console.error('Background sync failed:', err))
+      }
+
+      return {
+        success: true,
+        localId,
+        data: patientData,
+        isOffline,
+        willSyncLater: isOffline || true,
+      }
+    } catch (error: any) {
+      console.error('❌ Erreur création patient offline:', error)
+      throw new Error(`Impossible de sauvegarder le patient: ${error.message}`)
+    }
+  }
+
+  async updatePatient(id: string, data: any): Promise<OfflineWriteResult> {
+    const timestamp = new Date().toISOString()
+    const isOffline = !connectivityMonitor.isOnline()
+
+    try {
+      // Récupérer la version actuelle
+      const existing = await db.patients.get(id)
+      if (!existing) {
+        throw new Error('Patient introuvable')
+      }
+
+      const updatedData = {
+        ...existing,
+        ...data,
+        updated_at: timestamp,
+        version: (existing.version || 1) + 1,
+        _synced: false,
+      }
+
+      // 1. Mise à jour locale IMMÉDIATE
+      await db.patients.put(updatedData)
+      console.log('✅ Patient mis à jour localement:', id)
+
+      // 2. Ajouter à l'outbox
+      await db.addToOutbox('update', 'patient', updatedData, id)
+
+      // 3. Sync si online
+      if (!isOffline) {
+        this.sync().catch(err => console.error('Background sync failed:', err))
+      }
+
+      return {
+        success: true,
+        localId: id,
+        data: updatedData,
+        isOffline,
+        willSyncLater: isOffline || true,
+      }
+    } catch (error: any) {
+      console.error('❌ Erreur mise à jour patient:', error)
+      throw new Error(`Impossible de mettre à jour le patient: ${error.message}`)
+    }
+  }
+
+  // =========================================================================
+  // ÉCRITURE OPTIMISTE (CONSULTATIONS/ENCOUNTERS)
+  // =========================================================================
+
+  async createEncounter(data: any): Promise<OfflineWriteResult> {
+    const localId = uuidv4()
+    const timestamp = new Date().toISOString()
+    const isOffline = !connectivityMonitor.isOnline()
+
+    const encounterData = {
+      id: localId,
+      ...data,
+      created_at: timestamp,
+      updated_at: timestamp,
+      version: 1,
+      _synced: false,
+      _local_id: localId,
+    }
+
+    try {
+      // 1. Écriture locale
+      await db.encounters.add(encounterData)
+      console.log('✅ Consultation sauvegardée localement:', localId)
+
+      // 2. Outbox
+      await db.addToOutbox('create', 'encounter', {
+        ...data,
+        id: localId,
+      }, localId)
+
+      // 3. Sync
+      if (!isOffline) {
+        this.sync().catch(err => console.error('Background sync failed:', err))
+      }
+
+      return {
+        success: true,
+        localId,
+        data: encounterData,
+        isOffline,
+        willSyncLater: isOffline || true,
+      }
+    } catch (error: any) {
+      console.error('❌ Erreur création consultation:', error)
+      throw new Error(`Impossible de sauvegarder la consultation: ${error.message}`)
+    }
+  }
+
+  // =========================================================================
+  // SYNCHRONISATION AVEC RETRY INTELLIGENT
+  // =========================================================================
+
+  async sync(): Promise<SyncResult> {
+    if (this.isSyncing) {
+      console.log('⏭️  Sync déjà en cours, ignoré')
+      return { success: true, synced: 0, failed: 0, conflicts: 0, errors: [] }
+    }
+
+    if (!connectivityMonitor.isOnline()) {
+      console.log('📵 Offline, sync reportée')
+      return { success: false, synced: 0, failed: 0, conflicts: 0, errors: ['Offline'] }
+    }
+
+    this.isSyncing = true
+    const result: SyncResult = {
+      success: true,
+      synced: 0,
+      failed: 0,
+      conflicts: 0,
+      errors: [],
+    }
+
+    try {
+      console.log('🔄 Démarrage de la synchronisation...')
+
+      // Récupérer les opérations en attente
+      const pendingOps = await db.getPendingOperations()
+      console.log(`📦 ${pendingOps.length} opérations en attente`)
+
+      // Traiter chaque opération
+      for (const op of pendingOps) {
+        try {
+          await this.processOperationWithRetry(op)
+          await db.markOperationProcessed(op.id)
+          result.synced++
+          console.log(`✅ Opération ${op.id} synchronisée`)
+        } catch (error: any) {
+          console.error(`❌ Échec opération ${op.id}:`, error)
+
+          // Vérifier si c'est un conflit
+          const isConflict = error.status === 409 || error.message.includes('conflit')
+
+          if (isConflict) {
+            // Tenter de résoudre le conflit
+            const resolved = await this.resolveConflict(op, error)
+            if (resolved) {
+              result.synced++
+              result.conflicts++
+              await db.markOperationProcessed(op.id)
+              console.log(`✅ Conflit ${op.id} résolu`)
+              continue
+            }
+          }
+
+          // Incrémenter les tentatives
+          const newAttempts = op.attempts + 1
+          await db.incrementOperationAttempts(op.id, error.message)
+
+          // Abandonner après 10 tentatives
+          if (!ExponentialBackoff.shouldRetry(newAttempts)) {
+            console.warn(`⚠️  Opération ${op.id} abandonnée après ${newAttempts} tentatives`)
+            await db.markOperationProcessed(op.id) // Marquer comme traitée pour l'enlever de la queue
+            result.errors.push(`${op.entity} abandonné après ${newAttempts} tentatives`)
+          } else {
+            // Planifier un retry avec backoff
+            this.scheduleRetry(op, newAttempts)
+          }
+
+          result.failed++
+          result.errors.push(`${op.entity} ${op.operation}: ${error.message}`)
+        }
+      }
+
+      // Mettre à jour le timestamp de dernière sync
+      await db.sync_meta.put({
+        key: 'last_sync_time',
+        value: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+
+      result.success = result.failed === 0
+      console.log(`✅ Sync terminée: ${result.synced} réussies, ${result.failed} échouées, ${result.conflicts} conflits résolus`)
+
+    } catch (error: any) {
+      console.error('❌ Erreur globale de synchronisation:', error)
+      result.success = false
+      result.errors.push(error.message)
+    } finally {
+      this.isSyncing = false
+    }
+
+    return result
+  }
+
+  /**
+   * Traite une opération avec retry automatique
+   */
+  private async processOperationWithRetry(op: OutboxOperation): Promise<void> {
+    const { operation, entity, payload, client_id } = op
+
+    // Note: L'idempotency key est gérée automatiquement par l'API
+
+    switch (entity) {
+      case 'patient':
+        if (operation === 'create') {
+          const response = await patientsService.create(payload)
+          // Mettre à jour l'ID local avec l'ID serveur
+          if (client_id && response.id !== client_id) {
+            await db.patients.update(client_id, {
+              id: response.id,
+              _synced: true,
+              _local_id: client_id,
+            })
+            // Mettre à jour les encounters liés
+            await db.encounters
+              .where('patient_id')
+              .equals(client_id)
+              .modify({ patient_id: response.id })
+          } else {
+            await db.patients.update(client_id || response.id, { _synced: true })
+          }
+        } else if (operation === 'update') {
+          await patientsService.update(payload.id, payload)
+          await db.patients.update(payload.id, { _synced: true })
+        }
+        break
+
+      case 'encounter':
+        if (operation === 'create') {
+          const response = await encountersService.create(payload)
+          if (client_id && response.id !== client_id) {
+            await db.encounters.update(client_id, {
+              id: response.id,
+              _synced: true,
+              _local_id: client_id,
+            })
+          } else {
+            await db.encounters.update(client_id || response.id, { _synced: true })
+          }
+        }
+        break
+
+      case 'condition':
+        if (operation === 'create') {
+          await conditionsService.create(payload)
+          await db.conditions.update(payload.id, { _synced: true })
+        }
+        break
+
+      case 'medication_request':
+        if (operation === 'create') {
+          await medicationsService.create(payload)
+          await db.medication_requests.update(payload.id, { _synced: true })
+        }
+        break
+
+      case 'procedure':
+        if (operation === 'create') {
+          await proceduresService.create(payload)
+          await db.procedures.update(payload.id, { _synced: true })
+        }
+        break
+
+      default:
+        throw new Error(`Type d'entité inconnu: ${entity}`)
+    }
+  }
+
+  /**
+   * Planifie un retry avec exponential backoff
+   */
+  private scheduleRetry(op: OutboxOperation, attempt: number) {
+    // Annuler le timeout existant s'il y en a un
+    const existingTimeout = this.retryTimeouts.get(op.id)
+    if (existingTimeout) {
+      clearTimeout(existingTimeout)
+    }
+
+    const delay = ExponentialBackoff.calculateDelay(attempt)
+
+    const timeoutId = setTimeout(() => {
+      console.log(`🔄 Retry opération ${op.id} (tentative ${attempt + 1})`)
+      this.sync().catch(err => console.error('Retry sync failed:', err))
+      this.retryTimeouts.delete(op.id)
+    }, delay)
+
+    this.retryTimeouts.set(op.id, timeoutId)
+  }
+
+  /**
+   * Résout un conflit automatiquement
+   */
+  private async resolveConflict(op: OutboxOperation, error: any): Promise<boolean> {
+    try {
+      console.log(`⚠️  Conflit détecté pour ${op.entity} ${op.id}`)
+
+      // Récupérer la version serveur
+      let serverData: any
+      switch (op.entity) {
+        case 'patient':
+          serverData = await patientsService.get(op.payload.id)
+          break
+        case 'encounter':
+          serverData = await encountersService.get(op.payload.id)
+          break
+        default:
+          return false
+      }
+
+      // Appliquer la stratégie Last-Write-Wins
+      const resolution = ConflictResolver.resolveLastWriteWins(op.payload, serverData)
+
+      // Mettre à jour la base locale avec la version gagnante
+      if (resolution.resolvedData) {
+        const table = op.entity === 'patient' ? db.patients : db.encounters
+        await table.put({
+          ...resolution.resolvedData,
+          _synced: true,
+        })
+
+        // Si la version locale a gagné, réessayer l'upload
+        if (resolution.resolvedData === op.payload) {
+          await this.processOperationWithRetry(op)
+        }
+
+        return true
+      }
+
+      return false
+    } catch (err: any) {
+      console.error('Erreur résolution conflit:', err.message || err)
+      return false
+    }
+  }
+
+  /**
+   * Enregistre le Service Worker avec Background Sync
+   */
+  private async registerBackgroundSync() {
+    if ('serviceWorker' in navigator && 'sync' in ServiceWorkerRegistration.prototype) {
+      try {
+        const registration = await navigator.serviceWorker.ready
+
+        // Écouter les messages du Service Worker
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          this.handleServiceWorkerMessage(event.data)
+        })
+
+        // Enregistrer un tag de sync
+        await (registration as any).sync.register('sync-outbox')
+        console.log('✅ Background Sync enregistré')
+      } catch (error) {
+        console.warn('⚠️  Background Sync non supporté:', error)
+      }
+    }
+  }
+
+  /**
+   * Gère les messages reçus du Service Worker
+   */
+  private handleServiceWorkerMessage(data: any) {
+    switch (data.type) {
+      case 'SYNC_STARTED':
+        console.log(`🔄 Background Sync démarré (${data.count} opérations)`)
+        break
+
+      case 'SYNC_SUCCESS':
+        console.log(`✅ Background Sync réussi (${data.count} opérations)`)
+        // Déclencher un sync normal pour mettre à jour l'UI
+        this.sync()
+        break
+
+      case 'SYNC_FAILED':
+        console.error('❌ Background Sync échoué:', data.error)
+        break
+    }
+  }
+
+  /**
+   * Démarre la synchronisation automatique
+   */
+  startAutoSync(intervalMs: number = 120000) {
+    if (this.syncInterval) {
+      clearInterval(this.syncInterval)
+    }
+
+    // Sync immédiate
+    this.sync()
+
+    // Puis sync périodique
+    this.syncInterval = setInterval(() => {
+      if (connectivityMonitor.isOnline() && !this.isSyncing) {
+        this.sync()
+      }
+    }, intervalMs)
+
+    console.log(`✅ Auto-sync démarré (intervalle: ${intervalMs / 1000}s)`)
+  }
+
+  /**
+   * Arrête la synchronisation automatique
+   */
+  stopAutoSync() {
+    if (this.syncInterval) {
+      clearInterval(this.syncInterval)
+      this.syncInterval = null
+    }
+
+    // Annuler tous les retries
+    this.retryTimeouts.forEach(timeout => clearTimeout(timeout))
+    this.retryTimeouts.clear()
+
+    console.log('⏹️  Auto-sync arrêté')
+  }
+
+  /**
+   * Force une synchronisation immédiate
+   */
+  async forceSync(): Promise<SyncResult> {
+    return this.sync()
+  }
+
+  /**
+   * Obtient le nombre d'opérations en attente
+   */
+  async getPendingCount(): Promise<number> {
+    return db.outbox.where('processed').equals(0).count()
+  }
+}
+
+// ===========================================================================
+// INSTANCE GLOBALE
+// ===========================================================================
+
+export const offlineFirst = new OfflineFirstService()
+
+// Démarrer l'auto-sync au chargement
+if (typeof window !== 'undefined') {
+  // Attendre que l'utilisateur soit connecté
+  setTimeout(() => {
+    offlineFirst.startAutoSync(120000) // Toutes les 2 minutes
+  }, 5000) // Délai de 5s pour laisser l'app se charger
+}
