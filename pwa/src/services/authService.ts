@@ -36,6 +36,12 @@ export const authService = {
     nom: string
     prenom: string
     telephone?: string
+    // Informations du site/CSCOM
+    site_nom: string
+    site_type: string
+    site_ville?: string
+    site_pays: string
+    site_adresse?: string
   }) => {
     const response = await fetch(`${API_BASE_URL}/auth/signup`, {
       method: 'POST',

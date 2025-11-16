@@ -10,6 +10,12 @@ export const SignupPage = () => {
     nom: '',
     prenom: '',
     telephone: '',
+    // Informations du site/CSCOM
+    site_nom: '',
+    site_type: 'cscom',
+    site_ville: '',
+    site_pays: 'Mali',
+    site_adresse: '',
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -48,7 +54,7 @@ export const SignupPage = () => {
     }
   }, [success, navigate])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
@@ -79,6 +85,12 @@ export const SignupPage = () => {
         nom: formData.nom,
         prenom: formData.prenom,
         telephone: formData.telephone || undefined,
+        // Informations du site
+        site_nom: formData.site_nom,
+        site_type: formData.site_type,
+        site_ville: formData.site_ville || undefined,
+        site_pays: formData.site_pays,
+        site_adresse: formData.site_adresse || undefined,
       })
 
       // Afficher le message de succès
@@ -234,6 +246,102 @@ export const SignupPage = () => {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
                 placeholder="+223 70 00 00 00"
               />
+            </div>
+
+            {/* Séparateur visuel */}
+            <div className="border-t border-gray-200 pt-6 mt-2">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                Informations de votre structure de santé
+              </h3>
+            </div>
+
+            <div>
+              <label htmlFor="site_nom" className="block text-sm font-medium text-gray-700 mb-2">
+                Nom de votre CSCOM/Hôpital <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="site_nom"
+                name="site_nom"
+                type="text"
+                value={formData.site_nom}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
+                placeholder="Ex: CSCOM de Bamako Coura"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="site_type" className="block text-sm font-medium text-gray-700 mb-2">
+                Type de structure <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="site_type"
+                name="site_type"
+                value={formData.site_type}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition bg-white"
+              >
+                <option value="cscom">CSCOM (Centre de Santé Communautaire)</option>
+                <option value="hospital">Hôpital</option>
+                <option value="clinic">Clinique</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="site_ville" className="block text-sm font-medium text-gray-700 mb-2">
+                  Ville
+                </label>
+                <input
+                  id="site_ville"
+                  name="site_ville"
+                  type="text"
+                  value={formData.site_ville}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
+                  placeholder="Bamako"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="site_pays" className="block text-sm font-medium text-gray-700 mb-2">
+                  Pays <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="site_pays"
+                  name="site_pays"
+                  type="text"
+                  value={formData.site_pays}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
+                  placeholder="Mali"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="site_adresse" className="block text-sm font-medium text-gray-700 mb-2">
+                Adresse complète (optionnel)
+              </label>
+              <input
+                id="site_adresse"
+                name="site_adresse"
+                type="text"
+                value={formData.site_adresse}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
+                placeholder="Rue, quartier, commune"
+              />
+            </div>
+
+            {/* Séparateur visuel */}
+            <div className="border-t border-gray-200 pt-6 mt-2">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                Sécurité du compte
+              </h3>
             </div>
 
             <div>
