@@ -106,7 +106,13 @@ class SyncService {
     // Écouter les changements de connectivité
     connectivityMonitor.addListener((isOnline) => {
       if (isOnline && !this.isSyncing) {
-        this.sync()
+        // Attendre 2 secondes après reconnexion pour laisser le serveur se stabiliser
+        console.log('Connection restored, scheduling sync in 2s...')
+        setTimeout(() => {
+          if (connectivityMonitor.isOnline() && !this.isSyncing) {
+            this.sync()
+          }
+        }, 2000)
       }
     })
   }
@@ -322,30 +328,46 @@ class SyncService {
         }
       }
 
-      // Pull patients (limité à 50 pour éviter les timeouts)
-      const patientsResponse = await patientsService.list({ limit: 50 })
-      for (const patient of patientsResponse.data || []) {
-        await db.patients.put({
-          ...patient,
-          _synced: true,
-        })
-        result.synced++
+      // Pull patients avec retry sur 503
+      try {
+        const patientsResponse = await this.retryOnServerError(() =>
+          patientsService.list({ limit: 50 })
+        )
+        for (const patient of patientsResponse.data || []) {
+          await db.patients.put({
+            ...patient,
+            _synced: true,
+          })
+          result.synced++
+        }
+      } catch (error: any) {
+        // Si échec après retries, on continue quand même (mode dégradé)
+        console.warn('Failed to pull patients after retries:', error.message)
+        result.errors.push(`Patients sync skipped: ${error.message}`)
       }
 
       // Pull encounters (derniers 7 jours seulement pour réduire la charge)
-      const sevenDaysAgo = new Date()
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+      try {
+        const sevenDaysAgo = new Date()
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
-      const encountersResponse = await encountersService.list({
-        from_date: sevenDaysAgo.toISOString().split('T')[0],
-      })
+        const encountersResponse = await this.retryOnServerError(() =>
+          encountersService.list({
+            from_date: sevenDaysAgo.toISOString().split('T')[0],
+          })
+        )
 
-      for (const encounter of encountersResponse || []) {
-        await db.encounters.put({
-          ...encounter,
-          _synced: true,
-        })
-        result.synced++
+        for (const encounter of encountersResponse || []) {
+          await db.encounters.put({
+            ...encounter,
+            _synced: true,
+          })
+          result.synced++
+        }
+      } catch (error: any) {
+        // Si échec après retries, on continue quand même (mode dégradé)
+        console.warn('Failed to pull encounters after retries:', error.message)
+        result.errors.push(`Encounters sync skipped: ${error.message}`)
       }
 
     } catch (error: any) {
@@ -356,6 +378,44 @@ class SyncService {
     }
 
     return result
+  }
+
+  /**
+   * Retry avec backoff exponentiel sur erreurs serveur 503/502/504
+   */
+  private async retryOnServerError<T>(
+    fn: () => Promise<T>,
+    maxRetries: number = 3,
+    initialDelayMs: number = 1000
+  ): Promise<T> {
+    let lastError: any
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        return await fn()
+      } catch (error: any) {
+        lastError = error
+
+        // Retry uniquement sur erreurs serveur temporaires
+        const isRetryable =
+          error.response?.status === 503 || // Service Unavailable
+          error.response?.status === 502 || // Bad Gateway
+          error.response?.status === 504 || // Gateway Timeout
+          error.code === 'ECONNRESET' ||
+          error.code === 'ETIMEDOUT'
+
+        if (!isRetryable || attempt === maxRetries - 1) {
+          throw error
+        }
+
+        // Backoff exponentiel: 1s, 2s, 4s
+        const delay = initialDelayMs * Math.pow(2, attempt)
+        console.log(`Retry ${attempt + 1}/${maxRetries} after ${delay}ms due to ${error.response?.status || error.code}`)
+        await new Promise(resolve => setTimeout(resolve, delay))
+      }
+    }
+
+    throw lastError
   }
 
   /**
