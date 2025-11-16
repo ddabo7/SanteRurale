@@ -78,6 +78,7 @@ async def delete_all_users():
                 'patients',
                 'audit_logs',
                 'feedback',
+                'feedbacks',  # Variante plurielle
             ]
 
             for table in tables_to_truncate:
