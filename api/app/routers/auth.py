@@ -646,3 +646,48 @@ async def logout(response: Response):
         "success": True,
         "message": "Déconnexion réussie"
     }
+
+
+# ===========================================================================
+# Endpoint public pour lister les sites (pour le formulaire d'inscription)
+# ===========================================================================
+
+class SiteResponse(BaseModel):
+    """Schéma pour la réponse d'un site"""
+    id: str
+    nom: str
+    type: str
+    ville: str | None = None
+    pays: str | None = None
+    adresse: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
+@router.get("/sites", response_model=list[SiteResponse])
+async def list_available_sites(db: AsyncSession = Depends(get_db)):
+    """
+    Liste tous les sites/centres hospitaliers disponibles.
+
+    Endpoint public utilisé lors de l'inscription pour que l'utilisateur
+    puisse choisir son centre/site de santé.
+    """
+    result = await db.execute(
+        select(Site)
+        .where(Site.actif == True)
+        .order_by(Site.nom)
+    )
+    sites = result.scalars().all()
+
+    return [
+        SiteResponse(
+            id=str(site.id),
+            nom=site.nom,
+            type=site.type,
+            ville=site.ville,
+            pays=site.pays,
+            adresse=site.adresse
+        )
+        for site in sites
+    ]

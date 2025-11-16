@@ -85,6 +85,8 @@ class Site(Base, TimestampMixin):
 
     # Informations supplémentaires optionnelles
     adresse: Mapped[str | None] = mapped_column(String(500))
+    ville: Mapped[str | None] = mapped_column(String(200))
+    pays: Mapped[str | None] = mapped_column(String(100))
     telephone: Mapped[str | None] = mapped_column(String(50))
     email: Mapped[str | None] = mapped_column(String(200))
 

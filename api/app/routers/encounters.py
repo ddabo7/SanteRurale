@@ -57,6 +57,9 @@ async def list_encounters(
         )
     )
 
+    # 🔒 ISOLATION PAR SITE: Tous les utilisateurs ne voient que les consultations de leur site
+    query = query.where(Encounter.site_id == current_user.site_id)
+
     # ISOLATION MULTI-TENANT : Filtrer par tenant_id (CRITIQUE)
     if current_user.tenant_id:
         query = query.where(Encounter.tenant_id == current_user.tenant_id)

@@ -44,15 +44,15 @@ async def list_patients(
     - **limit**: Nombre de résultats (max 200)
 
     Permissions:
-    - Admin/Médecin: tous les patients
-    - Autres: patients de leur site uniquement
+    - 🔒 ISOLATION PAR SITE: Chaque utilisateur ne voit que les patients de son propre centre/site
+    - Cette règle s'applique à TOUS les rôles (admin, médecin, infirmier, etc.)
     """
     # Base query
     stmt = select(Patient).where(Patient.deleted_at == None)
 
-    # Filtrer par site si pas admin/médecin
-    if current_user.role not in [UserRole.ADMIN, UserRole.MEDECIN]:
-        stmt = stmt.where(Patient.site_id == current_user.site_id)
+    # 🔒 ISOLATION PAR SITE: Tous les utilisateurs ne voient que les patients de leur site
+    # (y compris les admins et médecins - chaque centre est isolé)
+    stmt = stmt.where(Patient.site_id == current_user.site_id)
 
     # Recherche textuelle
     if search:
