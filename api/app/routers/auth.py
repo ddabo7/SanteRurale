@@ -11,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models import Site, User
+from app.models import Site, User, District
 from app.models.tenant import Tenant, Subscription
 from app.security import (
     create_access_token,
@@ -44,7 +44,14 @@ class SignupRequest(BaseModel):
     prenom: str | None = None
     telephone: str | None = None
     role: str = "soignant"  # admin, medecin, major, soignant
-    site_id: uuid_module.UUID | None = None  # Si None, on prend le premier site
+    # Informations du site (obligatoires pour créer un nouveau site)
+    site_nom: str  # Nom du CSCOM/Hôpital
+    site_type: str = "cscom"  # cscom, hospital, clinic
+    site_ville: str | None = None
+    site_pays: str = "Mali"
+    site_adresse: str | None = None
+    # Legacy: pour compatibilité avec anciens clients
+    site_id: uuid_module.UUID | None = None  # DÉPRÉCIÉ: réservé aux admins
     tenant_id: uuid_module.UUID | None = None  # ID du tenant (pour multi-tenancy)
 
 
@@ -137,7 +144,8 @@ async def signup(signup_data: SignupRequest, db: AsyncSession = Depends(get_db))
             detail="Vous ne pouvez pas créer un compte avec ce rôle. Contactez l'administrateur système."
         )
 
-    # Récupérer le site (fourni ou le premier disponible)
+    # 🏥 GESTION DU SITE
+    # Option 1: L'utilisateur fourni un site_id (réservé aux admins ajoutant des utilisateurs)
     if signup_data.site_id:
         result = await db.execute(select(Site).where(Site.id == signup_data.site_id))
         site = result.scalar_one_or_none()
@@ -146,14 +154,31 @@ async def signup(signup_data: SignupRequest, db: AsyncSession = Depends(get_db))
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Site invalide."
             )
+    # Option 2: Créer automatiquement un nouveau site pour l'utilisateur
     else:
-        result = await db.execute(select(Site).limit(1))
-        site = result.scalar_one_or_none()
-        if not site:
+        # Récupérer le district par défaut (ou le créer si nécessaire)
+        result = await db.execute(select(District).limit(1))
+        district = result.scalar_one_or_none()
+
+        if not district:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Aucun site disponible. Contactez l'administrateur."
+                detail="Erreur de configuration : aucun district disponible. Contactez l'administrateur."
             )
+
+        # Créer le nouveau site
+        site = Site(
+            id=uuid_module.uuid4(),
+            nom=signup_data.site_nom,
+            type=signup_data.site_type,
+            ville=signup_data.site_ville,
+            pays=signup_data.site_pays,
+            adresse=signup_data.site_adresse,
+            district_id=district.id,
+            actif=True,
+        )
+        db.add(site)
+        await db.flush()  # Pour obtenir l'ID du site
 
     # VÉRIFIER LES QUOTAS SI TENANT SPÉCIFIÉ
     if signup_data.tenant_id:
