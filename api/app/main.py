@@ -79,9 +79,12 @@ async def root():
     }
 
 
+@app.head("/api/health")
+@app.get("/api/health")
+@app.head("/health")
 @app.get("/health")
 async def health_check():
     """
-    Endpoint de vérification de santé
+    Endpoint de vérification de santé (HEAD + GET pour offline-first)
     """
     return {"status": "healthy"}

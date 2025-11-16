@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Synchronisation Offline-First</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #00ff00;
+        }
+        .test-section.running {
+            border-left-color: #ffaa00;
+        }
+        .test-section.success {
+            border-left-color: #00ff00;
+        }
+        .test-section.error {
+            border-left-color: #ff0000;
+        }
+        h1 { color: #00ff00; }
+        h2 { color: #ffaa00; }
+        .log {
+            background: #000;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log-line {
+            margin: 2px 0;
+        }
+        .success { color: #00ff00; }
+        .error { color: #ff0000; }
+        .warning { color: #ffaa00; }
+        .info { color: #00aaff; }
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button:hover {
+            background: #00cc00;
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .stat-box {
+            background: #000;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #00ff00;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Automatisé - Synchronisation Offline-First</h1>
+
+    <div class="stats">
+        <div class="stat-box">
+            <div class="stat-value" id="stat-tests">0</div>
+            <div class="stat-label">Tests Exécutés</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value success" id="stat-success">0</div>
+            <div class="stat-label">Succès</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value error" id="stat-failed">0</div>
+            <div class="stat-label">Échecs</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value warning" id="stat-pending">0</div>
+            <div class="stat-label">En Attente (Outbox)</div>
+        </div>
+    </div>
+
+    <div style="margin: 20px 0;">
+        <button onclick="runAllTests()">▶️ Lancer Tous les Tests</button>
+        <button onclick="clearLogs()">🗑️ Effacer les Logs</button>
+        <button onclick="inspectIndexedDB()">🔍 Inspecter IndexedDB</button>
+    </div>
+
+    <div id="tests-container"></div>
+    <div id="global-logs" class="log"></div>
+
+    <script type="module">
+        import { db } from '/src/db/index.ts';
+        import { offlineFirst, connectivityMonitor } from '/src/services/offlineFirst.ts';
+
+        window.db = db;
+        window.offlineFirst = offlineFirst;
+        window.connectivityMonitor = connectivityMonitor;
+
+        let testResults = {
+            total: 0,
+            success: 0,
+            failed: 0
+        };
+
+        function log(message, type = 'info') {
+            const logEl = document.getElementById('global-logs');
+            const line = document.createElement('div');
+            line.className = `log-line ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            line.textContent = `[${timestamp}] ${message}`;
+            logEl.appendChild(line);
+            logEl.scrollTop = logEl.scrollHeight;
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+
+        window.log = log;
+
+        async function updateStats() {
+            try {
+                const pending = await db.outbox.where('processed').equals(0).count();
+                document.getElementById('stat-tests').textContent = testResults.total;
+                document.getElementById('stat-success').textContent = testResults.success;
+                document.getElementById('stat-failed').textContent = testResults.failed;
+                document.getElementById('stat-pending').textContent = pending;
+            } catch (error) {
+                log(`Erreur mise à jour stats: ${error.message}`, 'error');
+            }
+        }
+
+        window.clearLogs = function() {
+            document.getElementById('global-logs').innerHTML = '';
+            log('Logs effacés', 'info');
+        };
+
+        window.inspectIndexedDB = async function() {
+            log('=== INSPECTION IndexedDB ===', 'info');
+
+            const patients = await db.patients.toArray();
+            const outbox = await db.outbox.toArray();
+            const encounters = await db.encounters.toArray();
+
+            log(`📦 Patients: ${patients.length}`, 'info');
+            patients.forEach(p => {
+                log(`  - ${p.nom} ${p.prenom || ''} (${p.id}) [synced: ${p._synced}]`, p._synced ? 'success' : 'warning');
+            });
+
+            log(`📦 Outbox: ${outbox.length}`, 'info');
+            outbox.forEach(op => {
+                log(`  - ${op.entity} ${op.operation} (attempts: ${op.attempts}, processed: ${op.processed})`, op.processed ? 'success' : 'warning');
+            });
+
+            log(`📦 Encounters: ${encounters.length}`, 'info');
+
+            await updateStats();
+        };
+
+        async function runTest(name, testFn) {
+            const testId = `test-${Date.now()}`;
+            const container = document.getElementById('tests-container');
+
+            const testSection = document.createElement('div');
+            testSection.className = 'test-section running';
+            testSection.id = testId;
+            testSection.innerHTML = `<h2>⏳ ${name}</h2><div class="log" id="${testId}-log"></div>`;
+            container.appendChild(testSection);
+
+            function testLog(message, type = 'info') {
+                const logEl = document.getElementById(`${testId}-log`);
+                const line = document.createElement('div');
+                line.className = `log-line ${type}`;
+                line.textContent = `  ${message}`;
+                logEl.appendChild(line);
+                logEl.scrollTop = logEl.scrollHeight;
+            }
+
+            testResults.total++;
+
+            try {
+                log(`Démarrage test: ${name}`, 'info');
+                await testFn(testLog);
+                testSection.className = 'test-section success';
+                testSection.querySelector('h2').textContent = `✅ ${name}`;
+                testResults.success++;
+                log(`✅ Test réussi: ${name}`, 'success');
+            } catch (error) {
+                testSection.className = 'test-section error';
+                testSection.querySelector('h2').textContent = `❌ ${name}`;
+                testLog(`ERREUR: ${error.message}`, 'error');
+                testResults.failed++;
+                log(`❌ Test échoué: ${name} - ${error.message}`, 'error');
+            }
+
+            await updateStats();
+        }
+
+        window.runAllTests = async function() {
+            testResults = { total: 0, success: 0, failed: 0 };
+            document.getElementById('tests-container').innerHTML = '';
+            log('=== DÉMARRAGE DE LA SUITE DE TESTS ===', 'info');
+
+            // Test 1: Création patient online
+            await runTest('Test 1: Création Patient ONLINE', async (log) => {
+                log('Création d\'un patient...', 'info');
+
+                const result = await offlineFirst.createPatient({
+                    nom: 'TEST_AUTO_ONLINE',
+                    prenom: 'Alpha',
+                    sexe: 'M',
+                    annee_naissance: 1990,
+                    telephone: '+223 70 00 00 01',
+                    village: 'Bamako'
+                });
+
+                log(`Patient créé avec ID: ${result.localId}`, 'success');
+                log(`IsOffline: ${result.isOffline}`, 'info');
+                log(`WillSyncLater: ${result.willSyncLater}`, 'info');
+
+                // Attendre la sync
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                // Vérifier dans IndexedDB
+                const patient = await db.patients.get(result.localId);
+                if (!patient) throw new Error('Patient introuvable dans IndexedDB');
+                log(`Patient en DB: ${patient.nom} (synced: ${patient._synced})`, patient._synced ? 'success' : 'warning');
+
+                if (!patient._synced) {
+                    log('⚠️ Patient pas encore synchronisé, vérifiez l\'outbox', 'warning');
+                }
+            });
+
+            // Test 2: Vérifier l'outbox est vide
+            await runTest('Test 2: Vérification Outbox Vide', async (log) => {
+                const pending = await db.outbox.where('processed').equals(0).toArray();
+                log(`Opérations en attente: ${pending.length}`, pending.length === 0 ? 'success' : 'warning');
+
+                if (pending.length > 0) {
+                    pending.forEach(op => {
+                        log(`  - ${op.entity} ${op.operation} (attempts: ${op.attempts})`, 'warning');
+                    });
+                }
+            });
+
+            // Test 3: Connectivity Monitor
+            await runTest('Test 3: Connectivity Monitor', async (log) => {
+                const isOnline = connectivityMonitor.isOnline();
+                log(`État connexion: ${isOnline ? 'ONLINE' : 'OFFLINE'}`, isOnline ? 'success' : 'warning');
+
+                if (!isOnline) {
+                    throw new Error('Connectivité détectée comme offline');
+                }
+            });
+
+            // Test 4: Health Check
+            await runTest('Test 4: Health Check API', async (log) => {
+                const response = await fetch('/api/health', { method: 'HEAD' });
+                log(`Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+
+                if (!response.ok) {
+                    throw new Error(`Health check failed: ${response.status}`);
+                }
+            });
+
+            log('=== TESTS TERMINÉS ===', 'success');
+            log(`Total: ${testResults.total}, Succès: ${testResults.success}, Échecs: ${testResults.failed}`, 'info');
+        };
+
+        // Auto-démarrage des tests
+        log('Page de test chargée. Cliquez sur "Lancer Tous les Tests"', 'info');
+        log('Vous pouvez aussi utiliser la console: window.offlineFirst, window.db, etc.', 'info');
+
+        // Inspecter au démarrage
+        setTimeout(inspectIndexedDB, 1000);
+    </script>
+</body>
+</html>
