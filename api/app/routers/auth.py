@@ -180,6 +180,30 @@ async def signup(signup_data: SignupRequest, db: AsyncSession = Depends(get_db))
         db.add(site)
         await db.flush()  # Pour obtenir l'ID du site
 
+        # Créer automatiquement un tenant pilote gratuit pour ce site
+        # Cela permet l'accès aux endpoints /api/tenants/me et /api/tenants/me/subscription
+        from app.services.subscription_service import SubscriptionService
+        subscription_service = SubscriptionService(db)
+
+        # Générer un slug unique basé sur le nom du site
+        import re
+        slug_base = re.sub(r'[^a-z0-9-]', '-', signup_data.site_nom.lower())
+        slug_base = re.sub(r'-+', '-', slug_base).strip('-')
+        slug = f"{slug_base}-{uuid_module.uuid4().hex[:8]}"
+
+        tenant = await subscription_service.create_pilot_tenant(
+            name=signup_data.site_nom,
+            slug=slug,
+            email=signup_data.email,
+            phone=signup_data.telephone,
+            address=signup_data.site_adresse,
+            city=signup_data.site_ville,
+            country_code="ML"  # Mali par défaut
+        )
+
+        # Assigner automatiquement le tenant à l'utilisateur
+        signup_data.tenant_id = tenant.id
+
     # VÉRIFIER LES QUOTAS SI TENANT SPÉCIFIÉ
     if signup_data.tenant_id:
         # Récupérer le tenant
