@@ -81,12 +81,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      // CRITIQUE: Vider TOUTES les données IndexedDB AVANT le login
-      // pour éviter de voir les données fantômes d'un autre utilisateur
-      console.log('[Auth] Vidage complet d\'IndexedDB avant connexion...')
-      await db.clearAllData()
-      console.log('[Auth] IndexedDB vidé avec succès')
-
       const response = await authService.login(email, password)
 
       const { user: userData } = response
@@ -113,25 +107,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const logout = async () => {
+    // CRITIQUE: Vider TOUTES les données IndexedDB lors de la déconnexion
+    // Cela évite qu'un autre utilisateur voit les données du précédent
+    console.log('[Auth] Vidage complet d\'IndexedDB lors de la déconnexion...')
+    try {
+      await db.clearAllData()
+      console.log('[Auth] IndexedDB complètement vidé')
+    } catch (error) {
+      console.error('[Auth] Erreur lors du vidage d\'IndexedDB:', error)
+    }
+
+    // Vider le localStorage
+    try {
+      localStorage.clear()
+      console.log('[Auth] localStorage vidé')
+    } catch (error) {
+      console.warn('[Auth] Impossible de vider localStorage:', error)
+    }
+
+    // Nettoyer l'état React
+    setUser(null)
+
     // Appeler l'endpoint backend pour supprimer les cookies HttpOnly
     const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
     try {
       await fetch(`${API_BASE_URL}/auth/logout`, {
         method: 'POST',
-        credentials: 'include', // Important pour envoyer les cookies
+        credentials: 'include',
       })
     } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error)
-    }
-
-    // Nettoyer l'état local
-    setUser(null)
-
-    // Nettoyer IndexedDB
-    try {
-      await db.user_session.clear()
-    } catch (error) {
-      console.error('Erreur lors de la suppression de la session utilisateur:', error)
+      console.error('[Auth] Erreur lors de la déconnexion serveur:', error)
     }
   }
 
