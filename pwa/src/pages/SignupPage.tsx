@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { authService } from '../services/authService'
-import { db } from '../db'
 
 export const SignupPage = () => {
   const [formData, setFormData] = useState({
@@ -93,21 +92,6 @@ export const SignupPage = () => {
         site_pays: formData.site_pays,
         site_adresse: formData.site_adresse || undefined,
       })
-
-      // IMPORTANT: Vider toutes les sessions avant de rediriger vers login
-      // Sinon l'utilisateur va récupérer les cookies de la session précédente
-      try {
-        await db.clearAllData()
-        localStorage.clear()
-
-        // Appeler logout pour vider les cookies du navigateur
-        await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/auth/logout`, {
-          method: 'POST',
-          credentials: 'include',
-        })
-      } catch (error) {
-        console.warn('Erreur lors du nettoyage avant signup:', error)
-      }
 
       // Afficher le message de succès
       setSuccess(true)
