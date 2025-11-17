@@ -20,6 +20,8 @@ from app.schemas import (
     PaginationMeta,
 )
 from app.security import get_current_user
+from app.dependencies.tenant import get_current_tenant, check_quota
+from app.models.tenant import Tenant
 
 logger = logging.getLogger(__name__)
 
@@ -118,6 +120,7 @@ async def list_patients(
 async def create_patient(
     patient_data: PatientCreate,
     current_user: User = Depends(get_current_user),
+    tenant: Tenant = Depends(get_current_tenant),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -127,6 +130,17 @@ async def create_patient(
 
     Permissions: soignant, major, médecin, admin
     """
+    # 🔒 VÉRIFICATION DU QUOTA: Compter les patients actuels
+    count_stmt = select(func.count()).select_from(Patient).where(
+        Patient.site_id == current_user.site_id,
+        Patient.deleted_at == None
+    )
+    result = await db.execute(count_stmt)
+    current_patients_count = result.scalar() or 0
+
+    # Vérifier si le quota est atteint
+    await check_quota(tenant, "patients_total", current_patients_count, db)
+
     # Créer le patient
     patient = Patient(
         **patient_data.model_dump(),

@@ -49,10 +49,10 @@ async def init_production():
                     {
                         "code": "free",
                         "name": "Plan Gratuit",
-                        "description": "Phase pilote - Gratuit et illimité",
+                        "description": "Plan d'essai - Limité à 50 patients",
                         "price_monthly": Decimal("0.00"),
                         "max_users": 5,
-                        "max_patients_total": 100,
+                        "max_patients_total": 50,
                         "max_sites": 1,
                         "max_storage_gb": 5,
                         "features": ["basic_features"],
