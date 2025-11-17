@@ -81,6 +81,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
+      // DOUBLE SÉCURITÉ: Vider IndexedDB AVANT le login
+      // (au cas où le logout précédent n'aurait pas fonctionné)
+      console.log('[Auth] Vidage de sécurité d\'IndexedDB avant login...')
+      await db.clearAllData()
+
       const response = await authService.login(email, password)
 
       const { user: userData } = response
