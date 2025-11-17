@@ -135,11 +135,8 @@ async def create_patient(
     )
 
     db.add(patient)
-
-    # Context pour audit log
-    async with set_db_context(db, user_id=current_user.id):
-        await db.commit()
-        await db.refresh(patient)
+    await db.commit()
+    await db.refresh(patient)
 
     logger.info(
         "Patient créé",
