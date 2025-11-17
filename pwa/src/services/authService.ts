@@ -13,14 +13,6 @@ export const authService = {
    * Vide automatiquement IndexedDB pour éviter de voir les données d'un autre utilisateur
    */
   login: async (email: string, password: string) => {
-    // Vider IndexedDB AVANT la connexion pour éviter les données fantômes
-    try {
-      await db.clearAllData()
-      console.log('[Auth] IndexedDB vidé avant connexion')
-    } catch (error) {
-      console.warn('[Auth] Impossible de vider IndexedDB:', error)
-    }
-
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
@@ -33,6 +25,14 @@ export const authService = {
     if (!response.ok) {
       const error = await response.json()
       throw new Error(error.detail || 'Erreur de connexion')
+    }
+
+    // Vider IndexedDB APRÈS une connexion réussie pour éviter les données fantômes
+    try {
+      await db.clearAllData()
+      console.log('[Auth] IndexedDB vidé après connexion réussie')
+    } catch (error) {
+      console.warn('[Auth] Impossible de vider IndexedDB:', error)
     }
 
     return await response.json()
