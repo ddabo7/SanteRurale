@@ -81,6 +81,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
+      // 🔒 SÉCURITÉ CRITIQUE: Vider TOUTES les données locales AVANT de se connecter
+      // pour éviter la contamination des données entre comptes
+      console.log('[Auth] Nettoyage des données locales avant connexion...')
+      try {
+        await db.clearAllData()
+        localStorage.clear()
+        console.log('[Auth] ✅ Données locales vidées')
+      } catch (error) {
+        console.error('[Auth] ⚠️ Erreur lors du nettoyage pré-connexion:', error)
+      }
+
       const response = await authService.login(email, password)
 
       const { user: userData } = response
@@ -100,6 +111,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       })
 
       setUser(normalizedUser)
+      console.log('[Auth] ✅ Connexion réussie pour', normalizedUser.email, '(site:', normalizedUser.site_id, ')')
     } catch (error) {
       console.error('Erreur de connexion:', error)
       throw error
