@@ -2,14 +2,25 @@
  * Service d'authentification basé sur l'API PostgreSQL
  */
 
+import { db } from '../db'
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
 export const authService = {
   /**
    * Authentifie un utilisateur avec email et mot de passe
    * Les tokens sont stockés dans des cookies HttpOnly par le serveur
+   * Vide automatiquement IndexedDB pour éviter de voir les données d'un autre utilisateur
    */
   login: async (email: string, password: string) => {
+    // Vider IndexedDB AVANT la connexion pour éviter les données fantômes
+    try {
+      await db.clearAllData()
+      console.log('[Auth] IndexedDB vidé avant connexion')
+    } catch (error) {
+      console.warn('[Auth] Impossible de vider IndexedDB:', error)
+    }
+
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
@@ -25,6 +36,37 @@ export const authService = {
     }
 
     return await response.json()
+  },
+
+  /**
+   * Déconnecte l'utilisateur et vide toutes les données locales
+   */
+  logout: async () => {
+    // Vider IndexedDB
+    try {
+      await db.clearAllData()
+      console.log('[Auth] IndexedDB vidé lors de la déconnexion')
+    } catch (error) {
+      console.error('[Auth] Erreur lors du vidage d\'IndexedDB:', error)
+    }
+
+    // Vider le localStorage
+    try {
+      localStorage.clear()
+      console.log('[Auth] localStorage vidé')
+    } catch (error) {
+      console.warn('[Auth] Impossible de vider localStorage:', error)
+    }
+
+    // Appeler l'endpoint de déconnexion pour invalider les cookies
+    try {
+      await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+    } catch (error) {
+      console.warn('[Auth] Erreur lors de la déconnexion serveur:', error)
+    }
   },
 
   /**
