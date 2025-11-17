@@ -44,12 +44,12 @@ class Settings(BaseSettings):
             "http://127.0.0.1:3000",
         ]
 
-    # Configuration Email
-    EMAIL_HOST: str = "smtp.gmail.com"
-    EMAIL_PORT: int = 587
-    EMAIL_HOST_USER: str = "crosssecmar@gmail.com"
-    EMAIL_HOST_PASSWORD: str = "myrh iucx pjrh rboe"
-    EMAIL_FROM: str = "noreply@sante-rurale.ml"
+    # Configuration Email (Hostinger)
+    EMAIL_HOST: str = "smtp.hostinger.com"
+    EMAIL_PORT: int = 465
+    EMAIL_HOST_USER: str = "no-reply@santerurale.io"
+    EMAIL_HOST_PASSWORD: str = ""  # Défini dans .env en production
+    EMAIL_FROM: str = "no-reply@santerurale.io"
     EMAIL_FROM_NAME: str = "Santé Rurale"
 
     # URLs de l'application
