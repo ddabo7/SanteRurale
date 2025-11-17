@@ -81,6 +81,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
+      // CRITIQUE: Vider TOUTES les données IndexedDB AVANT le login
+      // pour éviter de voir les données fantômes d'un autre utilisateur
+      console.log('[Auth] Vidage complet d\'IndexedDB avant connexion...')
+      await db.clearAllData()
+      console.log('[Auth] IndexedDB vidé avec succès')
+
       const response = await authService.login(email, password)
 
       const { user: userData } = response
@@ -88,7 +94,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       // Les tokens sont maintenant dans des cookies HttpOnly (gérés automatiquement par le navigateur)
       // On stocke uniquement les données utilisateur dans IndexedDB (sans les tokens)
-      await db.user_session.clear()
       await db.user_session.put({
         id: normalizedUser.id,
         email: normalizedUser.email,

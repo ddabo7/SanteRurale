@@ -10,7 +10,7 @@ export const authService = {
   /**
    * Authentifie un utilisateur avec email et mot de passe
    * Les tokens sont stockés dans des cookies HttpOnly par le serveur
-   * Vide automatiquement IndexedDB pour éviter de voir les données d'un autre utilisateur
+   * Note: IndexedDB est vidé AVANT le login dans AuthContext pour éviter les données fantômes
    */
   login: async (email: string, password: string) => {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -25,14 +25,6 @@ export const authService = {
     if (!response.ok) {
       const error = await response.json()
       throw new Error(error.detail || 'Erreur de connexion')
-    }
-
-    // Vider IndexedDB APRÈS une connexion réussie pour éviter les données fantômes
-    try {
-      await db.clearAllData()
-      console.log('[Auth] IndexedDB vidé après connexion réussie')
-    } catch (error) {
-      console.warn('[Auth] Impossible de vider IndexedDB:', error)
     }
 
     return await response.json()
