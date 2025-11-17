@@ -1,0 +1,12 @@
+{
+  "email": "test.cscom@example.com",
+  "password": "TestPass123!",
+  "nom": "Traore",
+  "prenom": "Amadou",
+  "telephone": "+22370123456",
+  "site_nom": "CSCOM de Test Bamako",
+  "site_type": "cscom",
+  "site_ville": "Bamako",
+  "site_pays": "Mali",
+  "site_adresse": "Quartier Hippodrome"
+}
