@@ -104,8 +104,16 @@ export const PatientFormPage = () => {
     } catch (error: any) {
       console.error('❌ Erreur sauvegarde patient:', error)
 
+      // 🔒 QUOTA ATTEINT: Afficher un message spécial avec lien d'upgrade
+      if (error.response?.status === 402) {
+        const quotaMessage = error.response.data.detail || 'Quota de patients atteint'
+        setError(
+          `🚫 ${quotaMessage}\n\n` +
+          `Pour continuer à ajouter des patients, veuillez passer à un plan supérieur.`
+        )
+      }
       // Messages d'erreur adaptés
-      if (error.message) {
+      else if (error.message) {
         setError(error.message)
       } else if (error.response?.data?.detail) {
         if (Array.isArray(error.response.data.detail)) {
