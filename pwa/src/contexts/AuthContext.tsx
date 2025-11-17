@@ -81,11 +81,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      // DOUBLE SÉCURITÉ: Vider IndexedDB AVANT le login
-      // (au cas où le logout précédent n'aurait pas fonctionné)
-      console.log('[Auth] Vidage de sécurité d\'IndexedDB avant login...')
-      await db.clearAllData()
-
       const response = await authService.login(email, password)
 
       const { user: userData } = response
@@ -112,12 +107,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const logout = async () => {
-    // CRITIQUE: Vider TOUTES les données IndexedDB lors de la déconnexion
-    // Cela évite qu'un autre utilisateur voit les données du précédent
-    console.log('[Auth] Vidage complet d\'IndexedDB lors de la déconnexion...')
+    // Nettoyer l'état React
+    setUser(null)
+
+    // Appeler l'endpoint backend pour supprimer les cookies HttpOnly
+    // C'est lui qui fait le vrai travail de déconnexion
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+    try {
+      await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+    } catch (error) {
+      console.error('[Auth] Erreur lors de la déconnexion serveur:', error)
+    }
+
+    // Vider IndexedDB (pour éviter de garder des données locales)
     try {
       await db.clearAllData()
-      console.log('[Auth] IndexedDB complètement vidé')
+      console.log('[Auth] IndexedDB vidé')
     } catch (error) {
       console.error('[Auth] Erreur lors du vidage d\'IndexedDB:', error)
     }
@@ -128,20 +136,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log('[Auth] localStorage vidé')
     } catch (error) {
       console.warn('[Auth] Impossible de vider localStorage:', error)
-    }
-
-    // Nettoyer l'état React
-    setUser(null)
-
-    // Appeler l'endpoint backend pour supprimer les cookies HttpOnly
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
-    try {
-      await fetch(`${API_BASE_URL}/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      })
-    } catch (error) {
-      console.error('[Auth] Erreur lors de la déconnexion serveur:', error)
     }
   }
 

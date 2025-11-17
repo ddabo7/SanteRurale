@@ -685,11 +685,28 @@ async def change_password(
 @router.post("/logout")
 async def logout(response: Response):
     """
-    Déconnecte l'utilisateur en supprimant les cookies
+    Déconnecte l'utilisateur en supprimant les cookies HttpOnly
+
+    IMPORTANT: Il faut utiliser les MÊMES paramètres (path, domain, samesite)
+    que lors de la création des cookies, sinon ils ne seront pas supprimés !
     """
-    # Supprimer les cookies en les définissant avec max_age=0
-    response.delete_cookie(key="access_token")
-    response.delete_cookie(key="refresh_token")
+    # Supprimer les cookies avec les mêmes paramètres que lors de leur création
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+        domain=None,
+        samesite=COOKIE_SAMESITE,
+        httponly=COOKIE_HTTPONLY,
+        secure=COOKIE_SECURE
+    )
+    response.delete_cookie(
+        key="refresh_token",
+        path="/",
+        domain=None,
+        samesite=COOKIE_SAMESITE,
+        httponly=COOKIE_HTTPONLY,
+        secure=COOKIE_SECURE
+    )
 
     return {
         "success": True,
