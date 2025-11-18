@@ -39,11 +39,6 @@ export const SignupPage = () => {
         setCountdown((prev) => {
           if (prev <= 1) {
             clearInterval(timer)
-            navigate('/login', {
-              state: {
-                message: 'Compte créé ! Vérifiez votre email puis connectez-vous.'
-              }
-            })
             return 0
           }
           return prev - 1
@@ -52,7 +47,18 @@ export const SignupPage = () => {
 
       return () => clearInterval(timer)
     }
-  }, [success, navigate])
+  }, [success])
+
+  // Redirection séparée quand countdown atteint 0
+  useEffect(() => {
+    if (success && countdown === 0) {
+      navigate('/login', {
+        state: {
+          message: 'Compte créé ! Vérifiez votre email puis connectez-vous.'
+        }
+      })
+    }
+  }, [countdown, success, navigate])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData(prev => ({

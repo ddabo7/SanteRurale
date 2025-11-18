@@ -17,6 +17,15 @@ class SexeEnum(str, enum.Enum):
     F = "F"
 
 
+# Enum pour le rôle utilisateur
+class UserRoleEnum(str, enum.Enum):
+    soignant = "soignant"
+    major = "major"
+    medecin = "medecin"
+    pharmacien = "pharmacien"
+    admin = "admin"
+
+
 # Enum pour le statut des références
 class ReferenceStatutEnum(str, enum.Enum):
     en_attente = "en_attente"
@@ -105,7 +114,7 @@ class User(Base, TimestampMixin):
     prenom: Mapped[str | None] = mapped_column(String(200))
     email: Mapped[str] = mapped_column(String(200), unique=True, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(String(500), nullable=False)
-    role: Mapped[str] = mapped_column(String(50), nullable=False)  # admin, medecin, major, soignant
+    role: Mapped[UserRoleEnum] = mapped_column(SQLEnum(UserRoleEnum, name="user_role", create_type=False), nullable=False)
     site_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("sites.id"), nullable=False)
     tenant_id: Mapped[uuid_module.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
     actif: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)

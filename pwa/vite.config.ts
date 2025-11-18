@@ -60,7 +60,7 @@ export default defineConfig({
     host: true, // Écoute sur toutes les interfaces (Docker)
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: process.env.DOCKER_ENV ? 'http://api_dev:8000' : 'http://localhost:8000',
         changeOrigin: true,
       },
     },
