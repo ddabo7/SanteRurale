@@ -10,7 +10,10 @@ from app.config import settings
 
 def send_email(to_email: str, subject: str, html_body: str, text_body: str = "") -> None:
     """
-    Envoie un email via SMTP Gmail
+    Envoie un email via SMTP Hostinger (no-reply@santerurale.io)
+
+    Port 465 (SSL) : Utilise SMTP_SSL directement
+    Port 587 (TLS) : Utilise SMTP + starttls()
     """
     try:
         # Créer le message
@@ -27,16 +30,23 @@ def send_email(to_email: str, subject: str, html_body: str, text_body: str = "")
         part2 = MIMEText(html_body, 'html', 'utf-8')
         msg.attach(part2)
 
-        # Connexion au serveur SMTP
-        with smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT) as server:
-            server.starttls()
-            server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
-            server.send_message(msg)
+        # Connexion au serveur SMTP Hostinger
+        # Port 465 nécessite SMTP_SSL (connexion SSL dès le départ)
+        if settings.EMAIL_PORT == 465:
+            with smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT) as server:
+                server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+                server.send_message(msg)
+        else:
+            # Port 587 utilise STARTTLS
+            with smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT) as server:
+                server.starttls()
+                server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+                server.send_message(msg)
 
-        print(f"Email envoyé avec succès à {to_email}")
+        print(f"✅ Email envoyé avec succès à {to_email} depuis {settings.EMAIL_FROM}")
 
     except Exception as e:
-        print(f"Erreur lors de l'envoi de l'email à {to_email}: {str(e)}")
+        print(f"❌ Erreur lors de l'envoi de l'email à {to_email}: {str(e)}")
         raise
 
 
