@@ -150,6 +150,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.warn('[Auth] Impossible de vider localStorage:', error)
     }
 
+    // 🔥 CRITIQUE: Vider le cache du Service Worker
+    try {
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' })
+        console.log('[Auth] Message envoyé au Service Worker pour vider le cache')
+      }
+    } catch (error) {
+      console.error('[Auth] Erreur lors du vidage du cache Service Worker:', error)
+    }
+
     // 🔥 CRITIQUE: Forcer un rechargement COMPLET de la page pour vider TOUT le cache
     // Cela empêche le prochain utilisateur de voir les données en cache du précédent
     console.log('[Auth] Rechargement complet de la page pour vider le cache...')

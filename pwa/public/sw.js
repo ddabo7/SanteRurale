@@ -8,9 +8,9 @@
  * - Mise à jour automatique du cache
  */
 
-const CACHE_NAME = 'sante-rurale-v1';
-const STATIC_CACHE = 'sante-rurale-static-v1';
-const API_CACHE = 'sante-rurale-api-v1';
+const CACHE_NAME = 'sante-rurale-v2';
+const STATIC_CACHE = 'sante-rurale-static-v2';
+const API_CACHE = 'sante-rurale-api-v2';
 
 // Fichiers à mettre en cache lors de l'installation
 const STATIC_ASSETS = [
@@ -87,15 +87,24 @@ self.addEventListener('fetch', (event) => {
 
   // Stratégie pour les requêtes API
   if (url.pathname.startsWith('/api/')) {
-    // Stale-While-Revalidate pour les requêtes GET (données qui peuvent être un peu périmées)
-    if (request.method === 'GET' && (
-      url.pathname.includes('/patients') ||
-      url.pathname.includes('/encounters') ||
-      url.pathname.includes('/plans')
-    )) {
+    // 🔒 SÉCURITÉ CRITIQUE: JAMAIS mettre en cache les données utilisateur sensibles
+    // pour éviter la contamination de données entre utilisateurs
+    // On utilise Network First SANS cache pour toutes les requêtes authentifiées
+    if (url.pathname.includes('/patients') ||
+        url.pathname.includes('/encounters') ||
+        url.pathname.includes('/users') ||
+        url.pathname.includes('/auth')) {
+      // Network Only - Pas de cache du tout pour les données sensibles
+      event.respondWith(fetch(request));
+      return;
+    }
+
+    // Stale-While-Revalidate uniquement pour les données publiques/statiques
+    if (request.method === 'GET' && url.pathname.includes('/plans')) {
       event.respondWith(safeHandler(request, () => staleWhileRevalidate(request)));
       return;
     }
+
     // Network First pour les autres API (POST, PUT, DELETE)
     event.respondWith(safeHandler(request, () => networkFirstStrategy(request)));
     return;
