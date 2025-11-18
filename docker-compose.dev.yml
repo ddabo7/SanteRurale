@@ -1,0 +1,180 @@
+# ===========================================================================
+# Docker Compose - Development (Local Mac)
+# ===========================================================================
+# Configuration optimisée pour le développement local avec:
+# - Hot reload pour API et Frontend
+# - Debug activé
+# - Ports exposés pour accès direct
+# - Logs verbeux
+# ===========================================================================
+
+version: '3.8'
+
+services:
+  # ===========================================================================
+  # PostgreSQL Database (Dev)
+  # ===========================================================================
+  db_dev:
+    image: postgres:16-alpine
+    container_name: sante_db_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sante_rurale_dev
+      POSTGRES_USER: sante_dev
+      POSTGRES_PASSWORD: dev_password_123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    ports:
+      - "5433:5432"  # Port différent de prod
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./api/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sante_dev -d sante_rurale_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sante_dev_network
+
+  # ===========================================================================
+  # Redis (Dev)
+  # ===========================================================================
+  redis_dev:
+    image: redis:7-alpine
+    container_name: sante_redis_dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass dev_redis_123
+    ports:
+      - "6380:6379"  # Port différent de prod
+    volumes:
+      - redis_dev_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sante_dev_network
+
+  # ===========================================================================
+  # MinIO (Dev)
+  # ===========================================================================
+  minio_dev:
+    image: minio/minio:latest
+    container_name: sante_minio_dev
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_dev_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sante_dev_network
+
+  # ===========================================================================
+  # API FastAPI (Development avec Hot Reload)
+  # ===========================================================================
+  api_dev:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+      target: development
+    container_name: sante_api_dev
+    restart: unless-stopped
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --log-level debug
+    environment:
+      # Application
+      ENVIRONMENT: development
+      DEBUG: "true"
+      LOG_LEVEL: DEBUG
+
+      # Database
+      DATABASE_URL: postgresql+asyncpg://sante_dev:dev_password_123@db_dev:5432/sante_rurale_dev
+
+      # Redis
+      REDIS_URL: redis://:dev_redis_123@redis_dev:6379/0
+      CELERY_BROKER_URL: redis://:dev_redis_123@redis_dev:6379/1
+      CELERY_RESULT_BACKEND: redis://:dev_redis_123@redis_dev:6379/2
+
+      # S3/MinIO
+      S3_ENDPOINT_URL: http://minio_dev:9000
+      S3_BUCKET_NAME: sante-rurale-dev
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin123
+
+      # Security (Dev keys - NOT for production)
+      SECRET_KEY: dev_secret_key_change_in_production
+      JWT_ALGORITHM: HS256
+      ALLOWED_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000
+
+      # Email (utilise les mêmes que prod ou config test)
+      EMAIL_HOST: ${EMAIL_HOST:-smtp.hostinger.com}
+      EMAIL_PORT: ${EMAIL_PORT:-465}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-no-reply@santerurale.io}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      EMAIL_FROM: ${EMAIL_FROM:-no-reply@santerurale.io}
+      EMAIL_FROM_NAME: "Santé Rurale [DEV]"
+
+      # URLs
+      FRONTEND_URL: http://localhost:5173
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app  # Hot reload - monte le code source
+      - ./logs:/app/logs
+    depends_on:
+      db_dev:
+        condition: service_healthy
+      redis_dev:
+        condition: service_healthy
+      minio_dev:
+        condition: service_healthy
+    networks:
+      - sante_dev_network
+
+  # ===========================================================================
+  # Frontend PWA (Development avec Hot Reload)
+  # ===========================================================================
+  frontend_dev:
+    build:
+      context: ./pwa
+      dockerfile: Dockerfile
+      target: development
+    container_name: sante_pwa_dev
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:8000/api
+      VITE_ENVIRONMENT: development
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./pwa:/app  # Hot reload - monte le code source
+      - /app/node_modules  # Garde node_modules du container
+    networks:
+      - sante_dev_network
+    stdin_open: true
+    tty: true
+
+# ===========================================================================
+# Volumes
+# ===========================================================================
+volumes:
+  postgres_dev_data:
+  redis_dev_data:
+  minio_dev_data:
+
+# ===========================================================================
+# Network
+# ===========================================================================
+networks:
+  sante_dev_network:
+    driver: bridge
