@@ -195,6 +195,22 @@ prod_deploy_remote() {
     local SERVER_USER="root"
     local PROJECT_DIR="/opt/santerurale"
 
+    # 0. RAPPEL DU WORKFLOW OBLIGATOIRE
+    log_warning "📋 WORKFLOW OBLIGATOIRE:"
+    echo "  1️⃣  ./deploy.sh dev → Tester l'interface web localement"
+    echo "  2️⃣  ./deploy.sh test → Valider tout automatiquement"
+    echo "  3️⃣  ./deploy.sh prod-remote → Déployer en production"
+    echo ""
+    read -p "Avez-vous suivi ce workflow? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        log_error "⛔ Déploiement annulé - Suivez d'abord le workflow complet"
+        log_info "1. ./deploy.sh dev (tester l'interface)"
+        log_info "2. ./deploy.sh test (valider le code)"
+        log_info "3. ./deploy.sh prod-remote (déployer)"
+        exit 0
+    fi
+
     # 1. Validation pré-déploiement
     log_warning "⚠️  ATTENTION: Vous allez déployer en PRODUCTION sur $SERVER_IP"
     read -p "Continuer? (y/N) " -n 1 -r
