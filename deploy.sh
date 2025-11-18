@@ -155,6 +155,36 @@ run_tests() {
 }
 
 # ===========================================================================
+# Git push automatique
+# ===========================================================================
+git_push() {
+    log_info "📤 Push vers GitHub..."
+
+    # Vérifier s'il y a des changements non commités
+    if [[ -n $(git status -s) ]]; then
+        log_warning "Il y a des changements non commités"
+        read -p "Voulez-vous les commiter maintenant? (y/N) " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            git add .
+            read -p "Message du commit: " commit_msg
+            git commit -m "$commit_msg"
+        else
+            log_info "Push annulé"
+            return 0
+        fi
+    fi
+
+    # Push vers GitHub
+    if git push origin main; then
+        log_success "Code pushé vers GitHub"
+    else
+        log_error "Erreur lors du push"
+        return 1
+    fi
+}
+
+# ===========================================================================
 # Déploiement PROD
 # ===========================================================================
 prod_deploy() {
@@ -172,6 +202,9 @@ prod_deploy() {
     # 2. Lancer les tests
     log_info "Validation des tests..."
     run_tests
+
+    # 2.5. Push vers GitHub
+    git_push
 
     # 3. Backup de la base de données
     log_info "Backup de la base de données..."
@@ -248,6 +281,10 @@ case "$ENV" in
         check_prerequisites
         prod_deploy
         ;;
+    push)
+        check_prerequisites
+        git_push
+        ;;
     logs-dev)
         show_logs "dev"
         ;;
@@ -255,13 +292,14 @@ case "$ENV" in
         show_logs "prod"
         ;;
     *)
-        echo "Usage: $0 {dev|dev-stop|test|prod|logs-dev|logs-prod}"
+        echo "Usage: $0 {dev|dev-stop|test|prod|push|logs-dev|logs-prod}"
         echo ""
         echo "Commandes:"
         echo "  dev        - Démarre l'environnement de développement"
         echo "  dev-stop   - Arrête l'environnement de développement"
         echo "  test       - Lance les tests automatisés"
-        echo "  prod       - Déploie en production (avec validation)"
+        echo "  prod       - Déploie en production (avec validation + push auto)"
+        echo "  push       - Commit et push vers GitHub"
         echo "  logs-dev   - Affiche les logs de développement"
         echo "  logs-prod  - Affiche les logs de production"
         exit 1
