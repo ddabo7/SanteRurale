@@ -193,7 +193,7 @@ prod_deploy_remote() {
     # Configuration serveur
     local SERVER_IP="72.61.107.217"
     local SERVER_USER="root"
-    local PROJECT_DIR="/root/SanteRurale"
+    local PROJECT_DIR="/opt/santerurale"
 
     # 1. Validation pré-déploiement
     log_warning "⚠️  ATTENTION: Vous allez déployer en PRODUCTION sur $SERVER_IP"
@@ -216,25 +216,19 @@ prod_deploy_remote() {
 
     ssh $SERVER_USER@$SERVER_IP << 'ENDSSH'
         set -e
-        cd /root/SanteRurale || exit 1
+        cd /opt/santerurale || exit 1
 
         echo "📥 Pull du code depuis GitHub..."
         git pull origin main
 
-        echo "🛑 Arrêt des anciens containers..."
-        docker-compose -f docker-compose.prod.yml down
-
-        echo "🔨 Build des nouvelles images..."
-        docker-compose -f docker-compose.prod.yml build --no-cache
-
-        echo "🚀 Démarrage des nouveaux containers..."
-        docker-compose -f docker-compose.prod.yml up -d
+        echo "🚀 Déploiement avec docker compose..."
+        docker compose -f docker-compose.prod.yml up -d --build
 
         echo "⏳ Attente du démarrage (15s)..."
         sleep 15
 
         echo "✅ Vérification des services..."
-        docker-compose -f docker-compose.prod.yml ps
+        docker compose -f docker-compose.prod.yml ps
 
         echo "🎉 Déploiement terminé !"
 ENDSSH
