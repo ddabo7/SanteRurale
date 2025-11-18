@@ -185,10 +185,74 @@ git_push() {
 }
 
 # ===========================================================================
-# Déploiement PROD
+# Déploiement PROD DISTANT (sur VPS Hostinger)
+# ===========================================================================
+prod_deploy_remote() {
+    log_info "🚀 Déploiement en PRODUCTION sur VPS..."
+
+    # Configuration serveur
+    local SERVER_IP="72.61.107.217"
+    local SERVER_USER="root"
+    local PROJECT_DIR="/root/SanteRurale"
+
+    # 1. Validation pré-déploiement
+    log_warning "⚠️  ATTENTION: Vous allez déployer en PRODUCTION sur $SERVER_IP"
+    read -p "Continuer? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        log_info "Déploiement annulé"
+        exit 0
+    fi
+
+    # 2. Lancer les tests locaux
+    log_info "Validation des tests locaux..."
+    run_tests
+
+    # 3. Push vers GitHub
+    git_push
+
+    # 4. Déploiement sur le serveur
+    log_info "Connexion au serveur $SERVER_IP..."
+
+    ssh $SERVER_USER@$SERVER_IP << 'ENDSSH'
+        set -e
+        cd /root/SanteRurale || exit 1
+
+        echo "📥 Pull du code depuis GitHub..."
+        git pull origin main
+
+        echo "🛑 Arrêt des anciens containers..."
+        docker-compose -f docker-compose.prod.yml down
+
+        echo "🔨 Build des nouvelles images..."
+        docker-compose -f docker-compose.prod.yml build --no-cache
+
+        echo "🚀 Démarrage des nouveaux containers..."
+        docker-compose -f docker-compose.prod.yml up -d
+
+        echo "⏳ Attente du démarrage (15s)..."
+        sleep 15
+
+        echo "✅ Vérification des services..."
+        docker-compose -f docker-compose.prod.yml ps
+
+        echo "🎉 Déploiement terminé !"
+ENDSSH
+
+    if [ $? -eq 0 ]; then
+        log_success "\n✅ DÉPLOIEMENT RÉUSSI sur $SERVER_IP"
+        log_info "Site web: https://santerurale.io"
+    else
+        log_error "\n❌ ERREUR lors du déploiement"
+        exit 1
+    fi
+}
+
+# ===========================================================================
+# Déploiement PROD LOCAL (Docker local)
 # ===========================================================================
 prod_deploy() {
-    log_info "🚀 Déploiement en PRODUCTION..."
+    log_info "🚀 Déploiement en PRODUCTION LOCAL..."
 
     # 1. Validation pré-déploiement
     log_warning "⚠️  ATTENTION: Vous allez déployer en PRODUCTION"
@@ -281,6 +345,10 @@ case "$ENV" in
         check_prerequisites
         prod_deploy
         ;;
+    prod-remote)
+        check_prerequisites
+        prod_deploy_remote
+        ;;
     push)
         check_prerequisites
         git_push
@@ -292,16 +360,17 @@ case "$ENV" in
         show_logs "prod"
         ;;
     *)
-        echo "Usage: $0 {dev|dev-stop|test|prod|push|logs-dev|logs-prod}"
+        echo "Usage: $0 {dev|dev-stop|test|prod|prod-remote|push|logs-dev|logs-prod}"
         echo ""
         echo "Commandes:"
-        echo "  dev        - Démarre l'environnement de développement"
-        echo "  dev-stop   - Arrête l'environnement de développement"
-        echo "  test       - Lance les tests automatisés"
-        echo "  prod       - Déploie en production (avec validation + push auto)"
-        echo "  push       - Commit et push vers GitHub"
-        echo "  logs-dev   - Affiche les logs de développement"
-        echo "  logs-prod  - Affiche les logs de production"
+        echo "  dev         - Démarre l'environnement de développement"
+        echo "  dev-stop    - Arrête l'environnement de développement"
+        echo "  test        - Lance les tests automatisés"
+        echo "  prod        - Déploie en production LOCAL (Docker local)"
+        echo "  prod-remote - Déploie sur le VPS Hostinger (72.61.107.217)"
+        echo "  push        - Commit et push vers GitHub"
+        echo "  logs-dev    - Affiche les logs de développement"
+        echo "  logs-prod   - Affiche les logs de production"
         exit 1
         ;;
 esac
