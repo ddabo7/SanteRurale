@@ -19,12 +19,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Créer le type enum reference_statut
-    op.execute("""
-        CREATE TYPE reference_statut AS ENUM ('en_attente', 'confirme', 'complete', 'annule')
-    """)
-    
     # Créer la table referrals
+    # L'enum reference_statut sera créé automatiquement par SQLAlchemy
     op.create_table(
         'referrals',
         sa.Column('id', sa.UUID(), nullable=False),
