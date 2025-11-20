@@ -17,6 +17,7 @@ import enum
 
 class UserRole(str, enum.Enum):
     SOIGNANT = "soignant"
+    INFIRMIER = "infirmier"
     MAJOR = "major"
     MEDECIN = "medecin"
     PHARMACIEN = "pharmacien"

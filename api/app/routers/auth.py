@@ -43,7 +43,7 @@ class SignupRequest(BaseModel):
     nom: str
     prenom: str | None = None
     telephone: str | None = None
-    role: str = "soignant"  # admin, medecin, major, soignant
+    role: str  # Obligatoire: admin, medecin, infirmier, major, soignant, pharmacien
     # Informations du site (obligatoires pour créer un nouveau site)
     site_nom: str  # Nom du CSCOM/Hôpital
     site_type: str = "cscom"  # cscom, hospital, clinic

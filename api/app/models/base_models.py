@@ -20,6 +20,7 @@ class SexeEnum(str, enum.Enum):
 # Enum pour le rôle utilisateur
 class UserRoleEnum(str, enum.Enum):
     soignant = "soignant"
+    infirmier = "infirmier"
     major = "major"
     medecin = "medecin"
     pharmacien = "pharmacien"
