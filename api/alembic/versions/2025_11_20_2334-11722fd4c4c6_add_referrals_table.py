@@ -19,6 +19,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # Créer le type enum reference_statut
+    op.execute("""
+        CREATE TYPE reference_statut AS ENUM ('en_attente', 'confirme', 'complete', 'annule')
+    """)
+    
     # Créer la table referrals
     op.create_table(
         'referrals',
@@ -26,7 +31,7 @@ def upgrade() -> None:
         sa.Column('encounter_id', sa.UUID(), nullable=False),
         sa.Column('etablissement_destination', sa.String(length=500), nullable=False),
         sa.Column('motif', sa.Text(), nullable=False),
-        sa.Column('statut', sa.String(length=50), nullable=False, server_default='en_attente'),
+        sa.Column('statut', sa.Enum('en_attente', 'confirme', 'complete', 'annule', name='reference_statut'), nullable=False, server_default='en_attente'),
         sa.Column('date_reference', sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column('date_confirmation', sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column('commentaire', sa.Text(), nullable=True),
@@ -55,3 +60,6 @@ def downgrade() -> None:
     
     # Supprimer la table
     op.drop_table('referrals')
+    
+    # Supprimer le type enum
+    op.execute("DROP TYPE reference_statut")
