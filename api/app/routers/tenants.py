@@ -43,8 +43,8 @@ class TenantResponse(BaseModel):
     email: str
     is_active: bool
     is_pilot: bool
-    currency: Optional[str] = "XOF"  # Devise par défaut si NULL
     created_at: datetime
+    # Note: currency est gérée côté frontend via géolocalisation
 
     class Config:
         from_attributes = True
