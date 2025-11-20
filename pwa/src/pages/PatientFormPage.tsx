@@ -235,8 +235,8 @@ export const PatientFormPage = () => {
               <input
                 id="annee_naissance"
                 type="number"
-                value={formData.annee_naissance}
-                onChange={(e) => setFormData({ ...formData, annee_naissance: parseInt(e.target.value) })}
+                value={formData.annee_naissance || ''}
+                onChange={(e) => setFormData({ ...formData, annee_naissance: e.target.value ? parseInt(e.target.value) : 0 })}
                 required
                 min={1900}
                 max={currentYear}

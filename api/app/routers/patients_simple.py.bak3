@@ -107,6 +107,10 @@ async def list_patients(
     # Base query - exclure les patients supprimés
     query = select(Patient).where(Patient.deleted_at == None)
 
+    # ISOLATION MULTI-TENANT : Filtrer par tenant_id (CRITIQUE)
+    if current_user.tenant_id:
+        query = query.where(Patient.tenant_id == current_user.tenant_id)
+
     # Filtrer par site si pas admin/médecin
     if current_user.role not in [UserRole.ADMIN, UserRole.MEDECIN]:
         query = query.where(Patient.site_id == current_user.site_id)
@@ -160,6 +164,9 @@ async def get_patient(
     )
 
     # ISOLATION MULTI-TENANT : Vérifier que le patient appartient au tenant
+    if current_user.tenant_id:
+        query = query.where(Patient.tenant_id == current_user.tenant_id)
+
     result = await db.execute(query)
     patient = result.scalar_one_or_none()
 
@@ -202,13 +209,16 @@ async def create_patient(
     # Vérifier le quota de patients TOTAL (pas par mois!)
     total_patients_result = await db.execute(
         select(func.count(Patient.id))
-        .where(Patient.site_id == current_user.site_id)
+        .where(Patient.tenant_id == current_tenant.id)
         .where(Patient.deleted_at.is_(None))
     )
     total_patients = total_patients_result.scalar_one()
 
     # Vérifier si le tenant peut créer un nouveau patient
     await check_quota(current_tenant, "patients_total", total_patients, db)
+
+    # Générer le matricule basé sur le village
+    matricule = await generate_matricule(db, patient_data.village, datetime.now().year)
 
     # Créer le patient
     new_patient = Patient(
@@ -220,6 +230,8 @@ async def create_patient(
         telephone=patient_data.telephone,
         village=patient_data.village,
         site_id=current_user.site_id,  # Toujours le site de l'utilisateur
+        tenant_id=current_user.tenant_id,  # IMPORTANT: Associer au tenant de l'utilisateur
+        matricule=matricule,  # Matricule auto-généré
         created_by=current_user.id,
         version=1,
     )
@@ -252,6 +264,9 @@ async def update_patient(
     )
 
     # ISOLATION MULTI-TENANT : Vérifier que le patient appartient au tenant
+    if current_user.tenant_id:
+        query = query.where(Patient.tenant_id == current_user.tenant_id)
+
     result = await db.execute(query)
     patient = result.scalar_one_or_none()
 
@@ -304,6 +319,9 @@ async def delete_patient(
     )
 
     # ISOLATION MULTI-TENANT : Vérifier que le patient appartient au tenant
+    if current_user.tenant_id:
+        query = query.where(Patient.tenant_id == current_user.tenant_id)
+
     result = await db.execute(query)
     patient = result.scalar_one_or_none()
 

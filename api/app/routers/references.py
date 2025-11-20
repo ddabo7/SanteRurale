@@ -63,16 +63,15 @@ async def create_reference(
     Créer une nouvelle référence/évacuation pour une consultation
     """
     # Vérifier que la consultation existe et appartient au même site
-    stmt = select(Encounter).where(Encounter.id == uuid.UUID(data.encounter_id))
+    stmt = select(Encounter).where(
+        Encounter.id == uuid.UUID(data.encounter_id),
+        Encounter.site_id == current_user.site_id
+    )
     result = await db.execute(stmt)
     encounter = result.scalar_one_or_none()
 
     if not encounter:
         raise HTTPException(status_code=404, detail="Consultation non trouvée")
-
-    # Vérifier l'accès via tenant_id plutôt que site_id (multi-tenancy)
-    if current_user.tenant_id and str(encounter.tenant_id) != str(current_user.tenant_id):
-        raise HTTPException(status_code=403, detail="Accès non autorisé à cette consultation")
 
     # Valider et convertir le statut
     logger.info(f"🔍 DEBUG: data.statut reçu = '{data.statut}'")
@@ -92,6 +91,7 @@ async def create_reference(
         statut=statut_enum,
         eta=datetime.fromisoformat(data.eta) if data.eta else None,
         notes=data.notes,
+        created_by=current_user.id,
     )
 
     db.add(reference)

@@ -149,8 +149,6 @@ class Patient(Base, TimestampMixin):
     telephone: Mapped[str | None] = mapped_column(String(50))
     village: Mapped[str | None] = mapped_column(String(200))
     site_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("sites.id"), nullable=False)
-    tenant_id: Mapped[uuid_module.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
-    matricule: Mapped[str | None] = mapped_column(String(50), unique=True)
 
     # Audit fields
     created_by: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
@@ -164,10 +162,7 @@ class Patient(Base, TimestampMixin):
 
     # Relations
     site: Mapped["Site"] = relationship(back_populates="patients", foreign_keys=[site_id])
-    tenant: Mapped["Tenant"] = relationship(foreign_keys=[tenant_id])
     encounters: Mapped[list["Encounter"]] = relationship(back_populates="patient", cascade="all, delete-orphan")
-    created_by_user: Mapped["User"] = relationship(foreign_keys=[created_by])
-    updated_by_user: Mapped["User"] = relationship(foreign_keys=[updated_by])
 
 
 class Encounter(Base, TimestampMixin):
@@ -178,9 +173,6 @@ class Encounter(Base, TimestampMixin):
     patient_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("patients.id"), nullable=False)
     site_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("sites.id"), nullable=False)
     user_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-
-    # Multi-tenancy
-    tenant_id: Mapped[uuid_module.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
 
     # Date de la consultation
     date: Mapped[datetime] = mapped_column(Date, nullable=False)
@@ -199,11 +191,7 @@ class Encounter(Base, TimestampMixin):
     # Notes
     notes: Mapped[str | None] = mapped_column(Text)
 
-    # Audit fields
-    created_by: Mapped[uuid_module.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
-    updated_by: Mapped[uuid_module.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
-
-    # Version pour gestion optimiste des conflits
+    # Version
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
 
     # Soft delete
@@ -213,9 +201,6 @@ class Encounter(Base, TimestampMixin):
     patient: Mapped["Patient"] = relationship(back_populates="encounters")
     site: Mapped["Site"] = relationship()
     user: Mapped["User"] = relationship(foreign_keys=[user_id])
-    created_by_user: Mapped["User"] = relationship(foreign_keys=[created_by])
-    updated_by_user: Mapped["User"] = relationship(foreign_keys=[updated_by])
-    tenant: Mapped["Tenant"] = relationship(foreign_keys=[tenant_id])
     conditions: Mapped[list["Condition"]] = relationship(back_populates="encounter", cascade="all, delete-orphan")
     medication_requests: Mapped[list["MedicationRequest"]] = relationship(back_populates="encounter", cascade="all, delete-orphan")
     procedures: Mapped[list["Procedure"]] = relationship(back_populates="encounter", cascade="all, delete-orphan")
@@ -233,11 +218,11 @@ class Condition(Base):
     code_icd10: Mapped[str | None] = mapped_column(String(10))
     libelle: Mapped[str] = mapped_column(String(500), nullable=False)
     notes: Mapped[str | None] = mapped_column(Text)
+    created_by: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
 
     # Metadata
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.utcnow(), nullable=False)
     created_by: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-
     # Relation
     encounter: Mapped["Encounter"] = relationship(back_populates="conditions")
 
@@ -255,11 +240,11 @@ class MedicationRequest(Base):
     quantite: Mapped[float | None] = mapped_column(Numeric(10, 2))
     unite: Mapped[str | None] = mapped_column(String(50))
     notes: Mapped[str | None] = mapped_column(Text)
+    created_by: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
 
     # Metadata
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.utcnow(), nullable=False)
-    created_by: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-
+    
     # Relation
     encounter: Mapped["Encounter"] = relationship(back_populates="medication_requests")
 
@@ -275,8 +260,8 @@ class Procedure(Base):
     description: Mapped[str | None] = mapped_column(Text)
     resultat: Mapped[str | None] = mapped_column(Text)
 
-    # Metadata
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.utcnow(), nullable=False)
+    # Metadata
     created_by: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
 
     # Relation
@@ -285,16 +270,18 @@ class Procedure(Base):
 
 class Reference(Base, TimestampMixin):
     """Modèle pour les références/évacuations"""
-    __tablename__ = "references"
+    __tablename__ = "referrals"
 
     id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid_module.uuid4)
     encounter_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("encounters.id"), nullable=False)
 
     destination: Mapped[str] = mapped_column(String(300), nullable=False)
     raison: Mapped[str] = mapped_column(Text, nullable=False)
-    statut: Mapped[ReferenceStatutEnum] = mapped_column(SQLEnum(ReferenceStatutEnum), nullable=False, default=ReferenceStatutEnum.en_attente)
+    statut: Mapped[ReferenceStatutEnum] = mapped_column(SQLEnum(ReferenceStatutEnum, name="reference_statut"), nullable=False, default=ReferenceStatutEnum.en_attente)
     eta: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     notes: Mapped[str | None] = mapped_column(Text)
+    created_by: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    updated_by: Mapped[uuid_module.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
 
     # Relation
     encounter: Mapped["Encounter"] = relationship(back_populates="references")

@@ -24,7 +24,7 @@ import { FeedbackPage } from './pages/FeedbackPage'
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AuthProvider>
         <SyncProvider>
           <Routes>

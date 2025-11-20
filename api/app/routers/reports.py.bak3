@@ -33,18 +33,19 @@ async def get_overview(
     """
     Génère un rapport d'aperçu pour une période donnée (filtré par tenant)
     """
-    # Utiliser le site_id de l'utilisateur connecté pour l'isolation
-    user_site_id = current_user.site_id
-    
     # Construire les requêtes de base avec filtres de dates
     encounters_query = select(Encounter).where(
         Encounter.date >= from_date,
         Encounter.date <= to_date,
     )
 
+    # ISOLATION MULTI-TENANT : Filtrer par tenant_id (CRITIQUE)
+    if current_user.tenant_id:
+        encounters_query = encounters_query.where(Encounter.tenant_id == current_user.tenant_id)
+
     # Filtre par site si fourni
-    if user_site_id:
-        encounters_query = encounters_query.where(Encounter.site_id == user_site_id)
+    if site_id:
+        encounters_query = encounters_query.where(Encounter.site_id == site_id)
 
     # 1. Total consultations
     total_consultations_query = select(func.count(Encounter.id)).where(
@@ -53,8 +54,10 @@ async def get_overview(
         Encounter.deleted_at == None,  # Exclure les consultations supprimées
     )
     # ISOLATION MULTI-TENANT
-    if user_site_id:
-        total_consultations_query = total_consultations_query.where(Encounter.site_id == user_site_id)
+    if current_user.tenant_id:
+        total_consultations_query = total_consultations_query.where(Encounter.tenant_id == current_user.tenant_id)
+    if site_id:
+        total_consultations_query = total_consultations_query.where(Encounter.site_id == site_id)
 
     result = await db.execute(total_consultations_query)
     total_consultations = result.scalar() or 0
@@ -66,8 +69,10 @@ async def get_overview(
         Encounter.deleted_at == None,  # Exclure les consultations supprimées
     )
     # ISOLATION MULTI-TENANT
-    if user_site_id:
-        total_patients_query = total_patients_query.where(Encounter.site_id == user_site_id)
+    if current_user.tenant_id:
+        total_patients_query = total_patients_query.where(Encounter.tenant_id == current_user.tenant_id)
+    if site_id:
+        total_patients_query = total_patients_query.where(Encounter.site_id == site_id)
 
     result = await db.execute(total_patients_query)
     total_patients = result.scalar() or 0
@@ -78,8 +83,10 @@ async def get_overview(
         Patient.created_at <= datetime.combine(to_date, datetime.max.time()),
     )
     # ISOLATION MULTI-TENANT
-    if user_site_id:
-        nouveaux_patients_query = nouveaux_patients_query.where(Patient.site_id == user_site_id)
+    if current_user.tenant_id:
+        nouveaux_patients_query = nouveaux_patients_query.where(Patient.tenant_id == current_user.tenant_id)
+    if site_id:
+        nouveaux_patients_query = nouveaux_patients_query.where(Patient.site_id == site_id)
 
     result = await db.execute(nouveaux_patients_query)
     nouveaux_patients = result.scalar() or 0
@@ -98,8 +105,10 @@ async def get_overview(
         Patient.annee_naissance >= year_threshold,
     )
     # ISOLATION MULTI-TENANT
-    if user_site_id:
-        consultations_moins_5_query = consultations_moins_5_query.where(Encounter.site_id == user_site_id)
+    if current_user.tenant_id:
+        consultations_moins_5_query = consultations_moins_5_query.where(Encounter.tenant_id == current_user.tenant_id)
+    if site_id:
+        consultations_moins_5_query = consultations_moins_5_query.where(Encounter.site_id == site_id)
 
     result = await db.execute(consultations_moins_5_query)
     consultations_moins_5_ans = result.scalar() or 0
@@ -122,8 +131,10 @@ async def get_overview(
         .limit(10)
     )
     # ISOLATION MULTI-TENANT
-    if user_site_id:
-        top_diagnostics_query = top_diagnostics_query.where(Encounter.site_id == user_site_id)
+    if current_user.tenant_id:
+        top_diagnostics_query = top_diagnostics_query.where(Encounter.tenant_id == current_user.tenant_id)
+    if site_id:
+        top_diagnostics_query = top_diagnostics_query.where(Encounter.site_id == site_id)
 
     result = await db.execute(top_diagnostics_query)
     top_diagnostics_raw = result.all()
@@ -146,8 +157,10 @@ async def get_overview(
         Encounter.date <= to_date,
         Encounter.deleted_at == None,
     )
-    if user_site_id:
-        total_references_query = total_references_query.where(Encounter.site_id == user_site_id)
+    if current_user.tenant_id:
+        total_references_query = total_references_query.where(Encounter.tenant_id == current_user.tenant_id)
+    if site_id:
+        total_references_query = total_references_query.where(Encounter.site_id == site_id)
 
     result = await db.execute(total_references_query)
     total_references = result.scalar() or 0
@@ -161,8 +174,10 @@ async def get_overview(
         Encounter.deleted_at == None,
         Reference.statut == ReferenceStatutEnum.confirme,
     )
-    if user_site_id:
-        confirmes_query = confirmes_query.where(Encounter.site_id == user_site_id)
+    if current_user.tenant_id:
+        confirmes_query = confirmes_query.where(Encounter.tenant_id == current_user.tenant_id)
+    if site_id:
+        confirmes_query = confirmes_query.where(Encounter.site_id == site_id)
 
     result = await db.execute(confirmes_query)
     confirmes = result.scalar() or 0
@@ -176,8 +191,10 @@ async def get_overview(
         Encounter.deleted_at == None,
         Reference.statut == ReferenceStatutEnum.complete,
     )
-    if user_site_id:
-        completes_query = completes_query.where(Encounter.site_id == user_site_id)
+    if current_user.tenant_id:
+        completes_query = completes_query.where(Encounter.tenant_id == current_user.tenant_id)
+    if site_id:
+        completes_query = completes_query.where(Encounter.site_id == site_id)
 
     result = await db.execute(completes_query)
     completes = result.scalar() or 0
@@ -191,8 +208,10 @@ async def get_overview(
         Encounter.deleted_at == None,
         Reference.statut == ReferenceStatutEnum.en_attente,
     )
-    if user_site_id:
-        en_attente_query = en_attente_query.where(Encounter.site_id == user_site_id)
+    if current_user.tenant_id:
+        en_attente_query = en_attente_query.where(Encounter.tenant_id == current_user.tenant_id)
+    if site_id:
+        en_attente_query = en_attente_query.where(Encounter.site_id == site_id)
 
     result = await db.execute(en_attente_query)
     en_attente = result.scalar() or 0

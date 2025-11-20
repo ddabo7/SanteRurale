@@ -139,68 +139,92 @@ export const ConsultationFormPage = () => {
         notes: formData.notes || undefined,
       }
 
-      // Créer la consultation avec offline-first
-      const result = await offlineFirst.createEncounter(encounterData)
+      // Si on est en ligne, créer directement via l'API pour avoir l'ID serveur immédiatement
+      // Sinon utiliser offline-first
+      let serverEncounterId: string | null = null
+      
+      if (connectivityMonitor.isOnline()) {
+        // Création directe via API
+        const response = await encountersService.create(encounterData)
+        console.log('🔍 DEBUG Response:', response)
+        // La réponse peut être response.data ou directement response
+        serverEncounterId = response.data?.id || response.id
+        console.log('🔍 DEBUG serverEncounterId:', serverEncounterId)
+        setCreatedEncounterId(serverEncounterId)
+      } else {
+        // Offline-first pour mode hors ligne
+        const result = await offlineFirst.createEncounter(encounterData)
+        setCreatedEncounterId(result.localId)
+      }
 
-      // Sauvegarder l'ID pour permettre l'upload de fichiers
-      setCreatedEncounterId(result.localId)
-
-      // TODO: Ajouter les diagnostics, prescriptions, actes et références avec offline-first
-      // Pour l'instant, on les sauvegarde normalement si online
-      if (!result.isOffline) {
+      // Ajouter les éléments liés seulement si on a un ID serveur
+      if (serverEncounterId) {
         // Ajouter les diagnostics
         for (const condition of conditions) {
           if (condition.libelle.trim()) {
-            await conditionsService.create({
-              encounter_id: result.localId,
-              ...condition,
-            })
+            try {
+              await conditionsService.create({
+                encounter_id: serverEncounterId,
+                ...condition,
+              })
+            } catch (err) {
+              console.error('Erreur ajout diagnostic:', err)
+            }
           }
         }
 
         // Ajouter les prescriptions
         for (const medication of medications) {
           if (medication.medicament.trim()) {
-            await medicationsService.create({
-              encounter_id: result.localId,
-              ...medication,
-            })
+            try {
+              await medicationsService.create({
+                encounter_id: serverEncounterId,
+                ...medication,
+              })
+            } catch (err) {
+              console.error('Erreur ajout prescription:', err)
+            }
           }
         }
 
         // Ajouter les actes
         for (const procedure of procedures) {
           if (procedure.type.trim()) {
-            await proceduresService.create({
-              encounter_id: result.localId,
-              ...procedure,
-            })
+            try {
+              await proceduresService.create({
+                encounter_id: serverEncounterId,
+                ...procedure,
+              })
+            } catch (err) {
+              console.error('Erreur ajout acte:', err)
+            }
           }
         }
 
         // Ajouter la référence/évacuation si nécessaire
         if (hasReference && reference.destination.trim() && reference.raison.trim()) {
-          await referencesService.create({
-            encounter_id: result.localId,
-            destination: reference.destination,
-            raison: reference.raison,
-            statut: reference.statut,
-            eta: reference.eta || undefined,
-            notes: reference.notes || undefined,
-          })
+          try {
+            await referencesService.create({
+              encounter_id: serverEncounterId,
+              destination: reference.destination,
+              raison: reference.raison,
+              statut: reference.statut,
+              eta: reference.eta || undefined,
+              notes: reference.notes || undefined,
+            })
+          } catch (err) {
+            console.error('Erreur ajout référence:', err)
+          }
         }
       }
 
       // Messages de succès adaptés
-      if (result.isOffline) {
-        setSuccess('✅ Consultation créée localement (mode hors ligne). Sera synchronisée automatiquement.')
-        setTimeout(() => navigate('/consultations'), 2000)
-      } else if (result.willSyncLater) {
-        setSuccess('✅ Consultation créée et en cours de synchronisation...')
-        setTimeout(() => navigate('/consultations'), 1500)
-      } else {
+      if (connectivityMonitor.isOnline()) {
         setSuccess('✅ Consultation créée avec succès')
         setTimeout(() => navigate('/consultations'), 1000)
+      } else {
+        setSuccess('✅ Consultation créée localement (mode hors ligne). Sera synchronisée automatiquement.')
+        setTimeout(() => navigate('/consultations'), 2000)
       }
     } catch (error: any) {
       console.error('❌ Erreur sauvegarde consultation:', error)

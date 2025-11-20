@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 import uuid
 
 from app.database import get_db
@@ -82,7 +82,13 @@ class PlanResponse(BaseModel):
     max_patients_total: Optional[int] = Field(None, serialization_alias='max_patients_per_month')
     max_sites: Optional[int]
     max_storage_gb: Optional[int]
-    features: List[str]
+    features: List[str] = Field(default_factory=list)
+    
+    @field_validator('features', mode='before')
+    @classmethod
+    def validate_features(cls, v):
+        """Convertir None en liste vide"""
+        return v if v is not None else []
 
     class Config:
         from_attributes = True

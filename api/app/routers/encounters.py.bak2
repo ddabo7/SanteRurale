@@ -17,7 +17,6 @@ from app.schemas import (
     ConditionOut,
     EncounterCreate,
     EncounterOut,
-    EncounterDetails,
     MedicationRequestCreate,
     MedicationRequestOut,
     ProcedureCreate,
@@ -33,7 +32,7 @@ router = APIRouter(prefix="/encounters", tags=["Encounters"])
 # ===========================================================================
 
 
-@router.get("", response_model=List[EncounterDetails])
+@router.get("", response_model=List[EncounterOut])
 async def list_encounters(
     patient_id: Optional[str] = Query(None),
     from_date: Optional[date] = Query(None),
@@ -113,6 +112,8 @@ async def get_encounter(
     )
 
     # ISOLATION MULTI-TENANT : Vérifier que l'encounter appartient au tenant
+    if current_user.tenant_id:
+        query = query.where(Encounter.tenant_id == current_user.tenant_id)
 
     result = await db.execute(query)
     encounter = result.scalar_one_or_none()
@@ -160,6 +161,7 @@ async def create_encounter(
         patient_id=encounter_data.patient_id,
         site_id=site_id,
         user_id=user_id,
+        created_by=user_id,
         date=encounter_data.encounter_date,
         motif=encounter_data.motif,
         temperature=encounter_data.temperature,
@@ -203,11 +205,12 @@ async def create_condition(
     """
     Ajoute un diagnostic à une consultation
     """
-    # Vérifier que l'encounter existe ET appartient au site
-    encounter_query = select(Encounter).where(
-        Encounter.id == condition_data.encounter_id,
-        Encounter.site_id == current_user.site_id
-    )
+    # Vérifier que l'encounter existe ET appartient au tenant
+    encounter_query = select(Encounter).where(Encounter.id == condition_data.encounter_id)
+
+    # ISOLATION MULTI-TENANT : L'encounter doit appartenir au même tenant
+    if current_user.tenant_id:
+        encounter_query = encounter_query.where(Encounter.tenant_id == current_user.tenant_id)
 
     encounter_result = await db.execute(encounter_query)
     encounter = encounter_result.scalar_one_or_none()
@@ -248,11 +251,12 @@ async def create_medication_request(
     """
     Ajoute une prescription à une consultation
     """
-    # Vérifier que l'encounter existe ET appartient au site
-    encounter_query = select(Encounter).where(
-        Encounter.id == medication_data.encounter_id,
-        Encounter.site_id == current_user.site_id
-    )
+    # Vérifier que l'encounter existe ET appartient au tenant
+    encounter_query = select(Encounter).where(Encounter.id == medication_data.encounter_id)
+
+    # ISOLATION MULTI-TENANT : L'encounter doit appartenir au même tenant
+    if current_user.tenant_id:
+        encounter_query = encounter_query.where(Encounter.tenant_id == current_user.tenant_id)
 
     encounter_result = await db.execute(encounter_query)
     encounter = encounter_result.scalar_one_or_none()
@@ -296,11 +300,12 @@ async def create_procedure(
     """
     Ajoute un acte médical à une consultation
     """
-    # Vérifier que l'encounter existe ET appartient au site
-    encounter_query = select(Encounter).where(
-        Encounter.id == procedure_data.encounter_id,
-        Encounter.site_id == current_user.site_id
-    )
+    # Vérifier que l'encounter existe ET appartient au tenant
+    encounter_query = select(Encounter).where(Encounter.id == procedure_data.encounter_id)
+
+    # ISOLATION MULTI-TENANT : L'encounter doit appartenir au même tenant
+    if current_user.tenant_id:
+        encounter_query = encounter_query.where(Encounter.tenant_id == current_user.tenant_id)
 
     encounter_result = await db.execute(encounter_query)
     encounter = encounter_result.scalar_one_or_none()

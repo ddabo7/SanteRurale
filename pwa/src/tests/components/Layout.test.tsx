@@ -11,7 +11,7 @@ import { SyncProvider } from '../../contexts/SyncContext'
 
 const renderLayout = () => {
   return render(
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AuthProvider>
         <SyncProvider>
           <Layout>

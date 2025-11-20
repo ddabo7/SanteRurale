@@ -97,12 +97,12 @@ async def upload_file(
             detail="patient_id ou encounter_id requis"
         )
 
-    # Vérifier que le patient/consultation existe et appartient au tenant
+    # Vérifier que le patient/consultation existe et appartient au même site
     if patient_id:
         result = await db.execute(
             select(Patient).where(
                 Patient.id == patient_id,
-                Patient.tenant_id == current_user.tenant_id
+                Patient.site_id == current_user.site_id
             )
         )
         patient = result.scalar_one_or_none()
@@ -113,7 +113,7 @@ async def upload_file(
         result = await db.execute(
             select(Encounter).where(
                 Encounter.id == encounter_id,
-                Encounter.tenant_id == current_user.tenant_id
+                Encounter.site_id == current_user.site_id
             )
         )
         encounter = result.scalar_one_or_none()
@@ -136,7 +136,7 @@ async def upload_file(
 
     # Générer clé S3 unique
     file_extension = os.path.splitext(file.filename)[1]
-    s3_key = f"{current_user.tenant_id}/{uuid.uuid4()}{file_extension}"
+    s3_key = f"{current_user.site_id}/{uuid.uuid4()}{file_extension}"
 
     # Upload vers MinIO
     uploaded = False
@@ -228,12 +228,12 @@ async def list_attachments(
         LEFT JOIN patients p ON a.patient_id = p.id
         LEFT JOIN encounters e ON a.encounter_id = e.id
         WHERE (
-            (a.patient_id IS NOT NULL AND p.tenant_id = :tenant_id)
-            OR (a.encounter_id IS NOT NULL AND e.tenant_id = :tenant_id)
+            (a.patient_id IS NOT NULL AND p.site_id = :site_id)
+            OR (a.encounter_id IS NOT NULL AND e.site_id = :site_id)
         )
     """
 
-    params = {"tenant_id": current_user.tenant_id}
+    params = {"site_id": current_user.site_id}
 
     # Ajouter filtres optionnels
     if patient_id:
@@ -280,7 +280,7 @@ async def get_storage_stats(
     """Retourne les statistiques de stockage pour le tenant actuel"""
     from sqlalchemy import text
 
-    # Calculer le stockage total utilisé par le tenant (patients + consultations)
+    # Calculer le stockage total utilisé par le site (patients + consultations)
     query = text("""
         SELECT
             COALESCE(SUM(a.size_bytes), 0) as total_bytes,
@@ -289,19 +289,20 @@ async def get_storage_stats(
         LEFT JOIN patients p ON a.patient_id = p.id
         LEFT JOIN encounters e ON a.encounter_id = e.id
         WHERE (
-            (a.patient_id IS NOT NULL AND p.tenant_id = :tenant_id)
-            OR (a.encounter_id IS NOT NULL AND e.tenant_id = :tenant_id)
+            (a.patient_id IS NOT NULL AND p.site_id = :site_id)
+            OR (a.encounter_id IS NOT NULL AND e.site_id = :site_id)
         )
         AND a.uploaded = true
     """)
 
-    result = await db.execute(query, {"tenant_id": current_user.tenant_id})
+    result = await db.execute(query, {"site_id": current_user.site_id})
     row = result.fetchone()
 
     total_bytes = int(row.total_bytes)
     total_files = int(row.total_files)
 
     # Récupérer le quota du plan depuis la subscription
+    # Note: on utilise tenant_id ici car la table subscriptions a bien cette colonne
     quota_query = text("""
         SELECT p.max_storage_gb
         FROM subscriptions s
@@ -345,9 +346,10 @@ async def download_file(
     # Récupérer l'attachment
     query = text("""
         SELECT a.id, a.filename, a.s3_key, a.s3_bucket, a.mime_type,
-               a.uploaded, p.tenant_id
+               a.uploaded, p.site_id
         FROM attachments a
         LEFT JOIN patients p ON a.patient_id = p.id
+        LEFT JOIN encounters e ON a.encounter_id = e.id
         WHERE a.id = :id
     """)
 
@@ -357,8 +359,8 @@ async def download_file(
     if not row:
         raise HTTPException(status_code=404, detail="Fichier non trouvé")
 
-    # Vérifier que le fichier appartient au tenant de l'utilisateur
-    if row.tenant_id != current_user.tenant_id:
+    # Vérifier que le fichier appartient au même site que l'utilisateur
+    if row.site_id != current_user.site_id:
         raise HTTPException(status_code=403, detail="Accès refusé")
 
     if not row.uploaded:
@@ -397,9 +399,9 @@ async def delete_file(
     """Supprime un fichier"""
     from sqlalchemy import text
 
-    # Récupérer l'attachment avec vérification du tenant
+    # Récupérer l'attachment avec vérification du site
     query = text("""
-        SELECT a.id, a.s3_key, a.s3_bucket, a.uploaded, p.tenant_id as patient_tenant_id, e.tenant_id as encounter_tenant_id
+        SELECT a.id, a.s3_key, a.s3_bucket, a.uploaded, p.site_id as patient_site_id, e.site_id as encounter_site_id
         FROM attachments a
         LEFT JOIN patients p ON a.patient_id = p.id
         LEFT JOIN encounters e ON a.encounter_id = e.id
@@ -412,9 +414,9 @@ async def delete_file(
     if not row:
         raise HTTPException(status_code=404, detail="Fichier non trouvé")
 
-    # Vérifier que le fichier appartient au tenant de l'utilisateur
-    tenant_id = row.patient_tenant_id or row.encounter_tenant_id
-    if tenant_id != current_user.tenant_id:
+    # Vérifier que le fichier appartient au même site que l'utilisateur
+    site_id = row.patient_site_id or row.encounter_site_id
+    if site_id != current_user.site_id:
         raise HTTPException(status_code=403, detail="Accès refusé")
 
     # Supprimer depuis MinIO si le fichier a été uploadé
