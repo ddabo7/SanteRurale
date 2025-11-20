@@ -104,13 +104,15 @@ export const PatientFormPage = () => {
     } catch (error: any) {
       console.error('❌ Erreur sauvegarde patient:', error)
 
-      // 🔒 QUOTA ATTEINT: Afficher un message spécial avec lien d'upgrade
+      // 🔒 QUOTA ATTEINT: Rediriger vers la page d'abonnement
       if (error.response?.status === 402) {
         const quotaMessage = error.response.data.detail || 'Quota de patients atteint'
-        setError(
-          `🚫 ${quotaMessage}\n\n` +
-          `Pour continuer à ajouter des patients, veuillez passer à un plan supérieur.`
-        )
+        if (window.confirm(`🚫 ${quotaMessage}\n\nVoulez-vous upgrader votre plan maintenant ?`)) {
+          navigate('/subscription')
+          return
+        }
+        setError(quotaMessage)
+        return
       }
       // Messages d'erreur adaptés
       else if (error.message) {

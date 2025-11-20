@@ -75,7 +75,7 @@ apiClient.interceptors.response.use(
 
     // Autres erreurs
     if (import.meta.env.DEV) {
-      console.debug('🔍 API Error:', {
+      console.error('❌ API Error:', {
         url: error.config?.url,
         status: error.response?.status,
         message: error.message,

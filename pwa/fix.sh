@@ -1,0 +1,21 @@
+sed -i.bak '/console\.error(`❌ Échec opération ${op\.id}:`, error)/a\
+\
+          // Vérifier si c'"'"'est une erreur de quota (402)\
+          if (error.response?.status === 402 || error.status === 402) {\
+            console.warn('"'"'⚠️ Quota dépassé - arrêt des tentatives'"'"')\
+            await db.markOperationProcessed(op.id)\
+            \
+            // Afficher un popup pour upgrader\
+            const shouldUpgrade = window.confirm(\
+              "Quota dépassé ! Votre abonnement gratuit est limité à 50 patients. Souhaitez-vous upgrader votre abonnement ?"\
+            )\
+            \
+            if (shouldUpgrade) {\
+              window.location.href = '"'"'/subscription'"'"'\
+            }\
+            \
+            result.failed++\
+            result.errors.push(`Quota dépassé: ${error.response?.data?.detail || error.message}`)\
+            continue\
+          }
+' src/services/offlineFirst.ts

@@ -439,12 +439,7 @@ class OfflineFirstService {
           result.synced++
           console.log(`✅ Opération ${op.id} synchronisée`)
         } catch (error: any) {
-          // Log moins verbeux pour les erreurs de quota
-          if (error.response?.status === 402 || error.status === 402) {
-            console.debug(`ℹ️ Quota atteint pour opération ${op.id}`)
-          } else {
-            console.error(`❌ Échec opération ${op.id}:`, error)
-          }
+          console.error(`❌ Échec opération ${op.id}:`, error)
 
           // Vérifier si c'est une erreur de quota (402)
           if (error.response?.status === 402 || error.status === 402) {
