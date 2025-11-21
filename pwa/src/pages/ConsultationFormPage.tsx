@@ -16,7 +16,7 @@ interface Patient {
 interface Condition {
   libelle: string
   code_icd10?: string
-  notes?: string
+  commentaire?: string
 }
 
 interface Medication {
@@ -25,7 +25,7 @@ interface Medication {
   duree_jours?: number
   quantite?: number
   unite?: string
-  notes?: string
+  commentaire?: string
 }
 
 interface Procedure {
@@ -35,11 +35,11 @@ interface Procedure {
 }
 
 interface Reference {
-  destination: string
-  raison: string
+  etablissement_destination: string
+  motif: string
   statut: 'en_attente' | 'confirme' | 'complete' | 'annule'
-  eta?: string
-  notes?: string
+  date_reference?: string
+  commentaire?: string
 }
 
 export const ConsultationFormPage = () => {
@@ -69,7 +69,7 @@ export const ConsultationFormPage = () => {
     pression_diastolique: '',
     poids: '',
     taille: '',
-    notes: '',
+    commentaire: '',
   })
 
   // Diagnostics, prescriptions, actes
@@ -80,11 +80,11 @@ export const ConsultationFormPage = () => {
   // Référence/Évacuation
   const [hasReference, setHasReference] = useState(false)
   const [reference, setReference] = useState<Reference>({
-    destination: '',
-    raison: '',
+    etablissement_destination: '',
+    motif: '',
     statut: 'en_attente',
-    eta: '',
-    notes: '',
+    date_reference: '',
+    commentaire: '',
   })
 
   useEffect(() => {
@@ -202,15 +202,15 @@ export const ConsultationFormPage = () => {
         }
 
         // Ajouter la référence/évacuation si nécessaire
-        if (hasReference && reference.destination.trim() && reference.raison.trim()) {
+        if (hasReference && reference.etablissement_destination.trim() && reference.motif.trim()) {
           try {
             await referencesService.create({
               encounter_id: serverEncounterId,
-              destination: reference.destination,
-              raison: reference.raison,
+              etablissement_destination: reference.etablissement_destination,
+              motif: reference.motif,
               statut: reference.statut,
-              eta: reference.eta || undefined,
-              notes: reference.notes || undefined,
+              date_reference: reference.date_reference || undefined,
+              commentaire: reference.commentaire || undefined,
             })
           } catch (err) {
             console.error('Erreur ajout référence:', err)
@@ -683,7 +683,7 @@ export const ConsultationFormPage = () => {
                     </label>
                     <input
                       type="text"
-                      value={reference.destination}
+                      value={reference.etablissement_destination}
                       onChange={(e) => setReference({ ...reference, destination: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                       placeholder="Ex: Hôpital de Bamako, Centre de santé de référence..."
@@ -714,7 +714,7 @@ export const ConsultationFormPage = () => {
                   </label>
                   <input
                     type="text"
-                    value={reference.raison}
+                    value={reference.motif}
                     onChange={(e) => setReference({ ...reference, raison: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     placeholder="Ex: Complications nécessitant chirurgie, Accouchement à risque..."
@@ -728,7 +728,7 @@ export const ConsultationFormPage = () => {
                   </label>
                   <input
                     type="datetime-local"
-                    value={reference.eta}
+                    value={reference.date_reference}
                     onChange={(e) => setReference({ ...reference, eta: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   />
@@ -739,7 +739,7 @@ export const ConsultationFormPage = () => {
                     Notes complémentaires
                   </label>
                   <textarea
-                    value={reference.notes}
+                    value={reference.commentaire}
                     onChange={(e) => setReference({ ...reference, notes: e.target.value })}
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
