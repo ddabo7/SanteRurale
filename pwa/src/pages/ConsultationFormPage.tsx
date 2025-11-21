@@ -740,7 +740,7 @@ export const ConsultationFormPage = () => {
                   </label>
                   <textarea
                     value={reference.commentaire}
-                    onChange={(e) => setReference({ ...reference, notes: e.target.value })}
+                    onChange={(e) => setReference({ ...reference, commentaire: e.target.value })}
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     placeholder="Informations supplémentaires, contact du centre de destination..."
