@@ -276,13 +276,14 @@ class Reference(Base, TimestampMixin):
     id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid_module.uuid4)
     encounter_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("encounters.id"), nullable=False)
 
-    destination: Mapped[str] = mapped_column(String(300), nullable=False)
-    raison: Mapped[str] = mapped_column(Text, nullable=False)
+    etablissement_destination: Mapped[str] = mapped_column(String(500), nullable=False)
+    motif: Mapped[str] = mapped_column(Text, nullable=False)
     statut: Mapped[ReferenceStatutEnum] = mapped_column(SQLEnum(ReferenceStatutEnum, name="reference_statut"), nullable=False, default=ReferenceStatutEnum.en_attente)
-    eta: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    notes: Mapped[str | None] = mapped_column(Text)
-    created_by: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    updated_by: Mapped[uuid_module.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+    date_reference: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    date_confirmation: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    commentaire: Mapped[str | None] = mapped_column(Text)
+    site_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("sites.id"), nullable=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     # Relation
     encounter: Mapped["Encounter"] = relationship(back_populates="references")

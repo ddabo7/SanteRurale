@@ -26,22 +26,24 @@ router = APIRouter(prefix="/references", tags=["references"])
 class ReferenceCreate(BaseModel):
     """Schéma pour créer une référence"""
     encounter_id: str
-    destination: str = Field(..., min_length=1, max_length=300)
-    raison: str = Field(..., min_length=1)
+    etablissement_destination: str = Field(..., min_length=1, max_length=500)
+    motif: str = Field(..., min_length=1)
     statut: str = "en_attente"
-    eta: str | None = None
-    notes: str | None = None
+    date_reference: str | None = None
+    commentaire: str | None = None
 
 
 class ReferenceResponse(BaseModel):
     """Schéma de réponse pour une référence"""
     id: str
     encounter_id: str
-    destination: str
-    raison: str
+    etablissement_destination: str
+    motif: str
     statut: str
-    eta: datetime | None
-    notes: str | None
+    date_reference: datetime
+    date_confirmation: datetime | None
+    commentaire: str | None
+    site_id: str
     created_at: datetime
     updated_at: datetime
 
@@ -86,12 +88,12 @@ async def create_reference(
     # Créer la référence
     reference = Reference(
         encounter_id=uuid.UUID(data.encounter_id),
-        destination=data.destination,
-        raison=data.raison,
+        etablissement_destination=data.etablissement_destination,
+        motif=data.motif,
         statut=statut_enum,
-        eta=datetime.fromisoformat(data.eta) if data.eta else None,
-        notes=data.notes,
-        created_by=current_user.id,
+        date_reference=datetime.fromisoformat(data.date_reference) if data.date_reference else datetime.now(),
+        commentaire=data.commentaire,
+        site_id=current_user.site_id,
     )
 
     db.add(reference)
@@ -102,11 +104,13 @@ async def create_reference(
     return ReferenceResponse(
         id=str(reference.id),
         encounter_id=str(reference.encounter_id),
-        destination=reference.destination,
-        raison=reference.raison,
+        etablissement_destination=reference.etablissement_destination,
+        motif=reference.motif,
         statut=reference.statut.value,
-        eta=reference.eta,
-        notes=reference.notes,
+        date_reference=reference.date_reference,
+        date_confirmation=reference.date_confirmation,
+        commentaire=reference.commentaire,
+        site_id=str(reference.site_id),
         created_at=reference.created_at,
         updated_at=reference.updated_at,
     )
