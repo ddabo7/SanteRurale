@@ -684,7 +684,7 @@ export const ConsultationFormPage = () => {
                     <input
                       type="text"
                       value={reference.etablissement_destination}
-                      onChange={(e) => setReference({ ...reference, destination: e.target.value })}
+                      onChange={(e) => setReference({ ...reference, etablissement_destination: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                       placeholder="Ex: Hôpital de Bamako, Centre de santé de référence..."
                       required={hasReference}
@@ -715,7 +715,7 @@ export const ConsultationFormPage = () => {
                   <input
                     type="text"
                     value={reference.motif}
-                    onChange={(e) => setReference({ ...reference, raison: e.target.value })}
+                    onChange={(e) => setReference({ ...reference, motif: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     placeholder="Ex: Complications nécessitant chirurgie, Accouchement à risque..."
                     required={hasReference}
@@ -729,7 +729,7 @@ export const ConsultationFormPage = () => {
                   <input
                     type="datetime-local"
                     value={reference.date_reference}
-                    onChange={(e) => setReference({ ...reference, eta: e.target.value })}
+                    onChange={(e) => setReference({ ...reference, date_reference: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   />
                 </div>
