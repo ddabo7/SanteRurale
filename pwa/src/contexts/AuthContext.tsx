@@ -7,6 +7,7 @@ interface User {
   email: string
   nom: string
   prenom: string
+  sexe?: string
   role: string
   site_id: string
   site_nom?: string
@@ -30,6 +31,7 @@ const normalizeUser = (rawUser: any): User => ({
   email: rawUser.email,
   nom: rawUser.nom,
   prenom: rawUser.prenom || '',
+  sexe: rawUser.sexe,
   role: rawUser.role,
   site_id: rawUser.site_id,
   site_nom: rawUser.site_nom,
@@ -62,6 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               email: session.email,
               nom: session.nom,
               prenom: session.prenom,
+              sexe: session.sexe,
               role: session.role,
               site_id: session.site_id,
               telephone: session.telephone,
@@ -105,6 +108,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         nom: normalizedUser.nom,
         prenom: normalizedUser.prenom,
         telephone: normalizedUser.telephone,
+        sexe: normalizedUser.sexe,
         role: normalizedUser.role,
         site_id: normalizedUser.site_id,
         avatar_url: normalizedUser.avatar_url,

@@ -151,6 +151,7 @@ export interface UserSession {
   nom: string
   prenom?: string
   telephone?: string
+  sexe?: string
   role: string
   site_id: string
   avatar_url?: string

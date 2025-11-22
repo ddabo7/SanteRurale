@@ -2,6 +2,29 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
+// Fonction pour formater le rôle selon le sexe
+const formatRole = (role: string, sexe?: string): string => {
+  if (sexe === 'F') {
+    switch (role) {
+      case 'infirmier': return 'infirmière'
+      case 'major': return 'major (infirmière chef)'
+      case 'soignant': return 'soignante'
+      case 'pharmacien': return 'pharmacienne'
+      case 'medecin': return 'médecin'
+      default: return role
+    }
+  }
+  // Pour les hommes ou sexe non défini
+  switch (role) {
+    case 'infirmier': return 'infirmier'
+    case 'major': return 'major (infirmier chef)'
+    case 'soignant': return 'soignant'
+    case 'pharmacien': return 'pharmacien'
+    case 'medecin': return 'médecin'
+    default: return role
+  }
+}
+
 export const UserMenu = () => {
   const { user, logout } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
@@ -55,7 +78,7 @@ export const UserMenu = () => {
         )}
         <div className="text-left">
           <div className="font-medium text-sm">{user.prenom} {user.nom}</div>
-          <div className="text-emerald-200 text-xs">{user.role}</div>
+          <div className="text-emerald-200 text-xs">{formatRole(user.role, user.sexe)}</div>
         </div>
         <div className="flex flex-col space-y-1">
           <div className="w-5 h-0.5 bg-white"></div>
@@ -73,7 +96,7 @@ export const UserMenu = () => {
               <p className="text-sm font-medium text-gray-900">
                 {user.prenom} {user.nom}
               </p>
-              <p className="text-xs text-gray-500">{user.role}</p>
+              <p className="text-xs text-gray-500">{formatRole(user.role, user.sexe)}</p>
               {user.site_nom && (
                 <p className="text-xs text-gray-500 mt-1">📍 {user.site_nom}</p>
               )}

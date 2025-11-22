@@ -41,7 +41,7 @@ class ReferenceResponse(BaseModel):
     motif: str
     statut: str
     date_reference: datetime
-    date_confirmation: datetime | None
+    arrived_at: datetime | None
     commentaire: str | None
     site_id: str
     created_at: datetime
@@ -108,7 +108,7 @@ async def create_reference(
         motif=reference.motif,
         statut=reference.statut.value,
         date_reference=reference.date_reference,
-        date_confirmation=reference.date_confirmation,
+        arrived_at=reference.arrived_at,
         commentaire=reference.commentaire,
         site_id=str(reference.site_id),
         created_at=reference.created_at,

@@ -33,7 +33,7 @@ class FeedbackCreate(BaseModel):
 
 class FeedbackResponse(BaseModel):
     """Schéma de réponse pour un feedback"""
-    id: int
+    id: uuid_module.UUID
     type: str  # String au lieu de FeedbackType
     status: str  # String au lieu de FeedbackStatus
     subject: str

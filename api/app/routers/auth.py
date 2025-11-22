@@ -32,7 +32,7 @@ import os
 COOKIE_SECURE = os.getenv("ENVIRONMENT", "development") == "production"  # False en dev, True en prod
 COOKIE_HTTPONLY = True
 COOKIE_SAMESITE = "lax"
-COOKIE_MAX_AGE_ACCESS = 3600  # 1 heure
+COOKIE_MAX_AGE_ACCESS = 86400  # 24 heures (au lieu de 1 heure)
 COOKIE_MAX_AGE_REFRESH = 2592000  # 30 jours
 
 
@@ -43,6 +43,7 @@ class SignupRequest(BaseModel):
     nom: str
     prenom: str | None = None
     telephone: str | None = None
+    sexe: str | None = None  # M ou F
     role: str  # Obligatoire: admin, medecin, infirmier, major, soignant, pharmacien
     # Informations du site (obligatoires pour créer un nouveau site)
     site_nom: str  # Nom du CSCOM/Hôpital
@@ -83,6 +84,7 @@ class UserResponse(BaseModel):
     nom: str
     prenom: str | None
     telephone: str | None
+    sexe: str | None
     role: str
     site_id: str
     actif: bool
@@ -265,6 +267,7 @@ async def signup(signup_data: SignupRequest, db: AsyncSession = Depends(get_db))
         email=signup_data.email,
         password_hash=hash_password(signup_data.password),
         telephone=signup_data.telephone,
+        sexe=signup_data.sexe if signup_data.sexe else None,
         role=signup_data.role,
         site_id=site.id,
         tenant_id=signup_data.tenant_id,  # Associer au tenant
@@ -400,6 +403,7 @@ async def login(login_data: LoginRequest, response: Response, db: AsyncSession =
             nom=user.nom,
             prenom=user.prenom,
             telephone=user.telephone,
+            sexe=user.sexe.value if user.sexe else None,
             role=user.role,
             site_id=str(user.site_id),
             actif=user.actif,
@@ -574,6 +578,7 @@ async def get_current_user_info(
         nom=user.nom,
         prenom=user.prenom,
         telephone=user.telephone,
+        sexe=user.sexe.value if user.sexe else None,
         role=user.role,
         site_id=str(user.site_id),
         actif=user.actif,

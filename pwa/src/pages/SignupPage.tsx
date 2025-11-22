@@ -10,6 +10,7 @@ export const SignupPage = () => {
     nom: '',
     prenom: '',
     telephone: '',
+    sexe: '',  // M ou F
     role: '',  // Obligatoire: médecin, infirmier, major, soignant, pharmacien
     // Informations du site/CSCOM
     site_nom: '',
@@ -92,6 +93,7 @@ export const SignupPage = () => {
         nom: formData.nom,
         prenom: formData.prenom,
         telephone: formData.telephone || undefined,
+        sexe: formData.sexe,  // M ou F
         role: formData.role,  // Obligatoire
         // Informations du site
         site_nom: formData.site_nom,
@@ -257,6 +259,24 @@ export const SignupPage = () => {
             </div>
 
             <div>
+              <label htmlFor="sexe" className="block text-sm font-medium text-gray-700 mb-2">
+                Sexe <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="sexe"
+                name="sexe"
+                value={formData.sexe}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition bg-white"
+              >
+                <option value="">Sélectionnez votre sexe</option>
+                <option value="M">👨 Homme</option>
+                <option value="F">👩 Femme</option>
+              </select>
+            </div>
+
+            <div>
               <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
                 Fonction <span className="text-red-500">*</span>
               </label>
@@ -270,10 +290,10 @@ export const SignupPage = () => {
               >
                 <option value="">Sélectionnez votre fonction</option>
                 <option value="medecin">🩺 Médecin</option>
-                <option value="infirmier">👨‍⚕️ Infirmier / Infirmière</option>
-                <option value="major">👩‍⚕️ Major (Infirmier chef)</option>
-                <option value="soignant">🩹 Soignant</option>
-                <option value="pharmacien">💊 Pharmacien</option>
+                <option value="infirmier">{formData.sexe === 'F' ? '👩‍⚕️ Infirmière' : '👨‍⚕️ Infirmier'}</option>
+                <option value="major">👩‍⚕️ Major (Infirmier{formData.sexe === 'F' ? 'ère' : ''} chef)</option>
+                <option value="soignant">🩹 Soignant{formData.sexe === 'F' ? 'e' : ''}</option>
+                <option value="pharmacien">💊 Pharmacien{formData.sexe === 'F' ? 'ne' : ''}</option>
               </select>
             </div>
 

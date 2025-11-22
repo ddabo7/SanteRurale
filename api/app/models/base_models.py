@@ -115,6 +115,7 @@ class User(Base, TimestampMixin):
     prenom: Mapped[str | None] = mapped_column(String(200))
     email: Mapped[str] = mapped_column(String(200), unique=True, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(String(500), nullable=False)
+    sexe: Mapped[SexeEnum | None] = mapped_column(SQLEnum(SexeEnum, name="sexe", create_type=False))
     role: Mapped[UserRoleEnum] = mapped_column(SQLEnum(UserRoleEnum, name="user_role", create_type=False), nullable=False)
     site_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("sites.id"), nullable=False)
     tenant_id: Mapped[uuid_module.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
@@ -280,9 +281,11 @@ class Reference(Base, TimestampMixin):
     motif: Mapped[str] = mapped_column(Text, nullable=False)
     statut: Mapped[ReferenceStatutEnum] = mapped_column(SQLEnum(ReferenceStatutEnum, name="reference_statut"), nullable=False, default=ReferenceStatutEnum.en_attente)
     date_reference: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    date_confirmation: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    arrived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     commentaire: Mapped[str | None] = mapped_column(Text)
     site_id: Mapped[uuid_module.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("sites.id"), nullable=False)
+    created_by: Mapped[uuid_module.UUID | None] = mapped_column(UUID(as_uuid=True))
+    updated_by: Mapped[uuid_module.UUID | None] = mapped_column(UUID(as_uuid=True))
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     # Relation

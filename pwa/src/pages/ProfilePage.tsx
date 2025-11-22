@@ -3,6 +3,29 @@ import { useAuth } from '../contexts/AuthContext'
 import { authService } from '../services/authService'
 import { User, Mail, Phone, Shield, Lock, Key, Edit2, Check, X, Camera, Upload } from 'lucide-react'
 
+// Fonction pour formater le rôle selon le sexe
+const formatRole = (role: string, sexe?: string): string => {
+  if (sexe === 'F') {
+    switch (role) {
+      case 'infirmier': return 'Infirmière'
+      case 'major': return 'Major (Infirmière chef)'
+      case 'soignant': return 'Soignante'
+      case 'pharmacien': return 'Pharmacienne'
+      case 'medecin': return 'Médecin'
+      default: return role
+    }
+  }
+  // Pour les hommes ou sexe non défini
+  switch (role) {
+    case 'infirmier': return 'Infirmier'
+    case 'major': return 'Major (Infirmier chef)'
+    case 'soignant': return 'Soignant'
+    case 'pharmacien': return 'Pharmacien'
+    case 'medecin': return 'Médecin'
+    default: return role
+  }
+}
+
 export const ProfilePage = () => {
   const { user, updateUser } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
@@ -304,7 +327,7 @@ export const ProfilePage = () => {
                   <Shield className="w-4 h-4 text-indigo-600" />
                   <label className="text-sm font-medium text-gray-500">Rôle</label>
                 </div>
-                <p className="text-gray-900 font-medium capitalize">{user.role}</p>
+                <p className="text-gray-900 font-medium">{formatRole(user.role, user.sexe)}</p>
               </div>
             </div>
           ) : (

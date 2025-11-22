@@ -33,7 +33,7 @@ class Feedback(Base):
 
     __tablename__ = "feedbacks"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_module.uuid4, index=True)
 
     # Type et catégorie - utiliser ENUM PostgreSQL natif, pas les enums Python
     type = Column(ENUM('bug', 'feature_request', 'improvement', 'general', 'complaint', name='feedbacktype', create_type=True), nullable=False, default="general", server_default="general")
