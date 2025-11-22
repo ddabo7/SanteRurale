@@ -70,6 +70,7 @@ export const ConsultationFormPage = () => {
     poids: '',
     taille: '',
     commentaire: '',
+    notes: '',
   })
 
   // Diagnostics, prescriptions, actes

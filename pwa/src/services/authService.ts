@@ -70,6 +70,7 @@ export const authService = {
     nom: string
     prenom: string
     telephone?: string
+    sexe?: string
     role: string  // Obligatoire: medecin, infirmier, major, soignant, pharmacien
     // Informations du site/CSCOM
     site_nom: string
