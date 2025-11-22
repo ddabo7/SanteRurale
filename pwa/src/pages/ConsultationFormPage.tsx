@@ -17,6 +17,7 @@ interface Condition {
   libelle: string
   code_icd10?: string
   commentaire?: string
+  notes?: string
 }
 
 interface Medication {
@@ -26,6 +27,7 @@ interface Medication {
   quantite?: number
   unite?: string
   commentaire?: string
+  notes?: string
 }
 
 interface Procedure {
