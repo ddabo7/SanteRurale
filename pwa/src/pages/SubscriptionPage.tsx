@@ -134,6 +134,24 @@ export const SubscriptionPage = () => {
     fetchData()
   }, [])
 
+  // Handle ESC key to close modals
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (showSubscribeModal) {
+          setShowSubscribeModal(false)
+          setSelectedPlan(null)
+        }
+        if (showPlansModal) {
+          setShowPlansModal(false)
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleEscKey)
+    return () => document.removeEventListener('keydown', handleEscKey)
+  }, [showSubscribeModal, showPlansModal])
+
   const handleConfirmSubscription = async () => {
     if (!selectedPlan) return
 
@@ -609,26 +627,44 @@ export const SubscriptionPage = () => {
 
       {/* Plans Modal */}
       {showPlansModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full my-8">
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start sm:items-center justify-center z-50 overflow-y-auto"
+          onClick={() => setShowPlansModal(false)}
+        >
+          {/* Bouton fermer flottant pour mobile - toujours visible */}
+          <button
+            onClick={() => setShowPlansModal(false)}
+            className="fixed top-4 right-4 z-[60] sm:hidden bg-white/90 backdrop-blur-sm text-gray-700 p-3 rounded-full shadow-lg hover:bg-white transition-colors"
+            aria-label="Fermer"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <div
+            className="bg-white rounded-none sm:rounded-2xl shadow-2xl max-w-6xl w-full min-h-screen sm:min-h-0 sm:my-8 sm:mx-4 max-h-none sm:max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
-            <div className="px-8 py-6 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-emerald-50 to-teal-50">
+            <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-emerald-50 to-teal-50 sticky top-0 z-10">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900">Choisissez votre plan</h2>
-                <p className="text-gray-600 mt-1">Sélectionnez le plan qui correspond à vos besoins</p>
+                <h2 className="text-xl sm:text-3xl font-bold text-gray-900">Choisissez votre plan</h2>
+                <p className="text-gray-600 mt-1 text-sm sm:text-base">Sélectionnez le plan qui correspond à vos besoins</p>
               </div>
               <button
                 onClick={() => setShowPlansModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-white rounded-lg"
+                className="hidden sm:block text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors p-3 rounded-lg"
+                aria-label="Fermer"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
             {/* Plans Grid */}
-            <div className="p-8">
+            <div className="p-4 sm:p-8 pb-20 sm:pb-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {plans.map((plan) => {
                   const isCurrentPlan = subscription?.plan.code === plan.code
@@ -752,19 +788,54 @@ export const SubscriptionPage = () => {
 
       {/* Subscription Confirmation Modal */}
       {showSubscribeModal && selectedPlan && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start sm:items-center justify-center z-50 overflow-y-auto"
+          onClick={() => {
+            setShowSubscribeModal(false)
+            setSelectedPlan(null)
+          }}
+        >
+          {/* Bouton fermer flottant pour mobile */}
+          <button
+            onClick={() => {
+              setShowSubscribeModal(false)
+              setSelectedPlan(null)
+            }}
+            className="fixed top-4 right-4 z-[60] sm:hidden bg-white/90 backdrop-blur-sm text-gray-700 p-3 rounded-full shadow-lg hover:bg-white transition-colors"
+            aria-label="Fermer"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <div
+            className="bg-white rounded-none sm:rounded-2xl shadow-2xl max-w-2xl w-full min-h-screen sm:min-h-0 sm:my-8 sm:mx-4 max-h-none sm:max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
-            <div className="px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-teal-50">
-              <h2 className="text-2xl font-bold text-gray-900">
+            <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-teal-50 sticky top-0 z-10 flex justify-between items-center">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
                 {subscription ? 'Changer de plan' : 'Confirmer votre abonnement'}
               </h2>
+              <button
+                onClick={() => {
+                  setShowSubscribeModal(false)
+                  setSelectedPlan(null)
+                }}
+                className="hidden sm:block text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors p-2 rounded-lg"
+                aria-label="Fermer"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
             {/* Body */}
-            <div className="px-8 py-6">
+            <div className="px-4 sm:px-8 py-4 sm:py-6">
               {/* Plan Summary */}
-              <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl p-6 mb-6 text-white">
+              <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl p-4 sm:p-6 mb-6 text-white">
                 <h3 className="text-2xl font-bold mb-2">{selectedPlan.name}</h3>
                 <p className="text-white/90 mb-4">{selectedPlan.description}</p>
                 <div className="flex items-baseline space-x-2">
@@ -833,21 +904,21 @@ export const SubscriptionPage = () => {
             </div>
 
             {/* Footer */}
-            <div className="px-8 py-6 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+            <div className="px-4 sm:px-8 py-4 sm:py-6 bg-gray-50 border-t border-gray-200 flex flex-col-reverse sm:flex-row justify-end gap-3 sm:space-x-3 sticky bottom-0">
               <button
                 onClick={() => {
                   setShowSubscribeModal(false)
                   setSelectedPlan(null)
                 }}
                 disabled={actionLoading}
-                className="px-6 py-3 border-2 border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 font-semibold disabled:opacity-50 transition-colors"
+                className="w-full sm:w-auto px-6 py-3 border-2 border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 font-semibold disabled:opacity-50 transition-colors"
               >
                 Annuler
               </button>
               <button
                 onClick={handleConfirmSubscription}
                 disabled={actionLoading}
-                className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-lg font-semibold disabled:opacity-50 shadow-lg transition-all"
+                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-lg font-semibold disabled:opacity-50 shadow-lg transition-all"
               >
                 {actionLoading ? (
                   <span className="flex items-center">
