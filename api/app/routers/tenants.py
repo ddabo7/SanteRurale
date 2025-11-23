@@ -192,6 +192,7 @@ async def get_my_subscription(
             price_yearly=float(subscription.plan.price_yearly) if subscription.plan.price_yearly else None,
             max_users=subscription.plan.max_users,
             max_patients_total=subscription.plan.max_patients_total,
+            max_patients_per_month=subscription.plan.max_patients_per_month,
             max_sites=subscription.plan.max_sites,
             max_storage_gb=subscription.plan.max_storage_gb,
             features=subscription.plan.features if subscription.plan.features else []
@@ -338,6 +339,7 @@ async def upgrade_subscription(
             price_yearly=float(subscription_with_plan.plan.price_yearly) if subscription_with_plan.plan.price_yearly else None,
             max_users=subscription_with_plan.plan.max_users,
             max_patients_total=subscription_with_plan.plan.max_patients_total,
+            max_patients_per_month=subscription_with_plan.plan.max_patients_per_month,
             max_sites=subscription_with_plan.plan.max_sites,
             max_storage_gb=subscription_with_plan.plan.max_storage_gb,
             features=subscription_with_plan.plan.features if subscription_with_plan.plan.features else []
