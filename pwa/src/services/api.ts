@@ -110,8 +110,75 @@ export const authService = {
 
 export const patientsService = {
   async list(params?: { search?: string; village?: string; cursor?: string; limit?: number }) {
-    const response = await apiClient.get('/patients', { params })
-    return response.data
+    // Vérifier si on est online
+    const isOnline = navigator.onLine
+
+    if (isOnline) {
+      try {
+        const response = await apiClient.get('/patients', { params })
+        const patients = response.data.data || response.data || []
+
+        // Mettre en cache dans IndexedDB pour le mode offline
+        if (Array.isArray(patients) && patients.length > 0) {
+          try {
+            // Marquer tous comme synchronisés et stocker
+            const patientsToCache = patients.map((p: any) => ({
+              ...p,
+              _synced: true,
+              _cached_at: new Date().toISOString()
+            }))
+            await db.patients.bulkPut(patientsToCache)
+            console.log(`📦 ${patients.length} patients mis en cache pour le mode offline`)
+          } catch (cacheError) {
+            console.warn('⚠️ Erreur mise en cache IndexedDB:', cacheError)
+          }
+        }
+
+        return response.data
+      } catch (error: any) {
+        // Si erreur réseau, fallback vers IndexedDB
+        if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+          console.log('📵 Erreur réseau, lecture depuis IndexedDB...')
+          return this.listFromCache(params)
+        }
+        throw error
+      }
+    } else {
+      // Mode offline : lire depuis IndexedDB
+      console.log('📵 Mode offline, lecture depuis IndexedDB...')
+      return this.listFromCache(params)
+    }
+  },
+
+  async listFromCache(params?: { search?: string; village?: string; limit?: number }) {
+    let patients = await db.patients.toArray()
+
+    // Appliquer les filtres si présents
+    if (params?.search) {
+      const search = params.search.toLowerCase()
+      patients = patients.filter(p =>
+        p.nom?.toLowerCase().includes(search) ||
+        p.prenom?.toLowerCase().includes(search) ||
+        p.telephone?.includes(search)
+      )
+    }
+
+    if (params?.village) {
+      patients = patients.filter(p => p.village === params.village)
+    }
+
+    // Limiter les résultats
+    if (params?.limit) {
+      patients = patients.slice(0, params.limit)
+    }
+
+    console.log(`📦 ${patients.length} patients chargés depuis le cache IndexedDB`)
+
+    return {
+      data: patients,
+      total: patients.length,
+      _fromCache: true
+    }
   },
 
   async get(id: string) {
@@ -134,13 +201,91 @@ export const patientsService = {
 
 export const encountersService = {
   async list(params?: { patient_id?: string; from_date?: string; to_date?: string }) {
-    const response = await apiClient.get('/encounters', { params })
-    return response.data
+    const isOnline = navigator.onLine
+
+    if (isOnline) {
+      try {
+        const response = await apiClient.get('/encounters', { params })
+        const encounters = response.data.data || response.data || []
+
+        // Mettre en cache dans IndexedDB
+        if (Array.isArray(encounters) && encounters.length > 0) {
+          try {
+            const encountersToCache = encounters.map((e: any) => ({
+              ...e,
+              _synced: true,
+              _cached_at: new Date().toISOString()
+            }))
+            await db.encounters.bulkPut(encountersToCache)
+            console.log(`📦 ${encounters.length} consultations mises en cache`)
+          } catch (cacheError) {
+            console.warn('⚠️ Erreur mise en cache encounters:', cacheError)
+          }
+        }
+
+        return response.data
+      } catch (error: any) {
+        if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+          console.log('📵 Erreur réseau, lecture consultations depuis IndexedDB...')
+          return this.listFromCache(params)
+        }
+        throw error
+      }
+    } else {
+      console.log('📵 Mode offline, lecture consultations depuis IndexedDB...')
+      return this.listFromCache(params)
+    }
+  },
+
+  async listFromCache(params?: { patient_id?: string; from_date?: string; to_date?: string }) {
+    let encounters = await db.encounters.toArray()
+
+    if (params?.patient_id) {
+      encounters = encounters.filter(e => e.patient_id === params.patient_id)
+    }
+
+    if (params?.from_date) {
+      const fromDate = new Date(params.from_date)
+      encounters = encounters.filter(e => new Date(e.date || e.created_at) >= fromDate)
+    }
+
+    if (params?.to_date) {
+      const toDate = new Date(params.to_date)
+      encounters = encounters.filter(e => new Date(e.date || e.created_at) <= toDate)
+    }
+
+    console.log(`📦 ${encounters.length} consultations chargées depuis le cache`)
+
+    return {
+      data: encounters,
+      total: encounters.length,
+      _fromCache: true
+    }
   },
 
   async get(id: string) {
-    const response = await apiClient.get(`/encounters/${id}`)
-    return response.data
+    const isOnline = navigator.onLine
+
+    if (isOnline) {
+      try {
+        const response = await apiClient.get(`/encounters/${id}`)
+        // Mettre en cache
+        try {
+          await db.encounters.put({ ...response.data, _synced: true })
+        } catch {}
+        return response.data
+      } catch (error: any) {
+        if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+          const cached = await db.encounters.get(id)
+          if (cached) return cached
+        }
+        throw error
+      }
+    } else {
+      const cached = await db.encounters.get(id)
+      if (cached) return cached
+      throw new Error('Consultation non disponible en mode offline')
+    }
   },
 
   async create(data: any) {
