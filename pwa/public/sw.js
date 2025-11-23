@@ -317,9 +317,9 @@ async function networkFirstWithOfflineFallback(request) {
 
     // Dernière option: réponse basique
     return new Response(
-      '<h1>Mode hors ligne</h1><p>Veuillez vous reconnecter à Internet.</p>',
+      '<h1>Mode hors ligne</h1><p>Veuillez vous reconnecter a Internet.</p>',
       {
-        headers: { 'Content-Type': 'text/html' }
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
       }
     );
   }
