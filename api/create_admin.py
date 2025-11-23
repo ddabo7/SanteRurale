@@ -48,7 +48,7 @@ async def create_admin():
             site = result.scalar_one_or_none()
 
             if not site:
-                # Créer un site par défaut
+                # Créer un site par défaut 
                 site = Site(
                     id=uuid.uuid4(),
                     nom="Site Principal",
