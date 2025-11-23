@@ -12,7 +12,8 @@ interface Plan {
   price_monthly: number
   price_yearly: number | null
   max_users: number | null
-  max_patients_per_month: number | null
+  max_patients_total: number | null  // Limite totale (plan gratuit)
+  max_patients_per_month: number | null  // Limite mensuelle (plans payants)
   max_sites: number | null
   max_storage_gb: number | null
   features: string[]
@@ -379,7 +380,11 @@ export const SubscriptionPage = () => {
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
                   <p className="text-white/70 text-sm">Patients</p>
                   <p className="text-2xl font-bold mt-1">
-                    {subscription.plan.max_patients_per_month === null ? '∞' : subscription.plan.max_patients_per_month}
+                    {subscription.plan.max_patients_total !== null
+                      ? subscription.plan.max_patients_total
+                      : subscription.plan.max_patients_per_month !== null
+                        ? `${subscription.plan.max_patients_per_month}/mois`
+                        : '∞'}
                   </p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
@@ -680,14 +685,26 @@ export const SubscriptionPage = () => {
                             </span>
                           </li>
                         )}
-                        {plan.max_patients_per_month && (
+                        {(plan.max_patients_total || plan.max_patients_per_month) && (
                           <li className="flex items-start text-sm">
                             <svg className="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                             <span className="text-gray-700">
-                              {plan.max_patients_per_month === -1 ? 'Patients illimités' : `${plan.max_patients_per_month} patients`}
+                              {plan.max_patients_total
+                                ? `${plan.max_patients_total} patients (total)`
+                                : plan.max_patients_per_month
+                                  ? `${plan.max_patients_per_month} patients/mois`
+                                  : 'Patients illimités'}
                             </span>
+                          </li>
+                        )}
+                        {!plan.max_patients_total && !plan.max_patients_per_month && (
+                          <li className="flex items-start text-sm">
+                            <svg className="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-gray-700">Patients illimités</span>
                           </li>
                         )}
                         {plan.max_storage_gb && (
