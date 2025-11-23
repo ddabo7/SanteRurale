@@ -56,20 +56,30 @@ async def get_current_tenant(
             detail="Ce compte est désactivé. Veuillez contacter le support."
         )
 
-    # Vérifier l'abonnement (sauf pour les pilotes gratuits)
-    if not tenant.is_pilot:
-        subscription = await get_tenant_subscription(tenant.id, db)
-        if not subscription:
+    # Vérifier l'abonnement et le statut de blocage
+    subscription = await get_tenant_subscription(tenant.id, db)
+
+    if subscription:
+        from app.services.subscription_service import SubscriptionService
+        service = SubscriptionService(db)
+
+        # Vérifier si l'utilisateur peut se connecter (bloqué uniquement si SUSPENDED)
+        can_login, error_message = await service.check_can_login(subscription)
+        if not can_login:
             raise HTTPException(
-                status_code=status.HTTP_402_PAYMENT_REQUIRED,
-                detail="Aucun abonnement actif. Veuillez souscrire à un plan."
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=error_message
             )
 
-        if subscription.status not in [SubscriptionStatus.ACTIVE.value, SubscriptionStatus.TRIALING.value]:
-            raise HTTPException(
-                status_code=status.HTTP_402_PAYMENT_REQUIRED,
-                detail=f"Abonnement {subscription.status}. Veuillez mettre à jour votre abonnement."
-            )
+        # Stocker le statut calculé pour les dépendances suivantes
+        computed_status = await service.get_computed_status(subscription)
+        request.state.subscription_status = computed_status
+        request.state.subscription = subscription
+    elif not tenant.is_pilot:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Aucun abonnement actif. Veuillez souscrire à un plan."
+        )
 
     # Injecter le tenant dans la request pour le middleware
     request.state.tenant = tenant
@@ -125,6 +135,94 @@ def require_feature(feature: str):
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Cette fonctionnalité nécessite un plan supérieur. Fonctionnalité requise: {feature}"
             )
+
+        return tenant
+
+    return dependency
+
+
+async def require_active_subscription(
+    request: Request,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: AsyncSession = Depends(get_db)
+) -> Tenant:
+    """
+    Vérifie que l'abonnement permet de créer/modifier des données.
+    Bloque en mode DEGRADED, READ_ONLY, SUSPENDED.
+    """
+    subscription = getattr(request.state, 'subscription', None)
+
+    if subscription:
+        from app.services.subscription_service import SubscriptionService
+        service = SubscriptionService(db)
+
+        can_create, error_message = await service.check_can_create_patient(subscription)
+        if not can_create:
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail=error_message
+            )
+
+    return tenant
+
+
+async def require_write_access(
+    request: Request,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: AsyncSession = Depends(get_db)
+) -> Tenant:
+    """
+    Vérifie que l'abonnement permet de modifier des données.
+    Bloque en mode READ_ONLY, SUSPENDED.
+    """
+    subscription = getattr(request.state, 'subscription', None)
+
+    if subscription:
+        from app.services.subscription_service import SubscriptionService
+        service = SubscriptionService(db)
+
+        can_modify, error_message = await service.check_can_modify_data(subscription)
+        if not can_modify:
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail=error_message
+            )
+
+    return tenant
+
+
+def require_feature_with_subscription(feature: str):
+    """
+    Vérifie l'accès à une fonctionnalité avancée en tenant compte du statut d'abonnement.
+    Bloqué dès le mode DEGRADED pour les features avancées.
+    """
+    async def dependency(
+        request: Request,
+        tenant: Tenant = Depends(get_current_tenant),
+        db: AsyncSession = Depends(get_db)
+    ):
+        subscription = getattr(request.state, 'subscription', None)
+
+        if subscription:
+            from app.services.subscription_service import SubscriptionService
+            service = SubscriptionService(db)
+
+            # Vérifier le statut de l'abonnement pour cette feature
+            can_access, error_message = await service.check_can_access_feature(subscription, feature)
+            if not can_access:
+                raise HTTPException(
+                    status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                    detail=error_message
+                )
+
+            # Vérifier aussi que le plan inclut cette feature
+            plan = subscription.plan
+            if plan and plan.features:
+                if feature not in plan.features:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail=f"Cette fonctionnalité nécessite un plan supérieur. Fonctionnalité requise: {feature}"
+                    )
 
         return tenant
 

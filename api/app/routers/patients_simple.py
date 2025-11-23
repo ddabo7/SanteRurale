@@ -15,7 +15,7 @@ from app.models import Patient, User, Site
 from app.models.tenant import Tenant
 from app.schemas import PatientCreate, PatientUpdate, PatientOut, UserRole
 from app.security import get_current_user
-from app.dependencies.tenant import check_quota, get_current_tenant
+from app.dependencies.tenant import check_quota, get_current_tenant, require_active_subscription, require_write_access
 
 router = APIRouter(prefix="/patients", tags=["Patients"])
 
@@ -187,7 +187,7 @@ async def get_patient(
 async def create_patient(
     patient_data: PatientCreate,
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant),
+    current_tenant: Tenant = Depends(require_active_subscription),  # 🔒 Vérifie abonnement actif
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -197,6 +197,8 @@ async def create_patient(
     - SIBY: code du village (4 lettres)
     - 2025: année
     - 0001: numéro séquentiel
+
+    🔒 Blocage: Cette action est bloquée si l'abonnement est expiré (mode DEGRADED ou supérieur)
     """
     # Déterminer le type de quota à vérifier selon le plan
     from app.dependencies.tenant import get_tenant_subscription
@@ -259,10 +261,13 @@ async def update_patient(
     patient_id: uuid_module.UUID,
     patient_data: PatientUpdate,
     current_user: User = Depends(get_current_user),
+    tenant: Tenant = Depends(require_write_access),  # 🔒 Vérifie accès en écriture
     db: AsyncSession = Depends(get_db),
 ):
     """
     Mettre à jour un patient
+
+    🔒 Blocage: Cette action est bloquée si le compte est en lecture seule (mode READ_ONLY ou supérieur)
     """
     # Récupérer le patient
     query = select(Patient).where(
@@ -310,10 +315,13 @@ async def update_patient(
 async def delete_patient(
     patient_id: uuid_module.UUID,
     current_user: User = Depends(get_current_user),
+    tenant: Tenant = Depends(require_write_access),  # 🔒 Vérifie accès en écriture
     db: AsyncSession = Depends(get_db),
 ):
     """
     Supprimer un patient (soft delete)
+
+    🔒 Blocage: Cette action est bloquée si le compte est en lecture seule (mode READ_ONLY ou supérieur)
     """
     # Récupérer le patient
     query = select(Patient).where(

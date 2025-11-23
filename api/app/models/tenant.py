@@ -20,12 +20,18 @@ class PlanType(str, Enum):
 
 
 class SubscriptionStatus(str, Enum):
-    """Statuts d'abonnement"""
-    ACTIVE = "active"
-    TRIALING = "trialing"  # Période d'essai
-    PAST_DUE = "past_due"  # Paiement en retard
-    CANCELED = "canceled"
-    UNPAID = "unpaid"
+    """
+    Statuts d'abonnement avec mécanisme de blocage progressif
+
+    Flux: ACTIVE → GRACE_PERIOD → DEGRADED → READ_ONLY → SUSPENDED → (suppression)
+    """
+    ACTIVE = "active"  # Abonnement payé et valide
+    TRIALING = "trialing"  # Période d'essai (pour futurs usages)
+    GRACE_PERIOD = "grace_period"  # Jour 0-7 après expiration - accès complet + notifications
+    DEGRADED = "degraded"  # Jour 7-14 - Nouveaux patients/rapports/exports bloqués
+    READ_ONLY = "read_only"  # Jour 14-30 - Lecture seule uniquement
+    SUSPENDED = "suspended"  # Jour 30+ - Compte inaccessible, données conservées 90j
+    CANCELED = "canceled"  # Annulé volontairement
 
 
 class Plan(Base):
@@ -124,6 +130,14 @@ class Subscription(Base):
     current_period_start = Column(DateTime, nullable=False, default=datetime.utcnow)
     current_period_end = Column(DateTime, nullable=False)
     canceled_at = Column(DateTime)
+
+    # Mécanisme de blocage progressif
+    expires_at = Column(DateTime)  # Date d'expiration du paiement
+    grace_period_ends_at = Column(DateTime)  # expires_at + 7 jours
+    degraded_at = Column(DateTime)  # Date passage en mode dégradé
+    read_only_at = Column(DateTime)  # Date passage en lecture seule
+    suspended_at = Column(DateTime)  # Date de suspension
+    delete_scheduled_at = Column(DateTime)  # Date de suppression prévue (suspended_at + 90 jours)
 
     # Stripe
     stripe_subscription_id = Column(String(100))  # ID de l'abonnement Stripe

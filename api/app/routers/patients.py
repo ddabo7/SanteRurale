@@ -20,8 +20,9 @@ from app.schemas import (
     PaginationMeta,
 )
 from app.security import get_current_user
-from app.dependencies.tenant import get_current_tenant, check_quota
+from app.dependencies.tenant import get_current_tenant, check_quota, require_active_subscription, require_write_access
 from app.models.tenant import Tenant
+from app.services.subscription_service import SubscriptionService
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +121,7 @@ async def list_patients(
 async def create_patient(
     patient_data: PatientCreate,
     current_user: User = Depends(get_current_user),
-    tenant: Tenant = Depends(get_current_tenant),
+    tenant: Tenant = Depends(require_active_subscription),  # 🔒 Vérifie que l'abonnement permet de créer
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -129,12 +130,14 @@ async def create_patient(
     Le patient est automatiquement associé au site de l'utilisateur.
 
     Permissions: soignant, major, médecin, admin
+
+    🔒 Blocage: Cette action est bloquée si l'abonnement est expiré (mode DEGRADED ou supérieur)
     """
     # 🔒 VÉRIFICATION DU QUOTA: selon le plan
     from app.dependencies.tenant import get_tenant_subscription
     from datetime import datetime
     subscription = await get_tenant_subscription(tenant.id, db)
-    
+
     # Plan gratuit : vérifier limite TOTALE
     if not subscription or not subscription.plan or subscription.plan.code == 'free':
         count_stmt = select(func.count()).select_from(Patient).where(
@@ -144,12 +147,12 @@ async def create_patient(
         result = await db.execute(count_stmt)
         current_patients_count = result.scalar() or 0
         await check_quota(tenant, "patients_total", current_patients_count, db)
-    
+
     # Plans payants : vérifier limite MENSUELLE
     else:
         current_month = datetime.now().month
         current_year = datetime.now().year
-        
+
         from sqlalchemy import extract
         monthly_count_stmt = select(func.count()).select_from(Patient).where(
             Patient.site_id == current_user.site_id,
