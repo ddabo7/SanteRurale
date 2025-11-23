@@ -201,7 +201,7 @@ async def get_feedback_stats(
 
 @router.patch("/admin/{feedback_id}", response_model=FeedbackResponse)
 async def update_feedback(
-    feedback_id: int,
+    feedback_id: uuid_module.UUID,
     feedback_update: FeedbackUpdate,
     db: AsyncSession = Depends(get_db),
     current_admin: User = Depends(get_current_admin_user),
@@ -240,7 +240,7 @@ async def update_feedback(
 
 @router.delete("/admin/{feedback_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_feedback(
-    feedback_id: int,
+    feedback_id: uuid_module.UUID,
     db: AsyncSession = Depends(get_db),
     current_admin: User = Depends(get_current_admin_user),
 ):
