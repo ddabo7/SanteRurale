@@ -61,7 +61,7 @@ async def create_admin():
             else:
                 print(f"✅ Site existant: {site.nom} (ID: {site.id})")
 
-            # Vérifier si l'admin existe déjà
+            # Vérifier si l'admin existe déjà 
             result = await session.execute(
                 select(User).where(User.email == "admin@santerurale.io")
             )
