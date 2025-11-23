@@ -73,7 +73,7 @@ async def create_admin():
                 print(f"   Actif: {existing_user.actif}")
                 return
 
-            # Créer l'utilisateur admin
+            # Créer l'utilisateur admin 
             admin_user = User(
                 id=uuid.uuid4(),
                 email="admin@santerurale.io",
