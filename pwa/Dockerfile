@@ -48,11 +48,22 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
 # ===========================================================================
 FROM base AS builder
 
+# Arguments de build pour les variables d'environnement Vite
+ARG VITE_API_URL=https://santerurale.io/api
+ARG VITE_ENVIRONMENT=production
+
+# Définir les variables d'environnement pour le build
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_ENVIRONMENT=$VITE_ENVIRONMENT
+
 # Installer TOUTES les dépendances (incluant devDependencies pour le build)
 RUN npm ci
 
 # Copier tout le code source
 COPY . .
+
+# Afficher la configuration pour debug
+RUN echo "Building PWA with VITE_API_URL=$VITE_API_URL"
 
 # Build de production (génère /app/dist)
 RUN npm run build
