@@ -49,7 +49,7 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
 FROM base AS builder
 
 # Arguments de build pour les variables d'environnement Vite
-ARG VITE_API_URL=https://santerurale.io/api
+ARG VITE_API_URL=https://www.santerurale.io/api
 ARG VITE_ENVIRONMENT=production
 
 # Définir les variables d'environnement pour le build
