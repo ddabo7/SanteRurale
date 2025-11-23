@@ -198,16 +198,36 @@ async def create_patient(
     - 2025: année
     - 0001: numéro séquentiel
     """
-    # Vérifier le quota de patients TOTAL (pas par mois!)
-    total_patients_result = await db.execute(
-        select(func.count(Patient.id))
-        .where(Patient.site_id == current_user.site_id)
-        .where(Patient.deleted_at.is_(None))
-    )
-    total_patients = total_patients_result.scalar_one()
-
-    # Vérifier si le tenant peut créer un nouveau patient
-    await check_quota(current_tenant, "patients_total", total_patients, db)
+    # Déterminer le type de quota à vérifier selon le plan
+    from app.dependencies.tenant import get_tenant_subscription
+    subscription = await get_tenant_subscription(current_tenant.id, db)
+    
+    # Plan gratuit : vérifier limite TOTALE
+    if not subscription or not subscription.plan or subscription.plan.code == 'free':
+        total_patients_result = await db.execute(
+            select(func.count(Patient.id))
+            .where(Patient.site_id == current_user.site_id)
+            .where(Patient.deleted_at.is_(None))
+        )
+        total_patients = total_patients_result.scalar_one()
+        await check_quota(current_tenant, "patients_total", total_patients, db)
+    
+    # Plans payants : vérifier limite MENSUELLE
+    else:
+        from datetime import datetime
+        from sqlalchemy import extract
+        current_month = datetime.now().month
+        current_year = datetime.now().year
+        
+        monthly_patients_result = await db.execute(
+            select(func.count(Patient.id))
+            .where(Patient.site_id == current_user.site_id)
+            .where(Patient.deleted_at.is_(None))
+            .where(extract('month', Patient.created_at) == current_month)
+            .where(extract('year', Patient.created_at) == current_year)
+        )
+        monthly_patients = monthly_patients_result.scalar_one()
+        await check_quota(current_tenant, "patients_monthly", monthly_patients, db)
 
     # Créer le patient
     new_patient = Patient(

@@ -49,10 +49,11 @@ async def init_production():
                     {
                         "code": "free",
                         "name": "Plan Gratuit",
-                        "description": "Plan d'essai - Limité à 50 patients",
+                        "description": "Plan d'essai - Limité à 50 patients total",
                         "price_monthly": Decimal("0.00"),
                         "max_users": 5,
-                        "max_patients_total": 50,
+                        "max_patients_total": 50,  # Limite TOTALE pour le gratuit
+                        "max_patients_per_month": None,  # Pas de limite mensuelle
                         "max_sites": 1,
                         "max_storage_gb": 5,
                         "features": ["basic_features"],
@@ -60,35 +61,66 @@ async def init_production():
                     {
                         "code": "starter",
                         "name": "Plan Starter",
-                        "description": "Pour petites structures de santé",
+                        "description": "Abonnement mensuel - 500 nouveaux patients/mois",
                         "price_monthly": Decimal("50.00"),
-                        "max_users": 5,
-                        "max_patients_total": 500,
+                        "max_users": 10,
+                        "max_patients_total": None,  # Pas de limite totale
+                        "max_patients_per_month": 500,  # Limite MENSUELLE - nécessite renouvellement
                         "max_sites": 1,
-                        "max_storage_gb": 10,
-                        "features": ["basic_features", "reports"],
+                        "max_storage_gb": 20,
+                        "features": ["basic_features", "reports", "email_support", "data_backup"],
                     },
                     {
                         "code": "pro",
                         "name": "Plan Pro",
-                        "description": "Pour centres de santé importants",
+                        "description": "Abonnement mensuel - Patients illimités + fonctionnalités avancées",
                         "price_monthly": Decimal("150.00"),
                         "max_users": 50,
-                        "max_patients_total": None,
-                        "max_sites": 5,
-                        "max_storage_gb": 50,
-                        "features": ["basic_features", "reports", "multi_sites", "advanced_stats"],
+                        "max_patients_total": None,  # ILLIMITÉ
+                        "max_patients_per_month": None,  # ILLIMITÉ - tant que l'abonnement est actif
+                        "max_sites": 10,
+                        "max_storage_gb": 100,
+                        "features": [
+                            "basic_features",
+                            "reports",
+                            "advanced_reports",
+                            "multi_sites",
+                            "advanced_stats",
+                            "data_export",
+                            "api_access",
+                            "priority_support",
+                            "data_backup",
+                            "offline_mode"
+                        ],
                     },
                     {
                         "code": "enterprise",
                         "name": "Plan Enterprise",
-                        "description": "Pour réseaux de santé régionaux",
+                        "description": "Abonnement mensuel - Solution complète pour réseaux de santé",
                         "price_monthly": Decimal("500.00"),
-                        "max_users": None,
-                        "max_patients_total": None,
-                        "max_sites": None,
-                        "max_storage_gb": 200,
-                        "features": ["basic_features", "reports", "multi_sites", "advanced_stats", "dhis2_export", "custom_support"],
+                        "max_users": None,  # ILLIMITÉ
+                        "max_patients_total": None,  # ILLIMITÉ
+                        "max_patients_per_month": None,  # ILLIMITÉ
+                        "max_sites": None,  # ILLIMITÉ
+                        "max_storage_gb": 500,
+                        "features": [
+                            "basic_features",
+                            "reports",
+                            "advanced_reports",
+                            "multi_sites",
+                            "advanced_stats",
+                            "data_export",
+                            "dhis2_export",
+                            "api_access",
+                            "white_label",
+                            "custom_integration",
+                            "dedicated_support",
+                            "sla_guarantee",
+                            "data_backup",
+                            "offline_mode",
+                            "training_included",
+                            "custom_features"
+                        ],
                     },
                 ]
 

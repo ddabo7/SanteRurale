@@ -79,7 +79,8 @@ class PlanResponse(BaseModel):
     price_monthly: float
     price_yearly: Optional[float]
     max_users: Optional[int]
-    max_patients_total: Optional[int] = Field(None, serialization_alias='max_patients_per_month')
+    max_patients_total: Optional[int]  # Limite totale (plan gratuit)
+    max_patients_per_month: Optional[int]  # Limite mensuelle (plans payants)
     max_sites: Optional[int]
     max_storage_gb: Optional[int]
     features: List[str] = Field(default_factory=list)

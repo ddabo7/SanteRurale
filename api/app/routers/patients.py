@@ -130,16 +130,36 @@ async def create_patient(
 
     Permissions: soignant, major, médecin, admin
     """
-    # 🔒 VÉRIFICATION DU QUOTA: Compter les patients actuels
-    count_stmt = select(func.count()).select_from(Patient).where(
-        Patient.site_id == current_user.site_id,
-        Patient.deleted_at == None
-    )
-    result = await db.execute(count_stmt)
-    current_patients_count = result.scalar() or 0
-
-    # Vérifier si le quota est atteint
-    await check_quota(tenant, "patients_total", current_patients_count, db)
+    # 🔒 VÉRIFICATION DU QUOTA: selon le plan
+    from app.dependencies.tenant import get_tenant_subscription
+    from datetime import datetime
+    subscription = await get_tenant_subscription(tenant.id, db)
+    
+    # Plan gratuit : vérifier limite TOTALE
+    if not subscription or not subscription.plan or subscription.plan.code == 'free':
+        count_stmt = select(func.count()).select_from(Patient).where(
+            Patient.site_id == current_user.site_id,
+            Patient.deleted_at == None
+        )
+        result = await db.execute(count_stmt)
+        current_patients_count = result.scalar() or 0
+        await check_quota(tenant, "patients_total", current_patients_count, db)
+    
+    # Plans payants : vérifier limite MENSUELLE
+    else:
+        current_month = datetime.now().month
+        current_year = datetime.now().year
+        
+        from sqlalchemy import extract
+        monthly_count_stmt = select(func.count()).select_from(Patient).where(
+            Patient.site_id == current_user.site_id,
+            Patient.deleted_at == None,
+            extract('month', Patient.created_at) == current_month,
+            extract('year', Patient.created_at) == current_year
+        )
+        result = await db.execute(monthly_count_stmt)
+        monthly_patients_count = result.scalar() or 0
+        await check_quota(tenant, "patients_monthly", monthly_patients_count, db)
 
     # Créer le patient
     patient = Patient(

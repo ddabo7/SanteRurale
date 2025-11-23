@@ -142,7 +142,7 @@ async def check_quota(
 
     Args:
         tenant: Le tenant à vérifier
-        quota_type: Type de quota ("users", "patients_total", "sites", "storage_gb")
+        quota_type: Type de quota ("users", "patients_total", "patients_monthly", "sites", "storage_gb")
         current_value: Valeur actuelle à comparer au quota
         db: Session de base de données
 
@@ -159,6 +159,7 @@ async def check_quota(
         max_values = {
             "users": 5,
             "patients_total": 50,  # 50 patients TOTAL pour le plan gratuit
+            "patients_monthly": None,  # Pas de limite mensuelle pour le gratuit
             "sites": 1,
             "storage_gb": 10
         }
@@ -167,7 +168,8 @@ async def check_quota(
         plan = subscription.plan
         max_values = {
             "users": plan.max_users,
-            "patients_total": plan.max_patients_total,  # Nombre TOTAL de patients
+            "patients_total": plan.max_patients_total,  # Nombre TOTAL (plan gratuit uniquement)
+            "patients_monthly": plan.max_patients_per_month,  # Limite MENSUELLE (plans payants)
             "sites": plan.max_sites,
             "storage_gb": plan.max_storage_gb
         }
@@ -179,9 +181,18 @@ async def check_quota(
         return True
 
     if current_value >= max_value:
+        quota_labels = {
+            "users": "utilisateurs",
+            "patients_total": "patients (total)",
+            "patients_monthly": "patients (ce mois)",
+            "sites": "sites",
+            "storage_gb": "stockage (GB)"
+        }
+        label = quota_labels.get(quota_type, quota_type)
+        
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail=f"Quota {quota_type} atteint ({current_value}/{max_value}). Veuillez passer à un plan supérieur."
+            detail=f"Quota {label} atteint ({current_value}/{max_value}). Veuillez passer à un plan supérieur."
         )
 
     return True
