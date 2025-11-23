@@ -101,15 +101,15 @@ async def list_patients(
     Liste les patients accessibles à l'utilisateur
 
     Permissions:
-    - Admin/Médecin: tous les patients de leur tenant
-    - Autres: patients de leur site uniquement (dans leur tenant)
+    - Tous les utilisateurs: patients de leur site uniquement
+    - Note: L'admin plateforme n'a pas accès aux données patients (confidentialité médicale)
     """
     # Base query - exclure les patients supprimés
     query = select(Patient).where(Patient.deleted_at == None)
 
-    # Filtrer par site si pas admin/médecin
-    if current_user.role not in [UserRole.ADMIN, UserRole.MEDECIN]:
-        query = query.where(Patient.site_id == current_user.site_id)
+    # Toujours filtrer par site - même pour les admins/médecins
+    # Cela garantit que chaque utilisateur ne voit que les patients de son établissement
+    query = query.where(Patient.site_id == current_user.site_id)
 
     # Recherche textuelle
     if search:
@@ -169,13 +169,12 @@ async def get_patient(
             detail="Patient non trouvé"
         )
 
-    # Vérifier l'accès par site
-    if current_user.role not in [UserRole.ADMIN, UserRole.MEDECIN]:
-        if patient.site_id != current_user.site_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Accès non autorisé à ce patient"
-            )
+    # Vérifier l'accès par site - tous les utilisateurs sont limités à leur site
+    if patient.site_id != current_user.site_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Accès non autorisé à ce patient"
+        )
 
     return PatientOut.model_validate(patient)
 
@@ -261,13 +260,12 @@ async def update_patient(
             detail="Patient non trouvé"
         )
 
-    # Vérifier l'accès par site
-    if current_user.role not in [UserRole.ADMIN, UserRole.MEDECIN]:
-        if patient.site_id != current_user.site_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Accès non autorisé"
-            )
+    # Vérifier l'accès par site - tous les utilisateurs sont limités à leur site
+    if patient.site_id != current_user.site_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Accès non autorisé"
+        )
 
     # Appliquer les modifications
     update_data = patient_data.model_dump(exclude_unset=True)
