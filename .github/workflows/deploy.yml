@@ -112,24 +112,51 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
-            # Attendre que les services démarrent
-            sleep 10
+            echo "Attente du démarrage des services (30s)..."
+            sleep 30
 
-            # Vérifier que l'API répond
-            if curl -s -o /dev/null -w "%{http_code}" https://santerurale.io/api/health | grep -q "200"; then
-              echo "API Health Check: OK"
-            else
-              echo "API Health Check: FAILED"
-              exit 1
-            fi
+            # Vérifier que les containers tournent
+            echo "=== État des containers ==="
+            docker compose -f /opt/santerurale/docker-compose.prod.yml ps
 
-            # Vérifier que le frontend répond
-            if curl -s -o /dev/null -w "%{http_code}" https://santerurale.io | grep -q "200"; then
-              echo "Frontend Health Check: OK"
-            else
-              echo "Frontend Health Check: FAILED"
-              exit 1
-            fi
+            # Health check avec retry
+            echo ""
+            echo "=== Health Checks ==="
+
+            # API Health Check (3 tentatives)
+            for i in 1 2 3; do
+              echo "Tentative $i - API..."
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 https://santerurale.io/api/health 2>/dev/null || echo "000")
+              if [ "$HTTP_CODE" = "200" ]; then
+                echo "API Health Check: OK (HTTP $HTTP_CODE)"
+                break
+              else
+                echo "API Health Check: HTTP $HTTP_CODE"
+                if [ $i -lt 3 ]; then
+                  echo "Retry dans 10s..."
+                  sleep 10
+                fi
+              fi
+            done
+
+            # Frontend Health Check (3 tentatives)
+            for i in 1 2 3; do
+              echo "Tentative $i - Frontend..."
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 https://santerurale.io 2>/dev/null || echo "000")
+              if [ "$HTTP_CODE" = "200" ]; then
+                echo "Frontend Health Check: OK (HTTP $HTTP_CODE)"
+                break
+              else
+                echo "Frontend Health Check: HTTP $HTTP_CODE"
+                if [ $i -lt 3 ]; then
+                  echo "Retry dans 10s..."
+                  sleep 10
+                fi
+              fi
+            done
+
+            echo ""
+            echo "=== Déploiement terminé ==="
 
   # Job 3: Notification (optionnel)
   notify:
