@@ -169,14 +169,14 @@ async def get_global_stats(
     total_storage_bytes = int(storage_row.total_bytes) if storage_row else 0
 
     # Top 10 tenants les plus actifs
-    # Note: patients et encounters n'ont pas de tenant_id, on joint via users
+    # Note: patients appartiennent au site, on joint via users.site_id
     top_tenants_query = text("""
         SELECT
             t.id,
             t.name,
             t.created_at,
             COUNT(DISTINCT u.id) as total_users,
-            COUNT(DISTINCT e.patient_id) as total_patients,
+            COUNT(DISTINCT p.id) as total_patients,
             COUNT(DISTINCT e.id) as total_encounters,
             pl.name as plan_name,
             pl.code as plan_code,
@@ -184,6 +184,7 @@ async def get_global_stats(
             pl.price_monthly as monthly_revenue
         FROM tenants t
         LEFT JOIN users u ON u.tenant_id = t.id
+        LEFT JOIN patients p ON p.site_id = u.site_id
         LEFT JOIN encounters e ON e.user_id = u.id
         LEFT JOIN subscriptions s ON s.tenant_id = t.id
         LEFT JOIN plans pl ON pl.id = s.plan_id
@@ -284,14 +285,14 @@ async def list_all_tenants(
 ):
     """Liste tous les tenants avec leurs statistiques"""
 
-    # Note: patients et encounters n'ont pas de tenant_id, on joint via users
+    # Note: patients appartiennent au site, on joint via users.site_id
     query = text("""
         SELECT
             t.id,
             t.name,
             t.created_at,
             COUNT(DISTINCT u.id) as total_users,
-            COUNT(DISTINCT e.patient_id) as total_patients,
+            COUNT(DISTINCT p.id) as total_patients,
             COUNT(DISTINCT e.id) as total_encounters,
             pl.name as plan_name,
             pl.code as plan_code,
@@ -299,6 +300,7 @@ async def list_all_tenants(
             pl.price_monthly as monthly_revenue
         FROM tenants t
         LEFT JOIN users u ON u.tenant_id = t.id
+        LEFT JOIN patients p ON p.site_id = u.site_id
         LEFT JOIN encounters e ON e.user_id = u.id
         LEFT JOIN subscriptions s ON s.tenant_id = t.id AND s.status = 'active'
         LEFT JOIN plans pl ON pl.id = s.plan_id
