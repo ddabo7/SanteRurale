@@ -91,6 +91,7 @@ async def get_global_stats(
     """Retourne les statistiques globales de la plateforme"""
 
     # Statistiques des tenants
+    # Note: encounters n'a pas de tenant_id, on joint via users
     tenant_stats_query = text("""
         SELECT
             COUNT(DISTINCT t.id) as total_tenants,
@@ -103,7 +104,8 @@ async def get_global_stats(
                 THEN t.id
             END) as active_tenants
         FROM tenants t
-        LEFT JOIN encounters e ON e.tenant_id = t.id
+        LEFT JOIN users u ON u.tenant_id = t.id
+        LEFT JOIN encounters e ON e.user_id = u.id
     """)
 
     result = await db.execute(tenant_stats_query)
@@ -140,6 +142,7 @@ async def get_global_stats(
     mrr = float(revenue_row.mrr) if revenue_row else 0.0
 
     # Utilisation globale
+    # Note: patients et encounters n'ont pas de tenant_id, on joint via users/sites
     usage_query = text("""
         SELECT
             COUNT(DISTINCT u.id) as total_users,
@@ -147,8 +150,8 @@ async def get_global_stats(
             COUNT(DISTINCT e.id) as total_encounters
         FROM tenants t
         LEFT JOIN users u ON u.tenant_id = t.id
-        LEFT JOIN patients p ON p.tenant_id = t.id
-        LEFT JOIN encounters e ON e.tenant_id = t.id
+        LEFT JOIN patients p ON p.site_id IN (SELECT s.id FROM sites s JOIN districts d ON s.district_id = d.id)
+        LEFT JOIN encounters e ON e.user_id = u.id
     """)
 
     result = await db.execute(usage_query)
@@ -166,13 +169,14 @@ async def get_global_stats(
     total_storage_bytes = int(storage_row.total_bytes) if storage_row else 0
 
     # Top 10 tenants les plus actifs
+    # Note: patients et encounters n'ont pas de tenant_id, on joint via users
     top_tenants_query = text("""
         SELECT
             t.id,
             t.name,
             t.created_at,
             COUNT(DISTINCT u.id) as total_users,
-            COUNT(DISTINCT p.id) as total_patients,
+            COUNT(DISTINCT e.patient_id) as total_patients,
             COUNT(DISTINCT e.id) as total_encounters,
             pl.name as plan_name,
             pl.code as plan_code,
@@ -180,8 +184,7 @@ async def get_global_stats(
             pl.price_monthly as monthly_revenue
         FROM tenants t
         LEFT JOIN users u ON u.tenant_id = t.id
-        LEFT JOIN patients p ON p.tenant_id = t.id
-        LEFT JOIN encounters e ON e.tenant_id = t.id
+        LEFT JOIN encounters e ON e.user_id = u.id
         LEFT JOIN subscriptions s ON s.tenant_id = t.id
         LEFT JOIN plans pl ON pl.id = s.plan_id
         WHERE s.status = 'active'
@@ -281,13 +284,14 @@ async def list_all_tenants(
 ):
     """Liste tous les tenants avec leurs statistiques"""
 
+    # Note: patients et encounters n'ont pas de tenant_id, on joint via users
     query = text("""
         SELECT
             t.id,
             t.name,
             t.created_at,
             COUNT(DISTINCT u.id) as total_users,
-            COUNT(DISTINCT p.id) as total_patients,
+            COUNT(DISTINCT e.patient_id) as total_patients,
             COUNT(DISTINCT e.id) as total_encounters,
             pl.name as plan_name,
             pl.code as plan_code,
@@ -295,8 +299,7 @@ async def list_all_tenants(
             pl.price_monthly as monthly_revenue
         FROM tenants t
         LEFT JOIN users u ON u.tenant_id = t.id
-        LEFT JOIN patients p ON p.tenant_id = t.id
-        LEFT JOIN encounters e ON e.tenant_id = t.id
+        LEFT JOIN encounters e ON e.user_id = u.id
         LEFT JOIN subscriptions s ON s.tenant_id = t.id AND s.status = 'active'
         LEFT JOIN plans pl ON pl.id = s.plan_id
         GROUP BY t.id, t.name, t.created_at, pl.name, pl.code, s.status, pl.price_monthly
