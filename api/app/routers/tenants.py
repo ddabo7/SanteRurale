@@ -78,11 +78,11 @@ class PlanResponse(BaseModel):
     description: Optional[str]
     price_monthly: float
     price_yearly: Optional[float]
-    max_users: Optional[int]
-    max_patients_total: Optional[int]  # Limite totale (plan gratuit)
-    max_patients_per_month: Optional[int]  # Limite mensuelle (plans payants)
-    max_sites: Optional[int]
-    max_storage_gb: Optional[int]
+    max_users: Optional[int] = None
+    max_patients_total: Optional[int] = None  # Limite totale (plan gratuit)
+    max_patients_per_month: Optional[int] = None  # Limite mensuelle (plans payants)
+    max_sites: Optional[int] = None
+    max_storage_gb: Optional[int] = None
     features: List[str] = Field(default_factory=list)
     
     @field_validator('features', mode='before')
