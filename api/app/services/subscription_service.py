@@ -86,7 +86,7 @@ class SubscriptionService:
             current_period_end=datetime.utcnow() + timedelta(days=365),  # 1 an
         )
         self.db.add(subscription)
-        await self.db.commit()
+        await self.db.flush()  # Flush seulement, le commit sera fait par l'appelant
         await self.db.refresh(tenant)
 
         return tenant
