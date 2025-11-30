@@ -40,11 +40,8 @@ export const LandingPage = () => {
             <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
               Santé Rurale
             </h1>
-            <p className="text-xl md:text-2xl text-gray-700 font-semibold mb-2">
+            <p className="text-xl md:text-2xl text-gray-700 font-semibold">
               E-santé pour les centres de santé ruraux
-            </p>
-            <p className="text-gray-600 text-lg">
-              🌍 Pensée pour l'Afrique de l'Ouest
             </p>
           </div>
 
@@ -145,9 +142,9 @@ export const LandingPage = () => {
 
           <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md rounded-2xl px-6 py-3 text-white">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
-            <span className="text-sm font-medium">Afrique de l'Ouest</span>
+            <span className="text-sm font-medium">Rapide & Fiable</span>
           </div>
         </div>
       </div>
