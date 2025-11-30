@@ -62,9 +62,6 @@ RUN npm ci
 # Copier tout le code source
 COPY . .
 
-# Afficher la configuration pour debug
-RUN echo "Building PWA with VITE_API_URL=$VITE_API_URL"
-
 # Build de production (génère /app/dist)
 RUN npm run build
 
