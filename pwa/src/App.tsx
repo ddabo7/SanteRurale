@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import { SyncProvider } from './contexts/SyncContext'
 import { Layout } from './components/Layout'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { LandingPage } from './pages/LandingPage'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
@@ -29,6 +30,7 @@ function App() {
         <SyncProvider>
           <Routes>
           {/* Public routes */}
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -38,16 +40,6 @@ function App() {
           <Route path="/debug" element={<DebugPage />} />
 
           {/* Protected routes */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Navigate to="/patients" replace />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
 
           <Route
             path="/patients"
