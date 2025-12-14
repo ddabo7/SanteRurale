@@ -29,7 +29,7 @@ export const LoginPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 px-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 px-4 relative overflow-hidden">
       {/* Animated background shapes */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
@@ -45,7 +45,7 @@ export const LoginPage = () => {
             <div className="inline-block animate-bounce">
               <div className="text-7xl mb-4 filter drop-shadow-lg">🏥</div>
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
               Santé Rurale
             </h1>
             <p className="text-gray-600 mt-2 font-medium">
@@ -55,7 +55,7 @@ export const LoginPage = () => {
               <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
                 ✓ Mode Offline
               </span>
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+              <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">
                 ✓ Sécurisé
               </span>
             </div>
@@ -86,7 +86,7 @@ export const LoginPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all hover:border-purple-300"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all hover:border-emerald-300"
                 placeholder="votre.email@example.com"
               />
             </div>
@@ -102,7 +102,7 @@ export const LoginPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all hover:border-purple-300"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all hover:border-emerald-300"
                 placeholder="••••••••"
               />
             </div>
@@ -110,7 +110,7 @@ export const LoginPage = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 px-4 rounded-xl transition-all transform hover:scale-105 hover:shadow-xl flex items-center justify-center"
+              className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 px-4 rounded-xl transition-all transform hover:scale-105 hover:shadow-xl flex items-center justify-center"
             >
               {isLoading ? (
                 <>
@@ -133,7 +133,7 @@ export const LoginPage = () => {
 
           <div className="mt-6 space-y-3">
             <div className="text-center">
-              <Link to="/forgot-password" className="text-sm text-purple-600 hover:text-purple-700 transition-colors font-medium">
+              <Link to="/forgot-password" className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors font-medium">
                 🔑 Mot de passe oublié ?
               </Link>
             </div>

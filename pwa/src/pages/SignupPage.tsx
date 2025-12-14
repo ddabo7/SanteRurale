@@ -133,8 +133,8 @@ export const SignupPage = () => {
               </p>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-blue-800">
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-emerald-800">
                 <strong>📧 Vérifiez votre boîte de réception</strong><br />
                 Cliquez sur le lien dans l'email pour activer votre compte.
                 Le lien est valide pendant 24 heures.

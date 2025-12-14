@@ -45,8 +45,8 @@ export const ForgotPasswordPage = () => {
               </p>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-blue-800">
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-emerald-800">
                 <strong>Note :</strong> Vérifiez votre boîte de réception ainsi que vos courriers indésirables. Le lien est valide pendant 24 heures.
               </p>
             </div>
