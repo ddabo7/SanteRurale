@@ -57,7 +57,7 @@ export default defineConfig({
 
   server: {
     port: 5173,
-    host: true, // Écoute sur toutes les interfaces (Docker)
+    host: true, // Écoute sur toutes les interfaces (Docker) 
     proxy: {
       '/api': {
         target: process.env.DOCKER_ENV ? 'http://api_dev:8000' : 'http://localhost:8000',
