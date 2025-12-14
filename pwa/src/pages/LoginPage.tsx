@@ -152,7 +152,7 @@ export const LoginPage = () => {
                 Pas encore de compte ?
               </p>
               <Link to="/signup" className="mt-2 inline-block px-6 py-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold rounded-xl transition-all transform hover:scale-105">
-                ✨ Créer un compte gratuitement
+                ✨ Créer un compte gratuitement 
               </Link>
             </div>
           </div>
