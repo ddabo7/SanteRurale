@@ -151,7 +151,7 @@ export const LoginPage = () => {
               <p className="text-sm text-gray-600">
                 Pas encore de compte ?
               </p>
-              <Link to="/signup" className="mt-2 inline-block px-6 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-xl transition-all transform hover:scale-105">
+              <Link to="/signup" className="mt-2 inline-block px-6 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-xl transition-all transform hover:scale-105"> 
                 ✨ Créer un compte gratuitement 
               </Link>
             </div>
