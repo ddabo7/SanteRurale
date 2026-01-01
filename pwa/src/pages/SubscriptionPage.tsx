@@ -63,7 +63,7 @@ export const SubscriptionPage = () => {
       }
 
       // Détecter automatiquement la devise basée sur la localisation de l'utilisateur
-      // TOUJOURS utiliser la devise détectée (pas celle du tenant)
+      // TOUJOURS utiliser la devise détectée (pas celle du tenant) 
       const detectedCurrency = await getCachedOrDetectCurrency()
       setCurrency(detectedCurrency)
 
