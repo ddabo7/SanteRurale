@@ -104,6 +104,8 @@ class Site(Base, TimestampMixin):
     district: Mapped["District"] = relationship(back_populates="sites")
     users: Mapped[list["User"]] = relationship(back_populates="site")
     patients: Mapped[list["Patient"]] = relationship(back_populates="site")
+    stocks_medicaments: Mapped[list["StockSite"]] = relationship(back_populates="site")
+    bons_commande: Mapped[list["BonCommande"]] = relationship(back_populates="site")
 
 
 class User(Base, TimestampMixin):
@@ -165,6 +167,7 @@ class Patient(Base, TimestampMixin):
     # Relations
     site: Mapped["Site"] = relationship(back_populates="patients", foreign_keys=[site_id])
     encounters: Mapped[list["Encounter"]] = relationship(back_populates="patient", cascade="all, delete-orphan")
+    delivrances: Mapped[list["DelivrancePatient"]] = relationship(back_populates="patient")
 
 
 class Encounter(Base, TimestampMixin):

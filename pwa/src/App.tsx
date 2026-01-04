@@ -22,6 +22,11 @@ import { SubscriptionPage } from './pages/SubscriptionPage'
 import { AdminDashboardPage } from './pages/AdminDashboardPage'
 import { AdminFeedbackPage } from './pages/AdminFeedbackPage'
 import { FeedbackPage } from './pages/FeedbackPage'
+import { PharmaciePage } from './pages/PharmaciePage'
+import { MedicamentsPage } from './pages/MedicamentsPage'
+import { StockPage } from './pages/StockPage'
+import { FournisseursPage } from './pages/FournisseursPage'
+import { BonsCommandePage } from './pages/BonsCommandePage'
 
 function App() {
   return (
@@ -165,6 +170,62 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminFeedbackPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Pharmacy routes */}
+          <Route
+            path="/pharmacie"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PharmaciePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/medicaments"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <MedicamentsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/stock"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <StockPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/fournisseurs"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <FournisseursPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/bons-commande"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <BonsCommandePage />
+                </Layout>
               </ProtectedRoute>
             }
           />

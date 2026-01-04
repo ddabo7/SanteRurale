@@ -386,3 +386,98 @@ export const attachmentsService = {
     return response.data
   },
 }
+
+// ===========================================================================
+// PHARMACY INVENTORY SERVICES
+// ===========================================================================
+
+export const medicamentsService = {
+  async list(params?: { search?: string; forme?: string; cursor?: string; limit?: number }) {
+    const response = await apiClient.get('/medicaments', { params })
+    return response.data
+  },
+
+  async get(id: string) {
+    const response = await apiClient.get(`/medicaments/${id}`)
+    return response.data
+  },
+
+  async create(data: any) {
+    const response = await apiClient.post('/medicaments', data)
+    return response.data
+  },
+
+  async update(id: string, data: any) {
+    const response = await apiClient.put(`/medicaments/${id}`, data)
+    return response.data
+  },
+
+  async delete(id: string) {
+    await apiClient.delete(`/medicaments/${id}`)
+  },
+}
+
+export const stockService = {
+  async listBySite(siteId: string, params?: { search?: string; en_alerte?: boolean; cursor?: string; limit?: number }) {
+    const response = await apiClient.get(`/stock/sites/${siteId}`, { params })
+    return response.data
+  },
+
+  async createMovement(data: any) {
+    const response = await apiClient.post('/stock/mouvements', data)
+    return response.data
+  },
+
+  async listMovements(params?: { site_id?: string; medicament_id?: string; cursor?: string; limit?: number }) {
+    const response = await apiClient.get('/stock/mouvements', { params })
+    return response.data
+  },
+}
+
+export const fournisseursService = {
+  async list(params?: { search?: string; type?: string; cursor?: string; limit?: number }) {
+    const response = await apiClient.get('/fournisseurs', { params })
+    return response.data
+  },
+
+  async get(id: string) {
+    const response = await apiClient.get(`/fournisseurs/${id}`)
+    return response.data
+  },
+
+  async create(data: any) {
+    const response = await apiClient.post('/fournisseurs', data)
+    return response.data
+  },
+
+  async update(id: string, data: any) {
+    const response = await apiClient.put(`/fournisseurs/${id}`, data)
+    return response.data
+  },
+
+  async delete(id: string) {
+    await apiClient.delete(`/fournisseurs/${id}`)
+  },
+}
+
+export const bonsCommandeService = {
+  async list(params?: { fournisseur_id?: string; statut?: string; cursor?: string; limit?: number }) {
+    const response = await apiClient.get('/bons-commande', { params })
+    return response.data
+  },
+
+  async get(id: string) {
+    const response = await apiClient.get(`/bons-commande/${id}`)
+    return response.data
+  },
+
+  async create(data: any) {
+    const response = await apiClient.post('/bons-commande', data)
+    return response.data
+  },
+
+  async valider(id: string) {
+    const response = await apiClient.put(`/bons-commande/${id}/valider`)
+    return response.data
+  },
+}

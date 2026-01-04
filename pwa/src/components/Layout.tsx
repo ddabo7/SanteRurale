@@ -61,6 +61,19 @@ export const Layout = ({ children }: LayoutProps) => {
                     </span>
                   </Link>
                   <Link
+                    to="/pharmacie"
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all transform hover:scale-105 ${
+                      isActive('/pharmacie')
+                        ? 'bg-white/30 backdrop-blur-md shadow-lg'
+                        : 'hover:bg-white/20 backdrop-blur-sm'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="text-lg">💊</span>
+                      Pharmacie
+                    </span>
+                  </Link>
+                  <Link
                     to="/rapports"
                     className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all transform hover:scale-105 ${
                       isActive('/rapports')
@@ -149,6 +162,20 @@ export const Layout = ({ children }: LayoutProps) => {
                   <span className="flex items-center gap-2">
                     <span className="text-lg">🩺</span>
                     Consultations
+                  </span>
+                </Link>
+                <Link
+                  to="/pharmacie"
+                  onClick={closeMobileMenu}
+                  className={`px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                    isActive('/pharmacie')
+                      ? 'bg-white/30 backdrop-blur-md shadow-lg'
+                      : 'hover:bg-white/20 backdrop-blur-sm'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="text-lg">💊</span>
+                    Pharmacie
                   </span>
                 </Link>
                 <Link
