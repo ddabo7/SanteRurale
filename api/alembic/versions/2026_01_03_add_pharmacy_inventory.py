@@ -94,7 +94,7 @@ def upgrade() -> None:
         sa.UniqueConstraint('code')
     )
 
-    # 2.2 Table Fournisseurs (catalogue global)
+    # 2.2 Table Fournisseurs (catalogue global) 
     op.create_table(
         'fournisseurs',
         sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False, default=uuid.uuid4),
