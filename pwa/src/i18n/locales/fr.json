@@ -766,7 +766,15 @@
   "feedback": {
     "title": "Feedback",
     "subtitle": "Partagez votre expérience",
+    "types": {
+      "bug": "Bug",
+      "featureRequest": "Demande de Fonctionnalité",
+      "improvement": "Amélioration",
+      "general": "Général",
+      "complaint": "Réclamation"
+    },
     "form": {
+      "type": "Type",
       "category": "Catégorie",
       "selectCategory": "Sélectionnez une catégorie",
       "bug": "Bug",
@@ -775,17 +783,41 @@
       "other": "Autre",
       "subject": "Sujet",
       "subjectPlaceholder": "Résumé de votre feedback",
+      "characterCount": "{{count}}/500 caractères",
       "message": "Message",
       "messagePlaceholder": "Décrivez votre feedback en détail...",
+      "technicalInfo": "Informations Techniques",
       "attachments": "Pièces jointes (optionnel)",
       "attachmentsHelp": "Captures d'écran, documents, etc.",
       "sending": "Envoi...",
-      "submit": "Envoyer le feedback",
+      "submit": "Envoyer le Feedback",
       "cancel": "Annuler",
       "success": "Merci pour votre feedback !",
       "successMessage": "Nous avons bien reçu votre message.",
       "error": "Erreur lors de l'envoi",
       "errorMessage": "Impossible d'envoyer le feedback. Veuillez réessayer."
+    },
+    "features": {
+      "quickResponse": {
+        "title": "Réponse Rapide",
+        "subtitle": "Nous répondons à tous les feedbacks sous 24-48 heures"
+      },
+      "privacy": {
+        "title": "Confidentialité Protégée",
+        "subtitle": "Votre feedback est confidentiel et sécurisé"
+      },
+      "directImpact": {
+        "title": "Impact Direct",
+        "subtitle": "Vos suggestions aident à améliorer la plateforme pour tous"
+      }
+    },
+    "success": {
+      "title": "Feedback Envoyé avec Succès !",
+      "message": "Merci pour votre feedback. Nous apprécions votre contribution.",
+      "redirecting": "Redirection..."
+    },
+    "errors": {
+      "submitError": "Erreur lors de l'envoi du feedback. Veuillez réessayer."
     }
   },
   "admin": {
@@ -796,16 +828,61 @@
         "users": "Utilisateurs",
         "sites": "Sites",
         "patients": "Patients",
-        "consultations": "Consultations"
+        "consultations": "Consultations",
+        "totalHospitals": "Total Hôpitaux",
+        "mrr": "MRR",
+        "arr": "ARR",
+        "activeHospitals": "Hôpitaux Actifs",
+        "newThisMonth": "Nouveaux ce Mois",
+        "monthlyRevenue": "Revenu Mensuel",
+        "annualRevenue": "Revenu Annuel",
+        "thisMonth": "Ce Mois"
       },
+      "planDistribution": {
+        "title": "Distribution des Plans",
+        "freePlan": "Plan Gratuit",
+        "starterPlan": "Plan Starter",
+        "proPlan": "Plan Pro",
+        "enterprisePlan": "Plan Enterprise"
+      },
+      "globalUsage": {
+        "title": "Utilisation Globale",
+        "users": "Utilisateurs",
+        "patients": "Patients",
+        "consultations": "Consultations",
+        "storage": "Stockage"
+      },
+      "topHospitals": {
+        "title": "Top Hôpitaux",
+        "hospital": "Hôpital",
+        "plan": "Plan",
+        "users": "Utilisateurs",
+        "patients": "Patients",
+        "consultations": "Consultations",
+        "revenuePerMonth": "Revenu/Mois",
+        "registeredOn": "Inscrit le"
+      },
+      "errors": {
+        "accessDenied": "Accès Refusé",
+        "loadError": "Erreur de Chargement"
+      },
+      "backToHome": "Retour à l'Accueil",
       "recentActivity": "Activité récente",
       "noActivity": "Aucune activité récente"
     },
     "feedback": {
       "title": "Feedback utilisateurs",
       "subtitle": "Gérer les retours utilisateurs",
+      "stats": {
+        "total": "Total",
+        "new": "Nouveaux",
+        "last24h": "Dernières 24h",
+        "resolved": "Résolus"
+      },
       "filters": {
         "all": "Tous",
+        "type": "Type",
+        "status": "Statut",
         "bug": "Bugs",
         "feature": "Fonctionnalités",
         "improvement": "Améliorations",
@@ -821,10 +898,24 @@
       },
       "status": {
         "new": "Nouveau",
+        "in_progress": "En Cours",
         "inProgress": "En cours",
         "resolved": "Résolu",
         "closed": "Fermé"
       },
+      "actions": {
+        "respond": "Répondre",
+        "markResolved": "Marquer comme Résolu",
+        "close": "Fermer"
+      },
+      "modal": {
+        "title": "Répondre au Feedback",
+        "placeholder": "Écrivez votre réponse...",
+        "cancel": "Annuler",
+        "send": "Envoyer"
+      },
+      "adminResponse": "Réponse Admin",
+      "anonymous": "Anonyme",
       "noFeedback": "Aucun feedback"
     }
   },
