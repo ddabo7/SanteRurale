@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { authService } from '../services/authService'
 import { db } from '../db'
+import i18n from '../i18n/config'
 
 interface User {
   id: string
@@ -90,7 +91,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         await db.clearAllData()
         localStorage.clear()
-        console.log('[Auth] ✅ Données locales vidées')
+        // Réinitialiser la langue en français par défaut
+        await i18n.changeLanguage('fr')
+        console.log('[Auth] ✅ Données locales vidées et langue réinitialisée en français')
       } catch (error) {
         console.error('[Auth] ⚠️ Erreur lors du nettoyage pré-connexion:', error)
       }
@@ -144,6 +147,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log('[Auth] IndexedDB vidé')
     } catch (error) {
       console.error('[Auth] Erreur lors du vidage d\'IndexedDB:', error)
+    }
+
+    // Réinitialiser la langue en français avant de vider le localStorage
+    try {
+      await i18n.changeLanguage('fr')
+      console.log('[Auth] Langue réinitialisée en français')
+    } catch (error) {
+      console.warn('[Auth] Impossible de réinitialiser la langue:', error)
     }
 
     // Vider le localStorage
