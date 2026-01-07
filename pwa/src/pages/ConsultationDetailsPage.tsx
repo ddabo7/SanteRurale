@@ -243,7 +243,7 @@ export const ConsultationDetailsPage = () => {
               {calculateAge() && (
                 <div>
                   <div className="text-sm text-gray-500">{t('consultation.details.patientAge')}</div>
-                  <div>{t('patients.age', { count: calculateAge() })}</div>
+                  <div>{t('patients.age', { count: calculateAge()! })}</div>
                 </div>
               )}
               {encounter.patient?.telephone && (
