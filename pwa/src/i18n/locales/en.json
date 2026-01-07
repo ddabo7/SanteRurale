@@ -766,7 +766,15 @@
   "feedback": {
     "title": "Feedback",
     "subtitle": "Share your experience",
+    "types": {
+      "bug": "Bug",
+      "featureRequest": "Feature Request",
+      "improvement": "Improvement",
+      "general": "General",
+      "complaint": "Complaint"
+    },
     "form": {
+      "type": "Type",
       "category": "Category",
       "selectCategory": "Select a category",
       "bug": "Bug",
@@ -775,17 +783,41 @@
       "other": "Other",
       "subject": "Subject",
       "subjectPlaceholder": "Summary of your feedback",
+      "characterCount": "{{count}}/500 characters",
       "message": "Message",
       "messagePlaceholder": "Describe your feedback in detail...",
+      "technicalInfo": "Technical Information",
       "attachments": "Attachments (optional)",
       "attachmentsHelp": "Screenshots, documents, etc.",
       "sending": "Sending...",
-      "submit": "Send feedback",
+      "submit": "Send Feedback",
       "cancel": "Cancel",
       "success": "Thank you for your feedback!",
       "successMessage": "We have received your message.",
       "error": "Error sending",
       "errorMessage": "Unable to send feedback. Please try again."
+    },
+    "features": {
+      "quickResponse": {
+        "title": "Quick Response",
+        "subtitle": "We respond to all feedback within 24-48 hours"
+      },
+      "privacy": {
+        "title": "Privacy Protected",
+        "subtitle": "Your feedback is confidential and secure"
+      },
+      "directImpact": {
+        "title": "Direct Impact",
+        "subtitle": "Your suggestions help improve the platform for everyone"
+      }
+    },
+    "success": {
+      "title": "Feedback Sent Successfully!",
+      "message": "Thank you for your feedback. We appreciate your input.",
+      "redirecting": "Redirecting..."
+    },
+    "errors": {
+      "submitError": "Error submitting feedback. Please try again."
     }
   },
   "admin": {
@@ -796,16 +828,61 @@
         "users": "Users",
         "sites": "Sites",
         "patients": "Patients",
-        "consultations": "Consultations"
+        "consultations": "Consultations",
+        "totalHospitals": "Total Hospitals",
+        "mrr": "MRR",
+        "arr": "ARR",
+        "activeHospitals": "Active Hospitals",
+        "newThisMonth": "New This Month",
+        "monthlyRevenue": "Monthly Revenue",
+        "annualRevenue": "Annual Revenue",
+        "thisMonth": "This Month"
       },
+      "planDistribution": {
+        "title": "Plan Distribution",
+        "freePlan": "Free Plan",
+        "starterPlan": "Starter Plan",
+        "proPlan": "Pro Plan",
+        "enterprisePlan": "Enterprise Plan"
+      },
+      "globalUsage": {
+        "title": "Global Usage",
+        "users": "Users",
+        "patients": "Patients",
+        "consultations": "Consultations",
+        "storage": "Storage"
+      },
+      "topHospitals": {
+        "title": "Top Hospitals",
+        "hospital": "Hospital",
+        "plan": "Plan",
+        "users": "Users",
+        "patients": "Patients",
+        "consultations": "Consultations",
+        "revenuePerMonth": "Revenue/Month",
+        "registeredOn": "Registered On"
+      },
+      "errors": {
+        "accessDenied": "Access Denied",
+        "loadError": "Error Loading Data"
+      },
+      "backToHome": "Back to Home",
       "recentActivity": "Recent activity",
       "noActivity": "No recent activity"
     },
     "feedback": {
       "title": "User feedback",
       "subtitle": "Manage user feedback",
+      "stats": {
+        "total": "Total",
+        "new": "New",
+        "last24h": "Last 24h",
+        "resolved": "Resolved"
+      },
       "filters": {
         "all": "All",
+        "type": "Type",
+        "status": "Status",
         "bug": "Bugs",
         "feature": "Features",
         "improvement": "Improvements",
@@ -821,10 +898,24 @@
       },
       "status": {
         "new": "New",
+        "in_progress": "In Progress",
         "inProgress": "In progress",
         "resolved": "Resolved",
         "closed": "Closed"
       },
+      "actions": {
+        "respond": "Respond",
+        "markResolved": "Mark as Resolved",
+        "close": "Close"
+      },
+      "modal": {
+        "title": "Respond to Feedback",
+        "placeholder": "Write your response...",
+        "cancel": "Cancel",
+        "send": "Send"
+      },
+      "adminResponse": "Admin Response",
+      "anonymous": "Anonymous",
       "noFeedback": "No feedback"
     }
   },
