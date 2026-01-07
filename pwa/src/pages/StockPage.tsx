@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { stockService } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -17,6 +18,7 @@ interface StockSite {
 }
 
 export const StockPage = () => {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [stocks, setStocks] = useState<StockSite[]>([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -45,7 +47,7 @@ export const StockPage = () => {
       setStocks(response.items || [])
     } catch (error: any) {
       console.error('Erreur chargement stocks:', error)
-      setError(error.response?.data?.detail || 'Impossible de charger les stocks')
+      setError(error.response?.data?.detail || t('common.error'))
     } finally {
       setIsLoading(false)
     }
@@ -58,8 +60,8 @@ export const StockPage = () => {
     <div className="max-w-7xl mx-auto">
       {/* En-tête */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">📦 Gestion des Stocks</h1>
-        <p className="text-gray-600 mt-1">Suivi des stocks de médicaments par site</p>
+        <h1 className="text-3xl font-bold text-gray-900">📦 {t('pharmacy.stock.title')}</h1>
+        <p className="text-gray-600 mt-1">{t('pharmacy.modules.stock.description')}</p>
       </div>
 
       {/* Stats */}
@@ -67,7 +69,7 @@ export const StockPage = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total médicaments</p>
+              <p className="text-sm text-gray-600">{t('common.total')} {t('pharmacy.stock.filters.medication')}</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">{totalStocks}</p>
             </div>
             <div className="text-4xl">📊</div>
@@ -77,7 +79,7 @@ export const StockPage = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">En alerte</p>
+              <p className="text-sm text-gray-600">{t('pharmacy.stock.alerts.low')}</p>
               <p className="text-3xl font-bold text-red-600 mt-1">{stocksEnAlerte}</p>
             </div>
             <div className="text-4xl">⚠️</div>
@@ -87,12 +89,12 @@ export const StockPage = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Actions rapides</p>
+              <p className="text-sm text-gray-600">{t('common.actions')}</p>
               <Link
                 to="/stock/mouvement/nouveau"
                 className="inline-block mt-2 text-emerald-600 hover:text-emerald-800 font-medium text-sm"
               >
-                + Mouvement de stock
+                + {t('pharmacy.stock.title')}
               </Link>
             </div>
             <div className="text-4xl">⚡</div>
@@ -105,28 +107,28 @@ export const StockPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Rechercher
+              {t('common.search')}
             </label>
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Nom ou code du médicament..."
+              placeholder={t('pharmacy.stock.searchPlaceholder')}
               className="w-full border border-gray-300 rounded-lg px-4 py-2"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Filtrer par statut
+              {t('common.filter')}
             </label>
             <select
               value={filterAlerte === null ? '' : filterAlerte.toString()}
               onChange={(e) => setFilterAlerte(e.target.value === '' ? null : e.target.value === 'true')}
               className="w-full border border-gray-300 rounded-lg px-4 py-2"
             >
-              <option value="">Tous les stocks</option>
-              <option value="true">En alerte uniquement</option>
-              <option value="false">Stock normal</option>
+              <option value="">{t('pharmacy.stock.filters.allMedications')}</option>
+              <option value="true">{t('pharmacy.stock.alerts.low')}</option>
+              <option value="false">{t('pharmacy.stock.alerts.normal')}</option>
             </select>
           </div>
         </div>
@@ -136,7 +138,7 @@ export const StockPage = () => {
       {isLoading && (
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
-          <p className="text-gray-500 mt-4">Chargement...</p>
+          <p className="text-gray-500 mt-4">{t('common.loading')}</p>
         </div>
       )}
 
@@ -150,10 +152,10 @@ export const StockPage = () => {
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <div className="text-6xl mb-4">📦</div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            Aucun stock trouvé
+            {t('common.noData')}
           </h3>
           <p className="text-gray-600">
-            {searchTerm ? 'Essayez avec d\'autres critères de recherche' : 'Les stocks sont vides'}
+            {searchTerm ? t('pharmacy.stock.searchPlaceholder') : t('common.noData')}
           </p>
         </div>
       )}
@@ -166,22 +168,22 @@ export const StockPage = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Code
+                    {t('pharmacy.catalog.table.code')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Médicament
+                    {t('pharmacy.stock.table.medication')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Quantité
+                    {t('pharmacy.stock.table.quantity')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Seuil alerte
+                    {t('pharmacy.stock.table.minThreshold')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Statut
+                    {t('pharmacy.stock.table.status')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Actions
+                    {t('pharmacy.stock.table.actions')}
                   </th>
                 </tr>
               </thead>
@@ -208,11 +210,11 @@ export const StockPage = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       {stock.en_alerte ? (
                         <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                          ⚠️ Alerte
+                          ⚠️ {t('pharmacy.stock.alerts.low')}
                         </span>
                       ) : (
                         <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                          ✓ OK
+                          ✓ {t('pharmacy.stock.alerts.normal')}
                         </span>
                       )}
                     </td>
@@ -221,7 +223,7 @@ export const StockPage = () => {
                         to={`/stock/mouvements?medicament_id=${stock.medicament_id}`}
                         className="text-emerald-600 hover:text-emerald-900 font-medium"
                       >
-                        Historique
+                        {t('common.details')}
                       </Link>
                     </td>
                   </tr>
@@ -242,23 +244,23 @@ export const StockPage = () => {
                   </div>
                   {stock.en_alerte ? (
                     <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                      ⚠️ Alerte
+                      ⚠️ {t('pharmacy.stock.alerts.low')}
                     </span>
                   ) : (
                     <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                      ✓ OK
+                      ✓ {t('pharmacy.stock.alerts.normal')}
                     </span>
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-3 mb-3">
                   <div>
-                    <span className="text-sm text-gray-600">Quantité:</span>
+                    <span className="text-sm text-gray-600">{t('pharmacy.stock.table.quantity')}:</span>
                     <p className={`text-2xl font-bold ${stock.en_alerte ? 'text-red-600' : 'text-emerald-600'}`}>
                       {stock.quantite_disponible}
                     </p>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-600">Seuil alerte:</span>
+                    <span className="text-sm text-gray-600">{t('pharmacy.stock.table.minThreshold')}:</span>
                     <p className="text-xl font-semibold text-gray-900">
                       {stock.seuil_alerte || '-'}
                     </p>
@@ -268,7 +270,7 @@ export const StockPage = () => {
                   to={`/stock/mouvements?medicament_id=${stock.medicament_id}`}
                   className="block w-full text-center bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg font-medium transition-colors"
                 >
-                  Voir l'historique
+                  {t('common.details')}
                 </Link>
               </div>
             ))}

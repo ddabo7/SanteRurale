@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { formatCurrency } from '../utils/currency'
 import { getCachedOrDetectCurrency } from '../utils/geolocation'
 
@@ -43,6 +44,7 @@ interface UsageStats {
 }
 
 export const SubscriptionPage = () => {
+  const { t } = useTranslation()
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [usage, setUsage] = useState<UsageStats | null>(null)
   const [plans, setPlans] = useState<Plan[]>([])
@@ -83,7 +85,7 @@ export const SubscriptionPage = () => {
         const subData = await subResponse.json()
         setSubscription(subData)
       } else if (subResponse.status === 401 || subResponse.status === 403) {
-        setError('Vous devez être connecté pour accéder à cette page')
+        setError(t('subscription.mustBeLoggedIn'))
         return
       } else if (subResponse.status === 404) {
         console.log('Aucun abonnement actif')
@@ -124,7 +126,7 @@ export const SubscriptionPage = () => {
         setPlans(plansData)
       }
     } catch (err: any) {
-      setError(err.message || 'Erreur lors du chargement des données')
+      setError(err.message || t('subscription.loadingError'))
     } finally {
       setLoading(false)
     }
@@ -176,10 +178,10 @@ export const SubscriptionPage = () => {
 
         if (!response.ok) {
           const errorData = await response.json()
-          throw new Error(errorData.detail || 'Erreur lors du changement de plan')
+          throw new Error(errorData.detail || t('subscription.messages.planChangeError'))
         }
 
-        setSuccess(`Votre plan a été changé avec succès vers ${selectedPlan.name} !`)
+        setSuccess(t('subscription.messages.planChangedSuccess', { planName: selectedPlan.name }))
       } else {
         const response = await fetch(`${API_BASE_URL}/tenants/me/subscribe`, {
           method: 'POST',
@@ -190,10 +192,10 @@ export const SubscriptionPage = () => {
 
         if (!response.ok) {
           const errorData = await response.json()
-          throw new Error(errorData.detail || 'Erreur lors de la souscription')
+          throw new Error(errorData.detail || t('subscription.messages.subscriptionError'))
         }
 
-        setSuccess(`Bienvenue dans le plan ${selectedPlan.name} !`)
+        setSuccess(t('subscription.messages.welcomeToPlan', { planName: selectedPlan.name }))
       }
 
       setShowSubscribeModal(false)
@@ -208,7 +210,7 @@ export const SubscriptionPage = () => {
   }
 
   const handleCancel = async () => {
-    if (!confirm('Êtes-vous sûr de vouloir annuler votre abonnement ?')) {
+    if (!confirm(t('subscription.messages.confirmCancelQuestion'))) {
       return
     }
 
@@ -227,10 +229,10 @@ export const SubscriptionPage = () => {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.detail || "Erreur lors de l'annulation")
+        throw new Error(errorData.detail || t('subscription.messages.cancelError'))
       }
 
-      setSuccess('Abonnement annulé avec succès')
+      setSuccess(t('subscription.messages.cancelSuccess'))
       await fetchData()
     } catch (err: any) {
       setError(err.message)
@@ -264,8 +266,8 @@ export const SubscriptionPage = () => {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Abonnement</h1>
-            <p className="mt-2 text-gray-600">Gérez votre plan et suivez votre utilisation</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('subscription.title')}</h1>
+            <p className="mt-2 text-gray-600">{t('subscription.subtitle')}</p>
           </div>
           {subscription?.plan.code === 'free' && (
             <button
@@ -275,7 +277,7 @@ export const SubscriptionPage = () => {
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
-              Passer à un plan payant
+              {t('subscription.upgradeToAnyPlan')}
             </button>
           )}
         </div>
@@ -319,7 +321,7 @@ export const SubscriptionPage = () => {
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              Vue d'ensemble
+              {t('subscription.tabs.overview')}
             </div>
           </button>
           <button
@@ -334,7 +336,7 @@ export const SubscriptionPage = () => {
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
-              Utilisation
+              {t('subscription.tabs.usage')}
             </div>
           </button>
         </nav>
@@ -355,7 +357,7 @@ export const SubscriptionPage = () => {
                       </svg>
                     </div>
                     <div>
-                      <span className="text-sm font-medium text-white/80">Plan actuel</span>
+                      <span className="text-sm font-medium text-white/80">{t('subscription.currentPlan')}</span>
                       <h2 className="text-3xl font-bold">{subscription.plan.name}</h2>
                     </div>
                   </div>
@@ -364,7 +366,7 @@ export const SubscriptionPage = () => {
 
                   <div className="flex items-baseline space-x-3">
                     <span className="text-5xl font-bold">{formatCurrency(subscription.plan.price_monthly, currency)}</span>
-                    <span className="text-xl text-white/80">/mois</span>
+                    <span className="text-xl text-white/80">{t('subscription.perMonth')}</span>
                   </div>
                 </div>
 
@@ -376,12 +378,12 @@ export const SubscriptionPage = () => {
                         : 'bg-white/20 backdrop-blur-sm text-white'
                     }`}
                   >
-                    {subscription.status === 'active' ? '✓ Actif' : subscription.status}
+                    {subscription.status === 'active' ? `✓ ${t('subscription.active')}` : subscription.status}
                   </span>
 
                   {subscription.plan.code === 'free' && (
                     <span className="inline-flex items-center px-4 py-2 rounded-full text-xs font-medium bg-yellow-400 text-yellow-900">
-                      Phase Pilote
+                      {t('subscription.pilotPhase')}
                     </span>
                   )}
                 </div>
@@ -390,23 +392,23 @@ export const SubscriptionPage = () => {
               {/* Quick Stats */}
               <div className="mt-8 grid grid-cols-3 gap-4">
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                  <p className="text-white/70 text-sm">Utilisateurs</p>
+                  <p className="text-white/70 text-sm">{t('subscription.stats.users')}</p>
                   <p className="text-2xl font-bold mt-1">
-                    {subscription.plan.max_users === null ? '∞' : subscription.plan.max_users}
+                    {subscription.plan.max_users === null ? t('subscription.stats.unlimited') : subscription.plan.max_users}
                   </p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                  <p className="text-white/70 text-sm">Patients</p>
+                  <p className="text-white/70 text-sm">{t('subscription.stats.patients')}</p>
                   <p className="text-2xl font-bold mt-1">
                     {subscription.plan.max_patients_total !== null
                       ? subscription.plan.max_patients_total
                       : subscription.plan.max_patients_per_month !== null
-                        ? `${subscription.plan.max_patients_per_month}/mois`
-                        : '∞'}
+                        ? `${subscription.plan.max_patients_per_month}${t('subscription.perMonth')}`
+                        : t('subscription.stats.unlimited')}
                   </p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                  <p className="text-white/70 text-sm">Stockage</p>
+                  <p className="text-white/70 text-sm">{t('subscription.stats.storage')}</p>
                   <p className="text-2xl font-bold mt-1">{subscription.plan.max_storage_gb} GB</p>
                 </div>
               </div>
@@ -418,7 +420,7 @@ export const SubscriptionPage = () => {
                     onClick={() => setShowPlansModal(true)}
                     className="bg-white text-emerald-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg"
                   >
-                    Passer à un plan supérieur
+                    {t('subscription.upgradeToHigherPlan')}
                   </button>
                 ) : (
                   <>
@@ -426,7 +428,7 @@ export const SubscriptionPage = () => {
                       onClick={() => setShowPlansModal(true)}
                       className="bg-white text-emerald-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
                     >
-                      Changer de plan
+                      {t('subscription.changePlan')}
                     </button>
                     {subscription.status === 'active' && !subscription.canceled_at && (
                       <button
@@ -434,7 +436,7 @@ export const SubscriptionPage = () => {
                         disabled={actionLoading}
                         className="bg-white/10 backdrop-blur-sm text-white px-6 py-3 rounded-lg font-medium hover:bg-white/20 transition-colors disabled:opacity-50"
                       >
-                        Annuler l'abonnement
+                        {t('subscription.cancelSubscription')}
                       </button>
                     )}
                   </>
@@ -460,16 +462,16 @@ export const SubscriptionPage = () => {
                 </div>
                 <div className="ml-4 flex-1">
                   <h3 className="text-lg font-semibold text-amber-900 mb-2">
-                    Limitations du plan gratuit
+                    {t('subscription.usage.freePlanLimitations')}
                   </h3>
                   <p className="text-amber-800 mb-3">
-                    Vous êtes actuellement sur le plan pilote gratuit avec des quotas limités. Passez à un plan payant pour débloquer plus de capacités.
+                    {t('subscription.usage.freePlanMessage')}
                   </p>
                   <button
                     onClick={() => setShowPlansModal(true)}
                     className="inline-flex items-center px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-medium transition-colors"
                   >
-                    Voir les plans
+                    {t('subscription.usage.viewPlans')}
                     <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                     </svg>
@@ -491,7 +493,7 @@ export const SubscriptionPage = () => {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Utilisateurs actifs</p>
+                    <p className="text-sm font-medium text-gray-600">{t('subscription.stats.activeUsers')}</p>
                     <p className="text-2xl font-bold text-gray-900">
                       {usage.active_users}
                       {usage.quotas.max_users && (
@@ -504,7 +506,7 @@ export const SubscriptionPage = () => {
               {usage.quotas.max_users && (
                 <div className="mt-4">
                   <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                    <span>Utilisation</span>
+                    <span>{t('subscription.stats.usage')}</span>
                     <span className="font-semibold">{getUsagePercentage(usage.active_users, usage.quotas.max_users).toFixed(0)}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
@@ -527,7 +529,7 @@ export const SubscriptionPage = () => {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Patients ce mois</p>
+                    <p className="text-sm font-medium text-gray-600">{t('subscription.stats.patientsThisMonth')}</p>
                     <p className="text-2xl font-bold text-gray-900">
                       {usage.patients_this_month}
                       {usage.quotas.max_patients_per_month && (
@@ -540,7 +542,7 @@ export const SubscriptionPage = () => {
               {usage.quotas.max_patients_per_month && (
                 <div className="mt-4">
                   <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                    <span>Utilisation</span>
+                    <span>{t('subscription.stats.usage')}</span>
                     <span className="font-semibold">{getUsagePercentage(usage.patients_this_month, usage.quotas.max_patients_per_month).toFixed(0)}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
@@ -563,7 +565,7 @@ export const SubscriptionPage = () => {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Consultations ce mois</p>
+                    <p className="text-sm font-medium text-gray-600">{t('subscription.stats.consultationsThisMonth')}</p>
                     <p className="text-2xl font-bold text-gray-900">{usage.encounters_this_month}</p>
                   </div>
                 </div>
@@ -580,7 +582,7 @@ export const SubscriptionPage = () => {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Stockage utilisé</p>
+                    <p className="text-sm font-medium text-gray-600">{t('subscription.stats.storageUsed')}</p>
                     <p className="text-2xl font-bold text-gray-900">
                       {(usage.storage_used_mb / 1024).toFixed(1)} GB
                       {usage.quotas.max_storage_gb && (
@@ -593,7 +595,7 @@ export const SubscriptionPage = () => {
               {usage.quotas.max_storage_gb && (
                 <div className="mt-4">
                   <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                    <span>Utilisation</span>
+                    <span>{t('subscription.stats.usage')}</span>
                     <span className="font-semibold">{getUsagePercentage(usage.storage_used_mb / 1024, usage.quotas.max_storage_gb).toFixed(0)}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
@@ -619,7 +621,7 @@ export const SubscriptionPage = () => {
           <button
             onClick={() => setShowPlansModal(false)}
             className="fixed top-4 right-4 z-[60] sm:hidden bg-white/90 backdrop-blur-sm text-gray-700 p-3 rounded-full shadow-lg hover:bg-white transition-colors"
-            aria-label="Fermer"
+            aria-label={t('subscription.modal.close')}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -633,13 +635,13 @@ export const SubscriptionPage = () => {
             {/* Modal Header */}
             <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-emerald-50 to-teal-50 sticky top-0 z-10">
               <div>
-                <h2 className="text-xl sm:text-3xl font-bold text-gray-900">Choisissez votre plan</h2>
-                <p className="text-gray-600 mt-1 text-sm sm:text-base">Sélectionnez le plan qui correspond à vos besoins</p>
+                <h2 className="text-xl sm:text-3xl font-bold text-gray-900">{t('subscription.modal.choosePlan')}</h2>
+                <p className="text-gray-600 mt-1 text-sm sm:text-base">{t('subscription.modal.selectPlanDescription')}</p>
               </div>
               <button
                 onClick={() => setShowPlansModal(false)}
                 className="hidden sm:block text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors p-3 rounded-lg"
-                aria-label="Fermer"
+                aria-label={t('subscription.modal.close')}
               >
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -670,7 +672,7 @@ export const SubscriptionPage = () => {
                       {isCurrentPlan && (
                         <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                           <span className="bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                            PLAN ACTUEL
+                            {t('subscription.modal.currentPlanBadge')}
                           </span>
                         </div>
                       )}
@@ -678,7 +680,7 @@ export const SubscriptionPage = () => {
                       {isPaidPlan && isPilot && (
                         <div className="absolute -top-3 right-3">
                           <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                            Phase 2
+                            {t('subscription.modal.phase2Badge')}
                           </span>
                         </div>
                       )}
@@ -690,7 +692,7 @@ export const SubscriptionPage = () => {
                           <span className="text-4xl font-bold text-gray-900">
                             {formatCurrency(plan.price_monthly, currency)}
                           </span>
-                          <span className="text-gray-500 text-sm">/mois</span>
+                          <span className="text-gray-500 text-sm">{t('subscription.perMonth')}</span>
                         </div>
                       </div>
 
@@ -701,7 +703,7 @@ export const SubscriptionPage = () => {
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                             <span className="text-gray-700">
-                              {plan.max_users === -1 ? 'Utilisateurs illimités' : `${plan.max_users} utilisateurs`}
+                              {plan.max_users === -1 ? t('subscription.modal.usersUnlimited') : t('subscription.modal.usersCount', { count: plan.max_users })}
                             </span>
                           </li>
                         )}
@@ -712,10 +714,10 @@ export const SubscriptionPage = () => {
                             </svg>
                             <span className="text-gray-700">
                               {plan.max_patients_total
-                                ? `${plan.max_patients_total} patients (total)`
+                                ? t('subscription.modal.patientsTotal', { count: plan.max_patients_total })
                                 : plan.max_patients_per_month
-                                  ? `${plan.max_patients_per_month} patients/mois`
-                                  : 'Patients illimités'}
+                                  ? t('subscription.modal.patientsPerMonth', { count: plan.max_patients_per_month })
+                                  : t('subscription.modal.patientsUnlimited')}
                             </span>
                           </li>
                         )}
@@ -724,7 +726,7 @@ export const SubscriptionPage = () => {
                             <svg className="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
-                            <span className="text-gray-700">Patients illimités</span>
+                            <span className="text-gray-700">{t('subscription.modal.patientsUnlimited')}</span>
                           </li>
                         )}
                         {plan.max_storage_gb && (
@@ -732,7 +734,7 @@ export const SubscriptionPage = () => {
                             <svg className="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
-                            <span className="text-gray-700">{plan.max_storage_gb} GB stockage</span>
+                            <span className="text-gray-700">{t('subscription.modal.storageGB', { count: plan.max_storage_gb })}</span>
                           </li>
                         )}
                       </ul>
@@ -754,12 +756,12 @@ export const SubscriptionPage = () => {
                         }`}
                       >
                         {isCurrentPlan
-                          ? 'Plan actuel'
+                          ? t('subscription.currentLabel')
                           : isDisabled
-                          ? 'Bientôt disponible'
+                          ? t('subscription.modal.comingSoon')
                           : subscription
-                          ? 'Changer'
-                          : 'Choisir'}
+                          ? t('subscription.modal.change')
+                          : t('subscription.modal.choose')}
                       </button>
                     </div>
                   )
@@ -786,7 +788,7 @@ export const SubscriptionPage = () => {
               setSelectedPlan(null)
             }}
             className="fixed top-4 right-4 z-[60] sm:hidden bg-white/90 backdrop-blur-sm text-gray-700 p-3 rounded-full shadow-lg hover:bg-white transition-colors"
-            aria-label="Fermer"
+            aria-label={t('subscription.modal.close')}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -800,7 +802,7 @@ export const SubscriptionPage = () => {
             {/* Header */}
             <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-teal-50 sticky top-0 z-10 flex justify-between items-center">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-                {subscription ? 'Changer de plan' : 'Confirmer votre abonnement'}
+                {subscription ? t('subscription.confirmModal.title') : t('subscription.confirmModal.titleSubscribe')}
               </h2>
               <button
                 onClick={() => {
@@ -808,7 +810,7 @@ export const SubscriptionPage = () => {
                   setSelectedPlan(null)
                 }}
                 className="hidden sm:block text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors p-2 rounded-lg"
-                aria-label="Fermer"
+                aria-label={t('subscription.modal.close')}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -824,7 +826,7 @@ export const SubscriptionPage = () => {
                 <p className="text-white/90 mb-4">{selectedPlan.description}</p>
                 <div className="flex items-baseline space-x-2">
                   <span className="text-5xl font-bold">{formatCurrency(selectedPlan.price_monthly, currency)}</span>
-                  <span className="text-xl">/mois</span>
+                  <span className="text-xl">{t('subscription.perMonth')}</span>
                 </div>
               </div>
 
@@ -836,10 +838,10 @@ export const SubscriptionPage = () => {
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                     </svg>
                     <div>
-                      <h4 className="font-semibold text-blue-900 mb-1">Changement de plan</h4>
+                      <h4 className="font-semibold text-blue-900 mb-1">{t('subscription.confirmModal.title')}</h4>
                       <p className="text-sm text-blue-800">
-                        Vous passez de <strong>{subscription.plan.name}</strong> à <strong>{selectedPlan.name}</strong>.
-                        {selectedPlan.price_monthly > 0 && ' Le changement prendra effet immédiatement.'}
+                        {t('subscription.confirmModal.changingFrom')} <strong>{subscription.plan.name}</strong> {t('subscription.confirmModal.changingTo')} <strong>{selectedPlan.name}</strong>.
+                        {selectedPlan.price_monthly > 0 && ` ${t('subscription.confirmModal.immediateEffect')}`}
                       </p>
                     </div>
                   </div>
@@ -850,7 +852,7 @@ export const SubscriptionPage = () => {
               {selectedPlan.price_monthly === 0 && (
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
                   <p className="text-sm text-gray-700">
-                    <strong>Note :</strong> Ce plan est gratuit dans le cadre du programme pilote.
+                    <strong>Note :</strong> {t('subscription.confirmModal.freeNote')}
                   </p>
                 </div>
               )}
@@ -858,16 +860,16 @@ export const SubscriptionPage = () => {
               {/* Payment Info for Paid Plans */}
               {selectedPlan.price_monthly > 0 && (
                 <div className="border border-gray-200 rounded-lg p-6 mb-6">
-                  <h4 className="font-semibold text-gray-900 mb-4">Informations de paiement</h4>
+                  <h4 className="font-semibold text-gray-900 mb-4">{t('subscription.confirmModal.paymentInfo')}</h4>
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                     <div className="flex items-start">
                       <svg className="w-5 h-5 text-yellow-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                       </svg>
                       <div>
-                        <h5 className="font-semibold text-yellow-900 mb-1">Intégration Stripe en cours</h5>
+                        <h5 className="font-semibold text-yellow-900 mb-1">{t('subscription.confirmModal.stripeIntegration')}</h5>
                         <p className="text-sm text-yellow-800">
-                          Le système de paiement sera activé prochainement. Pour l'instant, ce plan est accessible gratuitement pendant la phase pilote.
+                          {t('subscription.confirmModal.stripeMessage')}
                         </p>
                       </div>
                     </div>
@@ -878,9 +880,9 @@ export const SubscriptionPage = () => {
               {/* Terms */}
               <div className="text-sm text-gray-600">
                 <p>
-                  En confirmant, vous acceptez nos{' '}
+                  {t('subscription.confirmModal.termsAccept')}{' '}
                   <a href="#" className="text-emerald-600 hover:text-emerald-700 underline">
-                    conditions d'utilisation
+                    {t('subscription.confirmModal.termsOfUse')}
                   </a>
                   .
                 </p>
@@ -897,7 +899,7 @@ export const SubscriptionPage = () => {
                 disabled={actionLoading}
                 className="w-full sm:w-auto px-6 py-3 border-2 border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 font-semibold disabled:opacity-50 transition-colors"
               >
-                Annuler
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleConfirmSubscription}
@@ -910,10 +912,10 @@ export const SubscriptionPage = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Traitement...
+                    {t('subscription.confirmModal.processing')}
                   </span>
                 ) : (
-                  subscription ? 'Confirmer le changement' : 'Confirmer la souscription'
+                  subscription ? t('subscription.confirmModal.confirmChange') : t('subscription.confirmModal.confirmSubscription')
                 )}
               </button>
             </div>

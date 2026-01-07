@@ -1,38 +1,40 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import { authService } from '../services/authService'
 import { User, Mail, Phone, Shield, Lock, Key, Edit2, Check, X, Camera, Upload } from 'lucide-react'
 
-// Fonction pour formater le rôle selon le sexe
-const formatRole = (role: string, sexe?: string): string => {
-  if (sexe === 'F') {
-    switch (role) {
-      case 'infirmier': return 'Infirmière'
-      case 'major': return 'Major (Infirmière chef)'
-      case 'soignant': return 'Soignante'
-      case 'pharmacien': return 'Pharmacienne'
-      case 'medecin': return 'Médecin'
-      default: return role
-    }
-  }
-  // Pour les hommes ou sexe non défini
-  switch (role) {
-    case 'infirmier': return 'Infirmier'
-    case 'major': return 'Major (Infirmier chef)'
-    case 'soignant': return 'Soignant'
-    case 'pharmacien': return 'Pharmacien'
-    case 'medecin': return 'Médecin'
-    default: return role
-  }
-}
-
 export const ProfilePage = () => {
+  const { t } = useTranslation()
   const { user, updateUser } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+
+  // Fonction pour formater le rôle selon le sexe
+  const formatRole = (role: string, sexe?: string): string => {
+    if (sexe === 'F') {
+      switch (role) {
+        case 'infirmier': return t('profile.roles.infirmiere')
+        case 'major': return t('profile.roles.majorFemale')
+        case 'soignant': return t('profile.roles.soignante')
+        case 'pharmacien': return t('profile.roles.pharmacienne')
+        case 'medecin': return t('profile.roles.medecin')
+        default: return role
+      }
+    }
+    // Pour les hommes ou sexe non défini
+    switch (role) {
+      case 'infirmier': return t('profile.roles.infirmier')
+      case 'major': return t('profile.roles.major')
+      case 'soignant': return t('profile.roles.soignant')
+      case 'pharmacien': return t('profile.roles.pharmacien')
+      case 'medecin': return t('profile.roles.medecin')
+      default: return role
+    }
+  }
 
   // Formulaire de profil
   const [formData, setFormData] = useState({
@@ -68,7 +70,7 @@ export const ProfilePage = () => {
 
     try {
       const response = await authService.updateProfile(formData)
-      setSuccess('Profil mis à jour avec succès')
+      setSuccess(t('profile.personalInfo.updateSuccess'))
       setIsEditing(false)
 
       // Mettre à jour le contexte utilisateur
@@ -82,7 +84,7 @@ export const ProfilePage = () => {
         })
       }
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la mise à jour du profil')
+      setError(err.message || t('profile.personalInfo.updateError'))
     } finally {
       setLoading(false)
     }
@@ -94,13 +96,13 @@ export const ProfilePage = () => {
 
     // Vérifier que c'est une image
     if (!file.type.startsWith('image/')) {
-      setError('Veuillez sélectionner une image')
+      setError(t('profile.avatar.selectImage'))
       return
     }
 
     // Vérifier la taille (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setError('La photo ne doit pas dépasser 5 MB')
+      setError(t('profile.avatar.sizeError'))
       return
     }
 
@@ -117,7 +119,7 @@ export const ProfilePage = () => {
         // Mettre à jour le profil avec la nouvelle photo
         const response = await authService.updateProfile({ avatar_url: dataUrl })
 
-        setSuccess('Photo de profil mise à jour avec succès')
+        setSuccess(t('profile.avatar.uploadSuccess'))
 
         // Mettre à jour le contexte utilisateur avec la réponse du serveur
         if (updateUser && response.user) {
@@ -128,7 +130,7 @@ export const ProfilePage = () => {
       }
       reader.readAsDataURL(file)
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la mise à jour de la photo')
+      setError(err.message || t('profile.avatar.uploadError'))
     } finally {
       setUploadingAvatar(false)
     }
@@ -142,13 +144,13 @@ export const ProfilePage = () => {
 
     // Validation
     if (passwordData.newPassword.length < 8) {
-      setError('Le nouveau mot de passe doit contenir au moins 8 caractères')
+      setError(t('profile.security.minLengthError'))
       setLoading(false)
       return
     }
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError('Les mots de passe ne correspondent pas')
+      setError(t('profile.security.mismatchError'))
       setLoading(false)
       return
     }
@@ -159,14 +161,14 @@ export const ProfilePage = () => {
         new_password: passwordData.newPassword,
       })
 
-      setSuccess('Mot de passe changé avec succès')
+      setSuccess(t('profile.security.changeSuccess'))
       setPasswordData({
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
       })
     } catch (err: any) {
-      setError(err.message || 'Erreur lors du changement de mot de passe')
+      setError(err.message || t('profile.security.changeError'))
     } finally {
       setLoading(false)
     }
@@ -175,7 +177,7 @@ export const ProfilePage = () => {
   if (!user) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Chargement...</p>
+        <p className="text-gray-500">{t('profile.loadingError')}</p>
       </div>
     )
   }
@@ -189,8 +191,8 @@ export const ProfilePage = () => {
             <User className="w-12 h-12" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">Mon Profil</h1>
-            <p className="text-blue-100 mt-1">Gérez vos informations personnelles et votre sécurité</p>
+            <h1 className="text-3xl font-bold">{t('profile.title')}</h1>
+            <p className="text-blue-100 mt-1">{t('profile.subtitle')}</p>
           </div>
         </div>
       </div>
@@ -218,8 +220,8 @@ export const ProfilePage = () => {
               <Camera className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Photo de profil</h2>
-              <p className="text-sm text-gray-600 mt-0.5">Ajoutez une photo pour personnaliser votre profil</p>
+              <h2 className="text-xl font-semibold text-gray-900">{t('profile.avatar.title')}</h2>
+              <p className="text-sm text-gray-600 mt-0.5">{t('profile.avatar.subtitle')}</p>
             </div>
           </div>
         </div>
@@ -253,7 +255,7 @@ export const ProfilePage = () => {
                 className="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-2.5 rounded-lg font-medium cursor-pointer transition-all shadow-md hover:shadow-lg disabled:opacity-50"
               >
                 <Upload className="w-4 h-4" />
-                <span>{uploadingAvatar ? 'Upload en cours...' : 'Changer la photo'}</span>
+                <span>{uploadingAvatar ? t('profile.avatar.uploading') : t('profile.avatar.changePhoto')}</span>
               </label>
               <input
                 id="avatar-upload"
@@ -264,7 +266,7 @@ export const ProfilePage = () => {
                 className="hidden"
               />
               <p className="text-xs text-gray-500 mt-2">
-                JPG, PNG ou GIF. Max 5 MB.
+                {t('profile.avatar.acceptedFormats')}
               </p>
             </div>
           </div>
@@ -278,7 +280,7 @@ export const ProfilePage = () => {
             <div className="bg-blue-600 p-2 rounded-lg">
               <User className="w-5 h-5 text-white" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900">Informations personnelles</h2>
+            <h2 className="text-xl font-semibold text-gray-900">{t('profile.personalInfo.title')}</h2>
           </div>
           {!isEditing && (
             <button
@@ -286,7 +288,7 @@ export const ProfilePage = () => {
               className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
               <Edit2 className="w-4 h-4" />
-              <span>Modifier</span>
+              <span>{t('profile.personalInfo.editButton')}</span>
             </button>
           )}
         </div>
@@ -297,35 +299,35 @@ export const ProfilePage = () => {
               <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                 <div className="flex items-center space-x-2 mb-2">
                   <User className="w-4 h-4 text-blue-600" />
-                  <label className="text-sm font-medium text-gray-500">Nom</label>
+                  <label className="text-sm font-medium text-gray-500">{t('profile.personalInfo.lastName')}</label>
                 </div>
                 <p className="text-gray-900 font-medium">{user.nom}</p>
               </div>
               <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                 <div className="flex items-center space-x-2 mb-2">
                   <User className="w-4 h-4 text-green-600" />
-                  <label className="text-sm font-medium text-gray-500">Prénom</label>
+                  <label className="text-sm font-medium text-gray-500">{t('profile.personalInfo.firstName')}</label>
                 </div>
                 <p className="text-gray-900 font-medium">{user.prenom || '-'}</p>
               </div>
               <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                 <div className="flex items-center space-x-2 mb-2">
                   <Mail className="w-4 h-4 text-purple-600" />
-                  <label className="text-sm font-medium text-gray-500">Email</label>
+                  <label className="text-sm font-medium text-gray-500">{t('profile.personalInfo.email')}</label>
                 </div>
                 <p className="text-gray-900 font-medium">{user.email}</p>
               </div>
               <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                 <div className="flex items-center space-x-2 mb-2">
                   <Phone className="w-4 h-4 text-orange-600" />
-                  <label className="text-sm font-medium text-gray-500">Téléphone</label>
+                  <label className="text-sm font-medium text-gray-500">{t('profile.personalInfo.phone')}</label>
                 </div>
                 <p className="text-gray-900 font-medium">{user.telephone || '-'}</p>
               </div>
               <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-200 md:col-span-2">
                 <div className="flex items-center space-x-2 mb-2">
                   <Shield className="w-4 h-4 text-indigo-600" />
-                  <label className="text-sm font-medium text-gray-500">Rôle</label>
+                  <label className="text-sm font-medium text-gray-500">{t('profile.personalInfo.role')}</label>
                 </div>
                 <p className="text-gray-900 font-medium">{formatRole(user.role, user.sexe)}</p>
               </div>
@@ -336,7 +338,7 @@ export const ProfilePage = () => {
                 <div>
                   <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
                     <User className="w-4 h-4 text-blue-600" />
-                    <span>Nom <span className="text-red-500">*</span></span>
+                    <span>{t('profile.personalInfo.lastName')} <span className="text-red-500">*</span></span>
                   </label>
                   <input
                     type="text"
@@ -350,7 +352,7 @@ export const ProfilePage = () => {
                 <div>
                   <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
                     <User className="w-4 h-4 text-green-600" />
-                    <span>Prénom</span>
+                    <span>{t('profile.personalInfo.firstName')}</span>
                   </label>
                   <input
                     type="text"
@@ -363,7 +365,7 @@ export const ProfilePage = () => {
                 <div>
                   <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
                     <Mail className="w-4 h-4 text-purple-600" />
-                    <span>Email <span className="text-red-500">*</span></span>
+                    <span>{t('profile.personalInfo.email')} <span className="text-red-500">*</span></span>
                   </label>
                   <input
                     type="email"
@@ -377,7 +379,7 @@ export const ProfilePage = () => {
                 <div>
                   <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
                     <Phone className="w-4 h-4 text-orange-600" />
-                    <span>Téléphone</span>
+                    <span>{t('profile.personalInfo.phone')}</span>
                   </label>
                   <input
                     type="tel"
@@ -395,7 +397,7 @@ export const ProfilePage = () => {
                   className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2.5 rounded-lg font-medium disabled:opacity-50 transition-all shadow-md hover:shadow-lg"
                 >
                   <Check className="w-4 h-4" />
-                  <span>{loading ? 'Enregistrement...' : 'Enregistrer'}</span>
+                  <span>{loading ? t('profile.personalInfo.saving') : t('profile.personalInfo.saveButton')}</span>
                 </button>
                 <button
                   type="button"
@@ -411,7 +413,7 @@ export const ProfilePage = () => {
                   className="flex items-center space-x-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2.5 rounded-lg font-medium transition-all"
                 >
                   <X className="w-4 h-4" />
-                  <span>Annuler</span>
+                  <span>{t('profile.personalInfo.cancelButton')}</span>
                 </button>
               </div>
             </form>
@@ -427,8 +429,8 @@ export const ProfilePage = () => {
               <Lock className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Changer le mot de passe</h2>
-              <p className="text-sm text-gray-600 mt-0.5">Protégez votre compte avec un mot de passe sécurisé</p>
+              <h2 className="text-xl font-semibold text-gray-900">{t('profile.security.title')}</h2>
+              <p className="text-sm text-gray-600 mt-0.5">{t('profile.security.subtitle')}</p>
             </div>
           </div>
         </div>
@@ -438,7 +440,7 @@ export const ProfilePage = () => {
             <div>
               <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
                 <Key className="w-4 h-4 text-gray-600" />
-                <span>Mot de passe actuel <span className="text-red-500">*</span></span>
+                <span>{t('profile.security.currentPassword')} <span className="text-red-500">*</span></span>
               </label>
               <input
                 type="password"
@@ -455,7 +457,7 @@ export const ProfilePage = () => {
               <div className="mb-3">
                 <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
                   <Lock className="w-4 h-4 text-blue-600" />
-                  <span>Nouveau mot de passe <span className="text-red-500">*</span></span>
+                  <span>{t('profile.security.newPassword')} <span className="text-red-500">*</span></span>
                 </label>
                 <input
                   type="password"
@@ -470,14 +472,14 @@ export const ProfilePage = () => {
               </div>
               <p className="text-xs text-blue-700 flex items-start space-x-2">
                 <Shield className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                <span>Au moins 8 caractères, avec une majuscule, un chiffre et un caractère spécial</span>
+                <span>{t('profile.security.requirements')}</span>
               </p>
             </div>
 
             <div>
               <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
                 <Check className="w-4 h-4 text-green-600" />
-                <span>Confirmer le nouveau mot de passe <span className="text-red-500">*</span></span>
+                <span>{t('profile.security.confirmPassword')} <span className="text-red-500">*</span></span>
               </label>
               <input
                 type="password"
@@ -497,7 +499,7 @@ export const ProfilePage = () => {
                 className="flex items-center space-x-2 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-6 py-2.5 rounded-lg font-medium disabled:opacity-50 transition-all shadow-md hover:shadow-lg"
               >
                 <Key className="w-4 h-4" />
-                <span>{loading ? 'Changement...' : 'Changer le mot de passe'}</span>
+                <span>{loading ? t('profile.security.changing') : t('profile.security.changeButton')}</span>
               </button>
             </div>
           </form>

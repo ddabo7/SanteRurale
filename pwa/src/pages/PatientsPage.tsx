@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { patientsService } from '../services/api'
 import type { Patient } from '../db'
 
 export const PatientsPage = () => {
+  const { t } = useTranslation()
   const [patients, setPatients] = useState<Patient[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -51,7 +53,7 @@ export const PatientsPage = () => {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement des patients...</p>
+          <p className="text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -67,7 +69,7 @@ export const PatientsPage = () => {
             onClick={loadPatients}
             className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg"
           >
-            Réessayer
+            {t('common.retry')}
           </button>
         </div>
       </div>
@@ -79,15 +81,15 @@ export const PatientsPage = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Patients</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">{patients.length} patients enregistrés</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('patients.title')}</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">{t('patients.registered', { count: patients.length })}</p>
         </div>
         <Link
           to="/patients/nouveau"
           className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 sm:px-6 rounded-lg transition-colors flex items-center justify-center text-sm sm:text-base"
         >
           <span className="mr-2">+</span>
-          Nouveau patient
+          {t('patients.newPatient')}
         </Link>
       </div>
 
@@ -96,7 +98,7 @@ export const PatientsPage = () => {
         <div className="relative">
           <input
             type="text"
-            placeholder="Rechercher par nom, téléphone ou village..."
+            placeholder={t('patients.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
@@ -110,12 +112,12 @@ export const PatientsPage = () => {
         <div className="bg-white rounded-lg shadow p-8 sm:p-12 text-center">
           <div className="text-5xl sm:text-6xl mb-4">👥</div>
           <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
-            {searchTerm ? 'Aucun patient trouvé' : 'Aucun patient enregistré'}
+            {searchTerm ? t('common.noData') : t('patients.registered', { count: 0 })}
           </h3>
           <p className="text-sm sm:text-base text-gray-600 mb-6">
             {searchTerm
-              ? 'Essayez une autre recherche'
-              : 'Commencez par ajouter votre premier patient'
+              ? t('patients.searchPlaceholder')
+              : t('patients.newPatient')
             }
           </p>
           {!searchTerm && (
@@ -123,7 +125,7 @@ export const PatientsPage = () => {
               to="/patients/nouveau"
               className="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors text-sm sm:text-base"
             >
-              + Ajouter un patient
+              + {t('patients.newPatient')}
             </Link>
           )}
         </div>
@@ -135,25 +137,26 @@ export const PatientsPage = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Patient
+                    {t('patients.table.patient')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Âge / Sexe
+                    {t('patients.table.ageGender')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Téléphone
+                    {t('patients.table.phone')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Village
+                    {t('patients.table.village')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    {t('patients.table.actions')}
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredPatients.map((patient) => {
                   const age = getAge(patient.annee_naissance)
+                  const genderText = patient.sexe === 'M' ? t('patients.gender.male') : t('patients.gender.female')
                   return (
                     <tr key={patient.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -177,10 +180,10 @@ export const PatientsPage = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {age !== null ? `${age} ans` : 'Âge inconnu'}
+                          {age !== null ? t('patients.age', { count: age }) : t('common.noData')}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {patient.sexe === 'M' ? '♂️ Homme' : '♀️ Femme'}
+                          {patient.sexe === 'M' ? '♂️' : '♀️'} {genderText}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -194,13 +197,13 @@ export const PatientsPage = () => {
                           to={`/patients/${patient.id}`}
                           className="text-emerald-600 hover:text-emerald-900 mr-4"
                         >
-                          Voir
+                          {t('patients.table.view')}
                         </Link>
                         <Link
                           to={`/consultations?patient=${patient.id}`}
                           className="text-blue-600 hover:text-blue-900"
                         >
-                          Consulter
+                          {t('patients.table.consult')}
                         </Link>
                       </td>
                     </tr>
@@ -214,6 +217,7 @@ export const PatientsPage = () => {
           <div className="md:hidden space-y-4">
             {filteredPatients.map((patient) => {
               const age = getAge(patient.annee_naissance)
+              const genderText = patient.sexe === 'M' ? t('patients.gender.male') : t('patients.gender.female')
               return (
                 <div key={patient.id} className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-start gap-3 mb-3">
@@ -234,25 +238,25 @@ export const PatientsPage = () => {
 
                   <div className="grid grid-cols-2 gap-3 text-sm mb-3">
                     <div>
-                      <span className="text-gray-500">Âge:</span>
+                      <span className="text-gray-500">{t('patients.table.ageGender').split(' / ')[0]}:</span>
                       <span className="ml-1 text-gray-900 font-medium">
-                        {age !== null ? `${age} ans` : 'Inconnu'}
+                        {age !== null ? t('patients.age', { count: age }) : t('common.noData')}
                       </span>
                     </div>
                     <div>
-                      <span className="text-gray-500">Sexe:</span>
+                      <span className="text-gray-500">{t('patients.table.ageGender').split(' / ')[1]}:</span>
                       <span className="ml-1 text-gray-900 font-medium">
-                        {patient.sexe === 'M' ? '♂️ Homme' : '♀️ Femme'}
+                        {patient.sexe === 'M' ? '♂️' : '♀️'} {genderText}
                       </span>
                     </div>
                     <div className="col-span-2">
-                      <span className="text-gray-500">Tel:</span>
+                      <span className="text-gray-500">{t('patients.table.phone')}:</span>
                       <span className="ml-1 text-gray-900 font-medium">
                         {patient.telephone || '-'}
                       </span>
                     </div>
                     <div className="col-span-2">
-                      <span className="text-gray-500">Village:</span>
+                      <span className="text-gray-500">{t('patients.table.village')}:</span>
                       <span className="ml-1 text-gray-900 font-medium">
                         {patient.village || '-'}
                       </span>
@@ -264,13 +268,13 @@ export const PatientsPage = () => {
                       to={`/patients/${patient.id}`}
                       className="flex-1 text-center bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium py-2 px-4 rounded-lg transition-colors text-sm"
                     >
-                      Voir
+                      {t('patients.table.view')}
                     </Link>
                     <Link
                       to={`/consultations?patient=${patient.id}`}
                       className="flex-1 text-center bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium py-2 px-4 rounded-lg transition-colors text-sm"
                     >
-                      Consulter
+                      {t('patients.table.consult')}
                     </Link>
                   </div>
                 </div>

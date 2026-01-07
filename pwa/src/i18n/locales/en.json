@@ -1,0 +1,984 @@
+{
+  "common": {
+    "appName": "Rural Health",
+    "copyright": "© {{year}} Rural Health. All rights reserved.",
+    "tagline": "Rural health management platform",
+    "welcome": "Welcome",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "close": "Close",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "reset": "Reset",
+    "apply": "Apply",
+    "clear": "Clear",
+    "retry": "Retry",
+    "actions": "Actions",
+    "status": "Status",
+    "date": "Date",
+    "total": "Total",
+    "details": "Details",
+    "access": "Access",
+    "online": "Online",
+    "offline": "Offline",
+    "noData": "No data available",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Information",
+    "required": "Required",
+    "optional": "Optional",
+    "or": "or"
+  },
+  "userMenu": {
+    "myProfile": "My profile",
+    "subscription": "Subscription",
+    "adminDashboard": "Admin Dashboard",
+    "userFeedbacks": "User Feedbacks",
+    "logout": "Logout",
+    "roles": {
+      "nurse": {
+        "male": "nurse",
+        "female": "nurse"
+      },
+      "major": {
+        "male": "head nurse",
+        "female": "head nurse"
+      },
+      "caregiver": {
+        "male": "caregiver",
+        "female": "caregiver"
+      },
+      "pharmacist": {
+        "male": "pharmacist",
+        "female": "pharmacist"
+      },
+      "doctor": "doctor",
+      "admin": "administrator"
+    }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "patients": "Patients",
+    "consultations": "Consultations",
+    "appointments": "Appointments",
+    "pharmacy": "Pharmacy",
+    "reports": "Reports",
+    "settings": "Settings",
+    "logout": "Logout",
+    "profile": "Profile"
+  },
+  "auth": {
+    "login": "Login",
+    "email": "Email",
+    "password": "Password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "loginButton": "Sign in",
+    "loggingIn": "Signing in...",
+    "logout": "Logout",
+    "sessionExpired": "Your session has expired",
+    "sessionExpiredMessage": "You have been logged out due to inactivity.",
+    "loginAgain": "Please log in again",
+    "inactivityWarning": "Warning: Inactivity detected",
+    "inactivityWarningMessage": "You will be logged out in {{seconds}} seconds due to inactivity.",
+    "stayConnected": "Stay connected",
+    "logoutNow": "Logout now",
+    "appTitle": "Rural Health",
+    "appDescription": "Modern health management platform",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "your.email@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "forgotPasswordLink": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "createAccountButton": "Create free account",
+    "alreadyHaveAccount": "Already have an account?",
+    "signInLink": "Sign in",
+    "secureSSL": "Secure SSL",
+    "offlineMode": "Offline Mode",
+    "secureRegistration": "Secure registration",
+    "secureProcess": "Secure process",
+    "connectionError": "Connection error",
+    "forgotPasswordPage": {
+      "title": "Forgot password?",
+      "subtitle": "Enter your email to receive a reset link",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "your.email@chc.ml",
+      "sendingLink": "Sending...",
+      "sendLink": "Send link",
+      "backToLogin": "Back to login",
+      "successTitle": "Email sent!",
+      "successMessage": "If this email exists in our system, a reset link has been sent.",
+      "successNote": "Check your inbox and spam folder. The link is valid for 24 hours.",
+      "errorSending": "Error sending reset link"
+    },
+    "emailVerification": {
+      "title": "Email verification",
+      "verifying": "Verifying...",
+      "successTitle": "Email verified!",
+      "redirectMessage": "Redirecting to login page",
+      "redirectCountdown": "in {{count}} second",
+      "redirectCountdownPlural": "in {{count}} seconds",
+      "goToLogin": "Go to login now",
+      "errorTitle": "Verification error",
+      "backToLogin": "Back to login",
+      "missingToken": "Verification token missing",
+      "verificationError": "Error during verification",
+      "verificationErrorDetails": "- Check console for more details",
+      "successMessage": "Email verified! You can now sign in."
+    },
+    "resetPassword": {
+      "title": "New password",
+      "subtitle": "Create a new secure password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "passwordMismatch": "Passwords do not match",
+      "passwordError": "Password does not meet all security criteria",
+      "resetting": "Resetting...",
+      "resetButton": "Reset my password",
+      "backToLogin": "Back to login",
+      "invalidLinkTitle": "Invalid link",
+      "invalidLinkMessage": "The reset link is invalid or has expired.",
+      "requestNewLink": "Request a new link",
+      "missingToken": "Reset token missing",
+      "resetError": "Error during reset",
+      "successMessage": "Password successfully reset! You can now sign in.",
+      "requirements": {
+        "length": "At least 8 characters",
+        "uppercase": "At least one uppercase letter",
+        "number": "At least one number",
+        "special": "At least one special character (!@#$%^&*)"
+      }
+    },
+    "signup": {
+      "title": "Create an account",
+      "subtitle": "Community Health Center",
+      "lastName": "Last name",
+      "lastNamePlaceholder": "DIARRA",
+      "firstName": "First name",
+      "firstNamePlaceholder": "Mamadou",
+      "email": "Email address",
+      "emailPlaceholder": "your.email@chc.ml",
+      "phone": "Phone (optional)",
+      "phonePlaceholder": "+223 70 00 00 00",
+      "gender": "Gender",
+      "genderSelect": "Select your gender",
+      "genderMale": "Male",
+      "genderFemale": "Female",
+      "role": "Role",
+      "roleSelect": "Select your role",
+      "roleMedecin": "Doctor",
+      "roleInfirmier": "Nurse",
+      "roleInfirmiere": "Nurse",
+      "roleMajor": "Head Nurse",
+      "roleMajorFemale": "Head Nurse",
+      "roleSoignant": "Caregiver",
+      "roleSoignante": "Caregiver",
+      "rolePharmacien": "Pharmacist",
+      "rolePharmacienne": "Pharmacist",
+      "siteInfoTitle": "Your health facility information",
+      "siteName": "Name of your CHC/Hospital",
+      "siteNamePlaceholder": "e.g., Bamako Coura CHC",
+      "siteType": "Facility type",
+      "siteTypeCscom": "CHC (Community Health Center)",
+      "siteTypeHospital": "Hospital",
+      "siteTypeClinic": "Clinic",
+      "siteCity": "City",
+      "siteCityPlaceholder": "Bamako",
+      "siteCountry": "Country",
+      "siteCountryPlaceholder": "Mali",
+      "siteAddress": "Full address (optional)",
+      "siteAddressPlaceholder": "Street, neighborhood, district",
+      "securityTitle": "Account security",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "passwordRequirements": {
+        "length": "At least 8 characters",
+        "uppercase": "At least one uppercase letter",
+        "number": "At least one number",
+        "special": "At least one special character (!@#$%^&*)"
+      },
+      "passwordMismatch": "Passwords do not match",
+      "passwordError": "Password does not meet all security criteria",
+      "createButton": "Create my account",
+      "creating": "Creating account...",
+      "successTitle": "Account successfully created!",
+      "successMessage": "A verification email has been sent to",
+      "checkInbox": "Check your inbox",
+      "checkInboxDetails": "Click the link in the email to activate your account. The link is valid for 24 hours.",
+      "emailNotReceived": "Email not received?",
+      "checkSpam": "Check your spam folder.",
+      "redirecting": "Redirecting to login page in",
+      "seconds": "second",
+      "secondsPlural": "seconds",
+      "goToLogin": "Go to login now",
+      "successRedirectMessage": "Account created! Check your email then sign in."
+    }
+  },
+  "consultations": {
+    "title": "Consultations",
+    "newConsultation": "+ New consultation",
+    "noConsultations": "No consultations found",
+    "loadingError": "Unable to load consultations",
+    "filters": {
+      "patient": "Patient",
+      "allPatients": "All patients",
+      "startDate": "Start date",
+      "endDate": "End date"
+    },
+    "table": {
+      "date": "Date",
+      "patient": "Patient",
+      "reason": "Reason",
+      "vitalSigns": "Vital signs",
+      "diagnoses": "Diagnoses",
+      "actions": "Actions",
+      "viewDetails": "View details",
+      "temperature": "T",
+      "pulse": "Pulse",
+      "bloodPressure": "BP",
+      "bpm": "bpm"
+    }
+  },
+  "profile": {
+    "title": "My Profile",
+    "subtitle": "Manage your personal information and security",
+    "avatar": {
+      "title": "Profile photo",
+      "subtitle": "Add a photo to personalize your profile",
+      "changePhoto": "Change photo",
+      "uploading": "Uploading...",
+      "acceptedFormats": "JPG, PNG or GIF. Max 5 MB.",
+      "uploadSuccess": "Profile photo successfully updated",
+      "uploadError": "Error updating photo",
+      "selectImage": "Please select an image",
+      "sizeError": "Photo must not exceed 5 MB"
+    },
+    "personalInfo": {
+      "title": "Personal information",
+      "editButton": "Edit",
+      "lastName": "Last name",
+      "firstName": "First name",
+      "email": "Email",
+      "phone": "Phone",
+      "role": "Role",
+      "saveButton": "Save",
+      "saving": "Saving...",
+      "cancelButton": "Cancel",
+      "updateSuccess": "Profile successfully updated",
+      "updateError": "Error updating profile"
+    },
+    "security": {
+      "title": "Change password",
+      "subtitle": "Protect your account with a secure password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "requirements": "At least 8 characters, with uppercase, number and special character",
+      "changeButton": "Change password",
+      "changing": "Changing...",
+      "minLengthError": "New password must contain at least 8 characters",
+      "mismatchError": "Passwords do not match",
+      "changeSuccess": "Password successfully changed",
+      "changeError": "Error changing password"
+    },
+    "roles": {
+      "medecin": "Doctor",
+      "infirmier": "Nurse",
+      "infirmiere": "Nurse",
+      "major": "Head Nurse",
+      "majorFemale": "Head Nurse",
+      "soignant": "Caregiver",
+      "soignante": "Caregiver",
+      "pharmacien": "Pharmacist",
+      "pharmacienne": "Pharmacist"
+    },
+    "loadingError": "Loading...",
+    "successMessage": "{{message}}",
+    "errorMessage": "{{message}}"
+  },
+  "pharmacy": {
+    "title": "Pharmacy Management",
+    "description": "Complete management of pharmaceutical inventory, orders and suppliers",
+    "modules": {
+      "catalog": {
+        "title": "Medication Catalog",
+        "description": "Management of available medications catalog",
+        "action": "Access catalog"
+      },
+      "stock": {
+        "title": "Stock Management",
+        "description": "Track stock by site and manage movements",
+        "action": "Manage stock"
+      },
+      "suppliers": {
+        "title": "Suppliers",
+        "description": "Management of suppliers and their contacts",
+        "action": "View suppliers"
+      },
+      "orders": {
+        "title": "Purchase Orders",
+        "description": "Create and track purchase orders",
+        "action": "Manage orders"
+      }
+    },
+    "guide": {
+      "title": "Quick guide",
+      "hide": "Hide guide",
+      "show": "Show quick guide",
+      "workflow": {
+        "title": "Recommended workflow",
+        "step1": "First configure your suppliers",
+        "step2": "Add medications to catalog",
+        "step3": "Create purchase orders",
+        "step4": "Manage stock by site"
+      },
+      "permissions": {
+        "title": "Required permissions",
+        "view": "View: \"view_pharmacy\" permission",
+        "manage": "Full management: \"manage_pharmacy\" permission",
+        "note": "These permissions apply to all pharmacy modules"
+      },
+      "features": {
+        "title": "Key features",
+        "multiTenant": "Multi-tenant for stock and orders",
+        "global": "Medications and suppliers shared globally",
+        "tracking": "Complete stock movement tracking",
+        "alerts": "Configurable low stock alerts"
+      }
+    },
+    "catalog": {
+      "title": "Medication Catalog",
+      "addMedication": "Add medication",
+      "searchPlaceholder": "Search by name, INN or barcode...",
+      "filters": {
+        "category": "Category",
+        "form": "Form",
+        "allCategories": "All categories",
+        "allForms": "All forms"
+      },
+      "table": {
+        "code": "Code",
+        "name": "Name",
+        "dci": "INN",
+        "form": "Form",
+        "dosage": "Dosage",
+        "category": "Category",
+        "price": "Unit price",
+        "actions": "Actions"
+      },
+      "noResults": "No medication found"
+    },
+    "suppliers": {
+      "title": "Suppliers",
+      "addSupplier": "Add supplier",
+      "searchPlaceholder": "Search supplier...",
+      "table": {
+        "name": "Name",
+        "contact": "Contact",
+        "email": "Email",
+        "phone": "Phone",
+        "address": "Address",
+        "status": "Status",
+        "actions": "Actions"
+      }
+    },
+    "orders": {
+      "title": "Purchase Orders",
+      "newOrder": "New purchase order",
+      "searchPlaceholder": "Search purchase order...",
+      "filters": {
+        "status": "Status",
+        "supplier": "Supplier",
+        "allStatuses": "All statuses",
+        "allSuppliers": "All suppliers"
+      },
+      "table": {
+        "number": "Order #",
+        "date": "Date",
+        "supplier": "Supplier",
+        "amount": "Total amount",
+        "status": "Status",
+        "deliveryDate": "Delivery date",
+        "actions": "Actions"
+      },
+      "statuses": {
+        "draft": "Draft",
+        "validated": "Validated",
+        "inProgress": "In Progress",
+        "delivered": "Delivered",
+        "cancelled": "Cancelled"
+      }
+    },
+    "stock": {
+      "title": "Stock Management",
+      "searchPlaceholder": "Search stock...",
+      "filters": {
+        "site": "Site",
+        "medication": "Medication",
+        "allSites": "All sites",
+        "allMedications": "All medications"
+      },
+      "table": {
+        "medication": "Medication",
+        "site": "Site",
+        "quantity": "Current quantity",
+        "minThreshold": "Min threshold",
+        "maxThreshold": "Max threshold",
+        "lastUpdate": "Last update",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "alerts": {
+        "low": "Low stock",
+        "critical": "Critical stock",
+        "normal": "Normal",
+        "excess": "Excess"
+      }
+    }
+  },
+  "inactivity": {
+    "title": "Inactivity detected",
+    "message": "You will be logged out in {{seconds}} seconds.",
+    "stayConnected": "Stay connected",
+    "logout": "Logout"
+  },
+  "patients": {
+    "title": "Patients",
+    "registered": "{{count}} registered patients",
+    "newPatient": "New patient",
+    "searchPlaceholder": "Search by name, phone or village...",
+    "table": {
+      "patient": "Patient",
+      "ageGender": "Age / Gender",
+      "phone": "Phone",
+      "village": "Village",
+      "actions": "Actions",
+      "view": "View",
+      "consult": "Consult"
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other"
+    },
+    "age": "{{count}} years old",
+    "form": {
+      "titleEdit": "Edit patient",
+      "titleNew": "New patient",
+      "subtitle": "Fill in patient information",
+      "offlineMode": "Offline mode - Data will be synchronized automatically",
+      "lastName": "Last name",
+      "lastNamePlaceholder": "TRAORÉ",
+      "firstName": "First name",
+      "firstNamePlaceholder": "Amadou",
+      "gender": "Gender",
+      "male": "Male",
+      "female": "Female",
+      "birthYear": "Birth year",
+      "ageLabel": "Age: {{age}} years",
+      "phone": "Phone",
+      "phonePlaceholder": "+223 XX XX XX XX",
+      "village": "Village",
+      "villagePlaceholder": "Village name",
+      "documentsTitle": "Patient documents",
+      "documentsSubtitle": "Add photos, ID documents, medical certificates, etc.",
+      "saving": "Saving...",
+      "saveButton": "Update",
+      "createButton": "Create patient",
+      "cancel": "Cancel",
+      "successUpdated": "Patient updated locally. Syncing...",
+      "successUpdatedOnline": "Patient successfully updated",
+      "successCreated": "Patient created locally (offline mode). Will be synchronized automatically.",
+      "successCreatedOnline": "Patient successfully created",
+      "successCreatedSyncing": "Patient created and syncing...",
+      "quotaReached": "Patient quota reached",
+      "quotaMessage": "Would you like to upgrade your plan now?",
+      "validationError": "Validation error: {{errors}}",
+      "saveError": "Unable to save patient. Please try again.",
+      "loadError": "Unable to load patient"
+    }
+  },
+  "consultation": {
+    "form": {
+      "titleEdit": "Edit consultation",
+      "titleNew": "New consultation",
+      "subtitle": "Record medical consultation details",
+      "offlineMode": "Offline mode - Data will be synchronized automatically",
+      "patient": "Patient",
+      "selectPatient": "Select a patient",
+      "patientAge": "Age: {{age}} years",
+      "date": "Consultation date",
+      "reason": "Reason for consultation",
+      "reasonPlaceholder": "Reason for visit...",
+      "vitalSigns": "Vital signs",
+      "temperature": "Temperature (°C)",
+      "temperaturePlaceholder": "37.5",
+      "pulse": "Pulse (bpm)",
+      "pulsePlaceholder": "72",
+      "bloodPressure": "Blood pressure",
+      "systolicPlaceholder": "120",
+      "diastolicPlaceholder": "80",
+      "weight": "Weight (kg)",
+      "weightPlaceholder": "70.5",
+      "height": "Height (cm)",
+      "heightPlaceholder": "175",
+      "diagnoses": "Diagnoses",
+      "addDiagnosis": "+ Add diagnosis",
+      "diagnosisLabel": "Diagnosis label",
+      "diagnosisCode": "ICD-10 Code",
+      "diagnosisNotes": "Notes",
+      "prescriptions": "Prescriptions",
+      "addPrescription": "+ Add prescription",
+      "medication": "Medication",
+      "dosage": "Dosage (e.g., 1 tablet x 3/day)",
+      "duration": "Duration (days)",
+      "prescriptionNotes": "Notes",
+      "procedures": "Medical procedures",
+      "addProcedure": "+ Add procedure",
+      "procedureType": "Procedure type",
+      "procedureDescription": "Description",
+      "procedureResult": "Result",
+      "reference": "Reference / Evacuation",
+      "referenceCheckbox": "Patient to evacuate/refer",
+      "destination": "Destination",
+      "destinationPlaceholder": "e.g., Bamako Hospital, Reference health center...",
+      "referenceStatus": "Status",
+      "statusPending": "Pending",
+      "statusConfirmed": "Confirmed",
+      "statusCompleted": "Completed",
+      "statusCancelled": "Cancelled",
+      "referenceReason": "Reason for evacuation",
+      "referenceReasonPlaceholder": "e.g., Complications requiring surgery, High-risk delivery...",
+      "eta": "Estimated time of arrival (ETA)",
+      "referenceNotes": "Additional notes",
+      "referenceNotesPlaceholder": "Additional information, destination center contact...",
+      "consultationNotes": "Consultation notes",
+      "consultationNotesPlaceholder": "Observations, recommendations...",
+      "saving": "Saving...",
+      "saveButton": "Save consultation",
+      "editButton": "Update",
+      "cancel": "Cancel",
+      "finish": "Finish",
+      "successCreated": "Consultation successfully created",
+      "successCreatedOffline": "Consultation created locally (offline mode). Will be synchronized automatically.",
+      "successCreatedSyncing": "Consultation created and syncing...",
+      "validationError": "Validation error: {{errors}}",
+      "saveError": "Unable to save consultation. Please try again.",
+      "documentsTitle": "Medical documents",
+      "documentsSuccess": "Consultation successfully saved!",
+      "documentsSubtitle": "You can now add medical documents (X-rays, test results, etc.)",
+      "backToList": "Back to consultations list"
+    },
+    "details": {
+      "loading": "Loading...",
+      "backButton": "← Back to consultations",
+      "title": "Consultation on {{date}}",
+      "createdAt": "Created on {{date}}",
+      "downloadPDF": "Download prescription (PDF)",
+      "patientInfo": "Patient",
+      "patientName": "Name",
+      "patientGender": "Gender",
+      "patientAge": "Age",
+      "patientPhone": "Phone",
+      "patientVillage": "Village",
+      "provider": "Provider",
+      "reasonTitle": "Reason for consultation",
+      "vitalSignsTitle": "Vital signs",
+      "temperature": "Temperature",
+      "pulse": "Pulse",
+      "bloodPressure": "Blood pressure",
+      "weight": "Weight",
+      "height": "Height",
+      "bmi": "BMI",
+      "diagnosesTitle": "Diagnoses",
+      "prescriptionsTitle": "Prescriptions",
+      "durationDays": "{{days}} days",
+      "proceduresTitle": "Medical procedures",
+      "procedureResult": "Result:",
+      "referenceTitle": "Reference / Evacuation",
+      "referenceDestination": "Destination",
+      "referenceReason": "Reason",
+      "referenceETA": "Estimated time of arrival",
+      "referenceNotes": "Notes",
+      "notesTitle": "Notes",
+      "documentsTitle": "Patient medical documents",
+      "loadError": "Unable to load consultation details",
+      "notFound": "Consultation not found"
+    }
+  },
+  "landing": {
+    "loading": "Loading...",
+    "nav": {
+      "features": "Features",
+      "stats": "Stats",
+      "forProfessionals": "For professionals",
+      "security": "Security",
+      "login": "Sign in",
+      "signup": "Sign up"
+    },
+    "hero": {
+      "title": {
+        "part1": "Manage your",
+        "highlight": "rural health center",
+        "part2": "with ease"
+      },
+      "subtitle": "The modern and complete solution to digitize your health center management, accessible everywhere, even without internet connection.",
+      "cta": {
+        "getStarted": "Get started for free",
+        "alreadyHaveAccount": "Already have an account?"
+      },
+      "badges": {
+        "ssl": "SSL Secured",
+        "offline": "Works Offline",
+        "fast": "Ultra-fast"
+      }
+    },
+    "features": {
+      "title": "Everything you need",
+      "subtitle": "A complete platform to improve the quality of your care",
+      "items": {
+        "patientManagement": {
+          "title": "Patient Management",
+          "description": "Complete electronic medical records with detailed history, photos and personalized tracking for each patient."
+        },
+        "consultations": {
+          "title": "Medical Consultations",
+          "description": "Quickly record consultations with diagnoses, prescriptions and automated appointment tracking."
+        },
+        "offline": {
+          "title": "Offline Mode",
+          "description": "Continue working without internet connection. Your data syncs automatically as soon as you're online."
+        }
+      }
+    },
+    "stats": {
+      "title": "They trust us",
+      "subtitle": "Join hundreds of health centers using Santé Rurale",
+      "items": {
+        "healthCenters": "Health centers",
+        "activeCarers": "Active caregivers",
+        "patientsFollowed": "Patients followed",
+        "availability": "Availability"
+      }
+    },
+    "forProfessionals": {
+      "badge": "For professionals",
+      "title": "Designed by caregivers, for caregivers",
+      "subtitle": "A solution designed to meet the specific needs of rural health centers in Africa.",
+      "benefits": {
+        "saveTime": {
+          "title": "Save time",
+          "description": "Intuitive and fast interface, designed to maximize your daily efficiency."
+        },
+        "reliableData": {
+          "title": "Reliable data",
+          "description": "Centralize all your medical information in a secure and always accessible system."
+        },
+        "workOffline": {
+          "title": "Work anywhere",
+          "description": "No internet dependency. Perfect for areas with limited connectivity."
+        }
+      },
+      "cta": "Try for free",
+      "roles": {
+        "doctors": {
+          "title": "Doctors",
+          "description": "Diagnoses and prescriptions"
+        },
+        "nurses": {
+          "title": "Nurses",
+          "description": "Patient care and monitoring"
+        },
+        "midwives": {
+          "title": "Midwives",
+          "description": "Maternal health"
+        },
+        "pharmacists": {
+          "title": "Pharmacists",
+          "description": "Medicine management"
+        }
+      }
+    },
+    "security": {
+      "title": "Your data is secure",
+      "subtitle": "We take the confidentiality of your medical data very seriously. All your information is protected.",
+      "features": {
+        "encryption": {
+          "title": "AES-256 Encryption",
+          "description": "All your data is encrypted end-to-end with military-grade standards."
+        },
+        "isolation": {
+          "title": "Total isolation",
+          "description": "Each center has its own database. Your data is never shared."
+        },
+        "compliance": {
+          "title": "GDPR Compliance",
+          "description": "Full compliance with European and African data protection regulations."
+        }
+      }
+    },
+    "cta": {
+      "title": "Ready to modernize your health center?",
+      "subtitle": "Join hundreds of centers that trust Santé Rurale.",
+      "buttons": {
+        "getStarted": "Create free account",
+        "contactUs": "Contact us"
+      }
+    },
+    "footer": {
+      "description": "The modern solution for managing rural health centers in Africa. Accessible, reliable and secure.",
+      "product": {
+        "title": "Product",
+        "features": "Features",
+        "stats": "Statistics",
+        "security": "Security",
+        "signup": "Create account"
+      },
+      "support": {
+        "title": "Support",
+        "contact": "Contact",
+        "helpCenter": "Help center",
+        "documentation": "Documentation"
+      },
+      "copyright": "© 2026 Santé Rurale. All rights reserved.",
+      "legal": {
+        "terms": "Terms of use",
+        "privacy": "Privacy policy",
+        "conditions": "General terms"
+      }
+    }
+  },
+  "feedback": {
+    "title": "Feedback",
+    "subtitle": "Share your experience",
+    "form": {
+      "category": "Category",
+      "selectCategory": "Select a category",
+      "bug": "Bug",
+      "feature": "New feature",
+      "improvement": "Improvement",
+      "other": "Other",
+      "subject": "Subject",
+      "subjectPlaceholder": "Summary of your feedback",
+      "message": "Message",
+      "messagePlaceholder": "Describe your feedback in detail...",
+      "attachments": "Attachments (optional)",
+      "attachmentsHelp": "Screenshots, documents, etc.",
+      "sending": "Sending...",
+      "submit": "Send feedback",
+      "cancel": "Cancel",
+      "success": "Thank you for your feedback!",
+      "successMessage": "We have received your message.",
+      "error": "Error sending",
+      "errorMessage": "Unable to send feedback. Please try again."
+    }
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Administration",
+      "subtitle": "Administrator dashboard",
+      "stats": {
+        "users": "Users",
+        "sites": "Sites",
+        "patients": "Patients",
+        "consultations": "Consultations"
+      },
+      "recentActivity": "Recent activity",
+      "noActivity": "No recent activity"
+    },
+    "feedback": {
+      "title": "User feedback",
+      "subtitle": "Manage user feedback",
+      "filters": {
+        "all": "All",
+        "bug": "Bugs",
+        "feature": "Features",
+        "improvement": "Improvements",
+        "other": "Others"
+      },
+      "table": {
+        "date": "Date",
+        "user": "User",
+        "category": "Category",
+        "subject": "Subject",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "new": "New",
+        "inProgress": "In progress",
+        "resolved": "Resolved",
+        "closed": "Closed"
+      },
+      "noFeedback": "No feedback"
+    }
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "Statistics and analytics",
+    "filters": {
+      "period": "Period",
+      "lastWeek": "Last 7 days",
+      "lastMonth": "Last 30 days",
+      "lastYear": "This year",
+      "custom": "Custom"
+    },
+    "stats": {
+      "totalConsultations": "Total consultations",
+      "newPatients": "New patients",
+      "childrenUnder5": "Children under 5",
+      "prescriptions": "Prescriptions",
+      "references": "References"
+    },
+    "charts": {
+      "consultationsOverTime": "Consultations over time",
+      "patientsByGender": "Patients by gender",
+      "topDiagnoses": "Most frequent diagnoses",
+      "cases": "cases"
+    },
+    "export": {
+      "button": "Export",
+      "pdf": "PDF",
+      "excel": "Excel",
+      "csv": "CSV"
+    }
+  },
+  "subscription": {
+    "title": "Subscription",
+    "subtitle": "Manage your plan and track your usage",
+    "manageYourPlan": "Manage your plan",
+    "currentPlan": "Current plan",
+    "upgradePlan": "Upgrade",
+    "upgradeToAnyPlan": "Switch to a paid plan",
+    "upgradeToHigherPlan": "Upgrade to a higher plan",
+    "changePlan": "Change plan",
+    "cancelSubscription": "Cancel subscription",
+    "active": "Active",
+    "pilotPhase": "Pilot Phase",
+    "loading": "Loading...",
+    "mustBeLoggedIn": "You must be logged in to access this page",
+    "loadingError": "Error loading data",
+    "perMonth": "/month",
+    "tabs": {
+      "overview": "Overview",
+      "usage": "Usage"
+    },
+    "stats": {
+      "users": "Users",
+      "patients": "Patients",
+      "storage": "Storage",
+      "activeUsers": "Active users",
+      "patientsThisMonth": "Patients this month",
+      "consultationsThisMonth": "Consultations this month",
+      "storageUsed": "Storage used",
+      "usage": "Usage",
+      "unlimited": "∞"
+    },
+    "plans": {
+      "free": {
+        "name": "Free",
+        "price": "0",
+        "currency": "FCFA",
+        "period": "month",
+        "features": [
+          "{{patients}} patients max",
+          "Unlimited consultations",
+          "1 user",
+          "Email support"
+        ]
+      },
+      "basic": {
+        "name": "Basic",
+        "price": "10000",
+        "currency": "FCFA",
+        "period": "month",
+        "features": [
+          "{{patients}} patients max",
+          "Unlimited consultations",
+          "5 users",
+          "Priority support",
+          "Advanced reports"
+        ]
+      },
+      "pro": {
+        "name": "Pro",
+        "price": "25000",
+        "currency": "FCFA",
+        "period": "month",
+        "features": [
+          "Unlimited patients",
+          "Unlimited consultations",
+          "Unlimited users",
+          "24/7 support",
+          "Advanced reports",
+          "API Access"
+        ]
+      }
+    },
+    "selectPlan": "Choose this plan",
+    "currentLabel": "Current plan",
+    "quotaWarning": "You have reached your plan limit",
+    "quotaMessage": "Upgrade to continue",
+    "modal": {
+      "choosePlan": "Choose your plan",
+      "selectPlanDescription": "Select the plan that fits your needs",
+      "currentPlanBadge": "CURRENT PLAN",
+      "phase2Badge": "Phase 2",
+      "comingSoon": "Coming soon",
+      "change": "Change",
+      "choose": "Choose",
+      "close": "Close",
+      "usersUnlimited": "Unlimited users",
+      "usersCount": "{{count}} users",
+      "patientsTotal": "{{count}} patients (total)",
+      "patientsPerMonth": "{{count}} patients/month",
+      "patientsUnlimited": "Unlimited patients",
+      "storageGB": "{{count}} GB storage"
+    },
+    "confirmModal": {
+      "title": "Change plan",
+      "titleSubscribe": "Confirm your subscription",
+      "changingFrom": "You are switching from",
+      "changingTo": "to",
+      "immediateEffect": "The change will take effect immediately.",
+      "freeNote": "This plan is free as part of the pilot program.",
+      "paymentInfo": "Payment information",
+      "stripeIntegration": "Stripe integration in progress",
+      "stripeMessage": "The payment system will be activated soon. For now, this plan is accessible for free during the pilot phase.",
+      "termsAccept": "By confirming, you accept our",
+      "termsOfUse": "terms of use",
+      "processing": "Processing...",
+      "confirmChange": "Confirm change",
+      "confirmSubscription": "Confirm subscription"
+    },
+    "usage": {
+      "freePlanLimitations": "Free plan limitations",
+      "freePlanMessage": "You are currently on the free pilot plan with limited quotas. Upgrade to a paid plan to unlock more capabilities.",
+      "viewPlans": "View plans"
+    },
+    "messages": {
+      "planChangedSuccess": "Your plan has been successfully changed to {{planName}}!",
+      "welcomeToPlan": "Welcome to the {{planName}} plan!",
+      "planChangeError": "Error changing plan",
+      "subscriptionError": "Error during subscription",
+      "confirmCancelQuestion": "Are you sure you want to cancel your subscription?",
+      "cancelError": "Error during cancellation",
+      "cancelSuccess": "Subscription cancelled successfully"
+    }
+  }
+}

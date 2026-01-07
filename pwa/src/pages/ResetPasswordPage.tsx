@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { authService } from '../services/authService'
 
 export const ResetPasswordPage = () => {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const token = searchParams.get('token')
@@ -26,17 +28,17 @@ export const ResetPasswordPage = () => {
     setError('')
 
     if (!token) {
-      setError('Token de réinitialisation manquant')
+      setError(t('auth.resetPassword.missingToken'))
       return
     }
 
     if (password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas')
+      setError(t('auth.resetPassword.passwordMismatch'))
       return
     }
 
     if (!allRequirementsMet) {
-      setError('Le mot de passe ne respecte pas tous les critères de sécurité')
+      setError(t('auth.resetPassword.passwordError'))
       return
     }
 
@@ -48,11 +50,11 @@ export const ResetPasswordPage = () => {
       // Rediriger vers la page de connexion avec un message de succès
       navigate('/login', {
         state: {
-          message: 'Mot de passe réinitialisé avec succès ! Vous pouvez maintenant vous connecter.'
+          message: t('auth.resetPassword.successMessage')
         }
       })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors de la réinitialisation')
+      setError(err instanceof Error ? err.message : t('auth.resetPassword.resetError'))
     } finally {
       setIsLoading(false)
     }
@@ -69,16 +71,16 @@ export const ResetPasswordPage = () => {
               </svg>
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">
-              Lien invalide
+              {t('auth.resetPassword.invalidLinkTitle')}
             </h2>
             <p className="text-gray-600 mb-6">
-              Le lien de réinitialisation est invalide ou a expiré.
+              {t('auth.resetPassword.invalidLinkMessage')}
             </p>
             <Link
               to="/forgot-password"
               className="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
             >
-              Demander un nouveau lien
+              {t('auth.resetPassword.requestNewLink')}
             </Link>
           </div>
         </div>
@@ -94,10 +96,10 @@ export const ResetPasswordPage = () => {
           <div className="text-center mb-8">
             <div className="text-5xl mb-3">🔑</div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Nouveau mot de passe
+              {t('auth.resetPassword.title')}
             </h1>
             <p className="text-gray-600 mt-2 text-sm">
-              Créez un nouveau mot de passe sécurisé
+              {t('auth.resetPassword.subtitle')}
             </p>
           </div>
 
@@ -111,7 +113,7 @@ export const ResetPasswordPage = () => {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Nouveau mot de passe
+                {t('auth.resetPassword.newPassword')}
               </label>
               <input
                 id="password"
@@ -130,19 +132,19 @@ export const ResetPasswordPage = () => {
                 <div className="mt-2 space-y-1">
                   <div className={`text-xs flex items-center ${passwordRequirements.length ? 'text-green-600' : 'text-gray-500'}`}>
                     <span className="mr-1">{passwordRequirements.length ? '✓' : '○'}</span>
-                    Au moins 8 caractères
+                    {t('auth.resetPassword.requirements.length')}
                   </div>
                   <div className={`text-xs flex items-center ${passwordRequirements.uppercase ? 'text-green-600' : 'text-gray-500'}`}>
                     <span className="mr-1">{passwordRequirements.uppercase ? '✓' : '○'}</span>
-                    Au moins une majuscule
+                    {t('auth.resetPassword.requirements.uppercase')}
                   </div>
                   <div className={`text-xs flex items-center ${passwordRequirements.number ? 'text-green-600' : 'text-gray-500'}`}>
                     <span className="mr-1">{passwordRequirements.number ? '✓' : '○'}</span>
-                    Au moins un chiffre
+                    {t('auth.resetPassword.requirements.number')}
                   </div>
                   <div className={`text-xs flex items-center ${passwordRequirements.special ? 'text-green-600' : 'text-gray-500'}`}>
                     <span className="mr-1">{passwordRequirements.special ? '✓' : '○'}</span>
-                    Au moins un caractère spécial (!@#$%^&*)
+                    {t('auth.resetPassword.requirements.special')}
                   </div>
                 </div>
               )}
@@ -150,7 +152,7 @@ export const ResetPasswordPage = () => {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                Confirmer le mot de passe
+                {t('auth.resetPassword.confirmPassword')}
               </label>
               <input
                 id="confirmPassword"
@@ -163,7 +165,7 @@ export const ResetPasswordPage = () => {
                 placeholder="••••••••"
               />
               {confirmPassword && password !== confirmPassword && (
-                <p className="mt-1 text-xs text-red-600">Les mots de passe ne correspondent pas</p>
+                <p className="mt-1 text-xs text-red-600">{t('auth.resetPassword.passwordMismatch')}</p>
               )}
             </div>
 
@@ -178,14 +180,14 @@ export const ResetPasswordPage = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Réinitialisation...
+                  {t('auth.resetPassword.resetting')}
                 </>
               ) : (
                 <>
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Réinitialiser mon mot de passe
+                  {t('auth.resetPassword.resetButton')}
                 </>
               )}
             </button>
@@ -196,7 +198,7 @@ export const ResetPasswordPage = () => {
               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              Retour à la connexion
+              {t('auth.resetPassword.backToLogin')}
             </Link>
           </div>
         </div>

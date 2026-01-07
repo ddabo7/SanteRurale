@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { authService } from '../services/authService'
 
 export const SignupPage = () => {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -75,12 +77,12 @@ export const SignupPage = () => {
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
-      setError('Les mots de passe ne correspondent pas')
+      setError(t('auth.signup.passwordMismatch'))
       return
     }
 
     if (!allRequirementsMet) {
-      setError('Le mot de passe ne respecte pas tous les critères de sécurité')
+      setError(t('auth.signup.passwordError'))
       return
     }
 
@@ -106,7 +108,7 @@ export const SignupPage = () => {
       // Afficher le message de succès
       setSuccess(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors de la création du compte')
+      setError(err instanceof Error ? err.message : t('auth.signup.passwordError'))
     } finally {
       setIsLoading(false)
     }
@@ -126,31 +128,30 @@ export const SignupPage = () => {
                 </svg>
               </div>
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Compte créé avec succès !
+                {t('auth.signup.successTitle')}
               </h1>
               <p className="text-gray-600 text-sm mb-4">
-                Un email de vérification a été envoyé à <strong>{formData.email}</strong>
+                {t('auth.signup.successMessage')} <strong>{formData.email}</strong>
               </p>
             </div>
 
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
               <p className="text-sm text-emerald-800">
-                <strong>📧 Vérifiez votre boîte de réception</strong><br />
-                Cliquez sur le lien dans l'email pour activer votre compte.
-                Le lien est valide pendant 24 heures.
+                <strong>📧 {t('auth.signup.checkInbox')}</strong><br />
+                {t('auth.signup.checkInboxDetails')}
               </p>
             </div>
 
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
               <p className="text-xs text-yellow-800">
-                <strong>⚠️ Email non reçu ?</strong><br />
-                Vérifiez vos courriers indésirables (spam).
+                <strong>⚠️ {t('auth.signup.emailNotReceived')}</strong><br />
+                {t('auth.signup.checkSpam')}
               </p>
             </div>
 
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 text-center">
               <p className="text-sm text-gray-600">
-                Redirection vers la page de connexion dans <strong className="text-emerald-600 text-lg">{countdown}</strong> seconde{countdown > 1 ? 's' : ''}...
+                {t('auth.signup.redirecting')} <strong className="text-emerald-600 text-lg">{countdown}</strong> {countdown > 1 ? t('auth.signup.secondsPlural') : t('auth.signup.seconds')}...
               </p>
             </div>
 
@@ -161,7 +162,7 @@ export const SignupPage = () => {
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
               </svg>
-              Aller maintenant à la connexion
+              {t('auth.signup.goToLogin')}
             </Link>
           </div>
         </div>
@@ -177,10 +178,10 @@ export const SignupPage = () => {
           <div className="text-center mb-8">
             <div className="text-5xl mb-3">🏥</div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Créer un compte
+              {t('auth.signup.title')}
             </h1>
             <p className="text-gray-600 mt-2 text-sm">
-              Centre de Santé Communautaire
+              {t('auth.signup.subtitle')}
             </p>
           </div>
 
@@ -195,7 +196,7 @@ export const SignupPage = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="nom" className="block text-sm font-medium text-gray-700 mb-2">
-                  Nom
+                  {t('auth.signup.lastName')}
                 </label>
                 <input
                   id="nom"
@@ -205,13 +206,13 @@ export const SignupPage = () => {
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
-                  placeholder="DIARRA"
+                  placeholder={t('auth.signup.lastNamePlaceholder')}
                 />
               </div>
 
               <div>
                 <label htmlFor="prenom" className="block text-sm font-medium text-gray-700 mb-2">
-                  Prénom
+                  {t('auth.signup.firstName')}
                 </label>
                 <input
                   id="prenom"
@@ -221,14 +222,14 @@ export const SignupPage = () => {
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
-                  placeholder="Mamadou"
+                  placeholder={t('auth.signup.firstNamePlaceholder')}
                 />
               </div>
             </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Adresse email
+                {t('auth.signup.email')}
               </label>
               <input
                 id="email"
@@ -239,13 +240,13 @@ export const SignupPage = () => {
                 required
                 autoComplete="email"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
-                placeholder="votre.email@cscom.ml"
+                placeholder={t('auth.signup.emailPlaceholder')}
               />
             </div>
 
             <div>
               <label htmlFor="telephone" className="block text-sm font-medium text-gray-700 mb-2">
-                Téléphone (optionnel)
+                {t('auth.signup.phone')}
               </label>
               <input
                 id="telephone"
@@ -254,13 +255,13 @@ export const SignupPage = () => {
                 value={formData.telephone}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
-                placeholder="+223 70 00 00 00"
+                placeholder={t('auth.signup.phonePlaceholder')}
               />
             </div>
 
             <div>
               <label htmlFor="sexe" className="block text-sm font-medium text-gray-700 mb-2">
-                Sexe <span className="text-red-500">*</span>
+                {t('auth.signup.gender')} <span className="text-red-500">*</span>
               </label>
               <select
                 id="sexe"
@@ -270,15 +271,15 @@ export const SignupPage = () => {
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition bg-white"
               >
-                <option value="">Sélectionnez votre sexe</option>
-                <option value="M">👨 Homme</option>
-                <option value="F">👩 Femme</option>
+                <option value="">{t('auth.signup.genderSelect')}</option>
+                <option value="M">👨 {t('auth.signup.genderMale')}</option>
+                <option value="F">👩 {t('auth.signup.genderFemale')}</option>
               </select>
             </div>
 
             <div>
               <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
-                Fonction <span className="text-red-500">*</span>
+                {t('auth.signup.role')} <span className="text-red-500">*</span>
               </label>
               <select
                 id="role"
@@ -288,25 +289,25 @@ export const SignupPage = () => {
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition bg-white"
               >
-                <option value="">Sélectionnez votre fonction</option>
-                <option value="medecin">🩺 Médecin</option>
-                <option value="infirmier">{formData.sexe === 'F' ? '👩‍⚕️ Infirmière' : '👨‍⚕️ Infirmier'}</option>
-                <option value="major">👩‍⚕️ Major (Infirmier{formData.sexe === 'F' ? 'ère' : ''} chef)</option>
-                <option value="soignant">🩹 Soignant{formData.sexe === 'F' ? 'e' : ''}</option>
-                <option value="pharmacien">💊 Pharmacien{formData.sexe === 'F' ? 'ne' : ''}</option>
+                <option value="">{t('auth.signup.roleSelect')}</option>
+                <option value="medecin">🩺 {t('auth.signup.roleMedecin')}</option>
+                <option value="infirmier">{formData.sexe === 'F' ? `👩‍⚕️ ${t('auth.signup.roleInfirmiere')}` : `👨‍⚕️ ${t('auth.signup.roleInfirmier')}`}</option>
+                <option value="major">👩‍⚕️ {formData.sexe === 'F' ? t('auth.signup.roleMajorFemale') : t('auth.signup.roleMajor')}</option>
+                <option value="soignant">🩹 {formData.sexe === 'F' ? t('auth.signup.roleSoignante') : t('auth.signup.roleSoignant')}</option>
+                <option value="pharmacien">💊 {formData.sexe === 'F' ? t('auth.signup.rolePharmacienne') : t('auth.signup.rolePharmacien')}</option>
               </select>
             </div>
 
             {/* Séparateur visuel */}
             <div className="border-t border-gray-200 pt-6 mt-2">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Informations de votre structure de santé
+                {t('auth.signup.siteInfoTitle')}
               </h3>
             </div>
 
             <div>
               <label htmlFor="site_nom" className="block text-sm font-medium text-gray-700 mb-2">
-                Nom de votre CSCOM/Hôpital <span className="text-red-500">*</span>
+                {t('auth.signup.siteName')} <span className="text-red-500">*</span>
               </label>
               <input
                 id="site_nom"
@@ -316,13 +317,13 @@ export const SignupPage = () => {
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
-                placeholder="Ex: CSCOM de Bamako Coura"
+                placeholder={t('auth.signup.siteNamePlaceholder')}
               />
             </div>
 
             <div>
               <label htmlFor="site_type" className="block text-sm font-medium text-gray-700 mb-2">
-                Type de structure <span className="text-red-500">*</span>
+                {t('auth.signup.siteType')} <span className="text-red-500">*</span>
               </label>
               <select
                 id="site_type"
@@ -332,16 +333,16 @@ export const SignupPage = () => {
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition bg-white"
               >
-                <option value="cscom">CSCOM (Centre de Santé Communautaire)</option>
-                <option value="hospital">Hôpital</option>
-                <option value="clinic">Clinique</option>
+                <option value="cscom">{t('auth.signup.siteTypeCscom')}</option>
+                <option value="hospital">{t('auth.signup.siteTypeHospital')}</option>
+                <option value="clinic">{t('auth.signup.siteTypeClinic')}</option>
               </select>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="site_ville" className="block text-sm font-medium text-gray-700 mb-2">
-                  Ville
+                  {t('auth.signup.siteCity')}
                 </label>
                 <input
                   id="site_ville"
@@ -350,13 +351,13 @@ export const SignupPage = () => {
                   value={formData.site_ville}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
-                  placeholder="Bamako"
+                  placeholder={t('auth.signup.siteCityPlaceholder')}
                 />
               </div>
 
               <div>
                 <label htmlFor="site_pays" className="block text-sm font-medium text-gray-700 mb-2">
-                  Pays <span className="text-red-500">*</span>
+                  {t('auth.signup.siteCountry')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="site_pays"
@@ -366,14 +367,14 @@ export const SignupPage = () => {
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
-                  placeholder="Mali"
+                  placeholder={t('auth.signup.siteCountryPlaceholder')}
                 />
               </div>
             </div>
 
             <div>
               <label htmlFor="site_adresse" className="block text-sm font-medium text-gray-700 mb-2">
-                Adresse complète (optionnel)
+                {t('auth.signup.siteAddress')}
               </label>
               <input
                 id="site_adresse"
@@ -382,20 +383,20 @@ export const SignupPage = () => {
                 value={formData.site_adresse}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
-                placeholder="Rue, quartier, commune"
+                placeholder={t('auth.signup.siteAddressPlaceholder')}
               />
             </div>
 
             {/* Séparateur visuel */}
             <div className="border-t border-gray-200 pt-6 mt-2">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Sécurité du compte
+                {t('auth.signup.securityTitle')}
               </h3>
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Mot de passe
+                {t('auth.signup.password')}
               </label>
               <input
                 id="password"
@@ -406,7 +407,7 @@ export const SignupPage = () => {
                 required
                 autoComplete="new-password"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
-                placeholder="••••••••"
+                placeholder={t('auth.passwordPlaceholder')}
               />
 
               {/* Indicateurs de force du mot de passe */}
@@ -414,19 +415,19 @@ export const SignupPage = () => {
                 <div className="mt-2 space-y-1">
                   <div className={`text-xs flex items-center ${passwordRequirements.length ? 'text-green-600' : 'text-gray-500'}`}>
                     <span className="mr-1">{passwordRequirements.length ? '✓' : '○'}</span>
-                    Au moins 8 caractères
+                    {t('auth.signup.passwordRequirements.length')}
                   </div>
                   <div className={`text-xs flex items-center ${passwordRequirements.uppercase ? 'text-green-600' : 'text-gray-500'}`}>
                     <span className="mr-1">{passwordRequirements.uppercase ? '✓' : '○'}</span>
-                    Au moins une majuscule
+                    {t('auth.signup.passwordRequirements.uppercase')}
                   </div>
                   <div className={`text-xs flex items-center ${passwordRequirements.number ? 'text-green-600' : 'text-gray-500'}`}>
                     <span className="mr-1">{passwordRequirements.number ? '✓' : '○'}</span>
-                    Au moins un chiffre
+                    {t('auth.signup.passwordRequirements.number')}
                   </div>
                   <div className={`text-xs flex items-center ${passwordRequirements.special ? 'text-green-600' : 'text-gray-500'}`}>
                     <span className="mr-1">{passwordRequirements.special ? '✓' : '○'}</span>
-                    Au moins un caractère spécial (!@#$%^&*)
+                    {t('auth.signup.passwordRequirements.special')}
                   </div>
                 </div>
               )}
@@ -434,7 +435,7 @@ export const SignupPage = () => {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                Confirmer le mot de passe
+                {t('auth.signup.confirmPassword')}
               </label>
               <input
                 id="confirmPassword"
@@ -445,10 +446,10 @@ export const SignupPage = () => {
                 required
                 autoComplete="new-password"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
-                placeholder="••••••••"
+                placeholder={t('auth.passwordPlaceholder')}
               />
               {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                <p className="mt-1 text-xs text-red-600">Les mots de passe ne correspondent pas</p>
+                <p className="mt-1 text-xs text-red-600">{t('auth.signup.passwordMismatch')}</p>
               )}
             </div>
 
@@ -463,14 +464,14 @@ export const SignupPage = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Création du compte...
+                  {t('auth.signup.creating')}
                 </>
               ) : (
                 <>
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                   </svg>
-                  Créer mon compte
+                  {t('auth.signup.createButton')}
                 </>
               )}
             </button>
@@ -478,9 +479,9 @@ export const SignupPage = () => {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Vous avez déjà un compte ?{' '}
+              {t('auth.alreadyHaveAccount')}{' '}
               <Link to="/login" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
-                Se connecter
+                {t('auth.signInLink')}
               </Link>
             </p>
           </div>
@@ -492,7 +493,7 @@ export const SignupPage = () => {
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
             </svg>
-            <span>Inscription sécurisée</span>
+            <span>{t('auth.secureRegistration')}</span>
           </div>
         </div>
       </div>

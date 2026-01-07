@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { bonsCommandeService } from '../services/api'
 import { formatCurrency } from '../utils/currency'
 import { getCachedOrDetectCurrency } from '../utils/geolocation'
@@ -20,6 +21,7 @@ interface BonCommande {
 }
 
 export const BonsCommandePage = () => {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const fournisseurIdParam = searchParams.get('fournisseur_id')
 
@@ -55,17 +57,17 @@ export const BonsCommandePage = () => {
       setBons(response.items || [])
     } catch (error: any) {
       console.error('Erreur chargement bons de commande:', error)
-      setError(error.response?.data?.detail || 'Impossible de charger les bons de commande')
+      setError(error.response?.data?.detail || t('common.error'))
     } finally {
       setIsLoading(false)
     }
   }
 
   const statuts = [
-    { value: 'brouillon', label: 'Brouillon', color: 'gray' },
-    { value: 'validee', label: 'Validée', color: 'blue' },
-    { value: 'en_cours', label: 'En cours', color: 'yellow' },
-    { value: 'livree', label: 'Livrée', color: 'green' },
+    { value: 'brouillon', label: t('pharmacy.orders.statuses.draft'), color: 'gray' },
+    { value: 'validee', label: t('pharmacy.orders.statuses.validated'), color: 'blue' },
+    { value: 'en_cours', label: t('pharmacy.orders.statuses.inProgress'), color: 'yellow' },
+    { value: 'livree', label: t('pharmacy.orders.statuses.delivered'), color: 'green' },
   ]
 
   const getStatutColor = (statut: string) => {
@@ -90,14 +92,14 @@ export const BonsCommandePage = () => {
       {/* En-tête */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">📋 Bons de Commande</h1>
-          <p className="text-gray-600 mt-1">Gestion des commandes aux fournisseurs</p>
+          <h1 className="text-3xl font-bold text-gray-900">📋 {t('pharmacy.orders.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('pharmacy.modules.orders.description')}</p>
         </div>
         <Link
           to="/bons-commande/nouveau"
           className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
         >
-          + Nouvelle commande
+          + {t('pharmacy.orders.newOrder')}
         </Link>
       </div>
 
@@ -106,7 +108,7 @@ export const BonsCommandePage = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total commandes</p>
+              <p className="text-sm text-gray-600">{t('common.total')} {t('pharmacy.orders.title')}</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">{totalCommandes}</p>
             </div>
             <div className="text-4xl">📦</div>
@@ -116,7 +118,7 @@ export const BonsCommandePage = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">En cours</p>
+              <p className="text-sm text-gray-600">{t('pharmacy.orders.statuses.inProgress')}</p>
               <p className="text-3xl font-bold text-yellow-600 mt-1">{commandesEnCours}</p>
             </div>
             <div className="text-4xl">⏳</div>
@@ -126,7 +128,7 @@ export const BonsCommandePage = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Montant total</p>
+              <p className="text-sm text-gray-600">{t('pharmacy.orders.table.amount')}</p>
               <p className="text-2xl font-bold text-emerald-600 mt-1">
                 {formatCurrency(montantTotal, currency)}
               </p>
@@ -141,26 +143,26 @@ export const BonsCommandePage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Fournisseur
+              {t('pharmacy.orders.filters.supplier')}
             </label>
             <input
               type="text"
               value={filterFournisseur}
               onChange={(e) => setFilterFournisseur(e.target.value)}
-              placeholder="ID du fournisseur..."
+              placeholder={t('pharmacy.orders.searchPlaceholder')}
               className="w-full border border-gray-300 rounded-lg px-4 py-2"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Statut
+              {t('pharmacy.orders.filters.status')}
             </label>
             <select
               value={filterStatut}
               onChange={(e) => setFilterStatut(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-4 py-2"
             >
-              <option value="">Tous les statuts</option>
+              <option value="">{t('pharmacy.orders.filters.allStatuses')}</option>
               {statuts.map(statut => (
                 <option key={statut.value} value={statut.value}>{statut.label}</option>
               ))}
@@ -173,7 +175,7 @@ export const BonsCommandePage = () => {
       {isLoading && (
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
-          <p className="text-gray-500 mt-4">Chargement...</p>
+          <p className="text-gray-500 mt-4">{t('common.loading')}</p>
         </div>
       )}
 
@@ -187,16 +189,16 @@ export const BonsCommandePage = () => {
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <div className="text-6xl mb-4">📋</div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            Aucun bon de commande trouvé
+            {t('common.noData')}
           </h3>
           <p className="text-gray-600 mb-6">
-            Créez votre première commande
+            {t('pharmacy.modules.orders.description')}
           </p>
           <Link
             to="/bons-commande/nouveau"
             className="inline-block bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold"
           >
-            + Créer une commande
+            + {t('pharmacy.orders.newOrder')}
           </Link>
         </div>
       )}
@@ -209,25 +211,25 @@ export const BonsCommandePage = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Numéro
+                    {t('pharmacy.orders.table.number')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Fournisseur
+                    {t('pharmacy.orders.table.supplier')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Date commande
+                    {t('pharmacy.orders.table.date')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Livraison prévue
+                    {t('pharmacy.orders.table.deliveryDate')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Montant
+                    {t('pharmacy.orders.table.amount')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Statut
+                    {t('pharmacy.orders.table.status')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Actions
+                    {t('pharmacy.orders.table.actions')}
                   </th>
                 </tr>
               </thead>
@@ -261,7 +263,7 @@ export const BonsCommandePage = () => {
                           to={`/bons-commande/${bon.id}`}
                           className="text-emerald-600 hover:text-emerald-900 font-medium"
                         >
-                          Voir détails
+                          {t('common.details')}
                         </Link>
                       </td>
                     </tr>
@@ -288,18 +290,18 @@ export const BonsCommandePage = () => {
                   </div>
                   <div className="space-y-2 text-sm mb-3">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Date commande:</span>
+                      <span className="text-gray-600">{t('pharmacy.orders.table.date')}:</span>
                       <span className="font-medium">{formatDate(bon.date_commande)}</span>
                     </div>
                     {bon.date_livraison_prevue && (
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Livraison prévue:</span>
+                        <span className="text-gray-600">{t('pharmacy.orders.table.deliveryDate')}:</span>
                         <span className="font-medium">{formatDate(bon.date_livraison_prevue)}</span>
                       </div>
                     )}
                     {bon.montant_total && (
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Montant:</span>
+                        <span className="text-gray-600">{t('pharmacy.orders.table.amount')}:</span>
                         <span className="font-bold text-emerald-600">{formatCurrency(bon.montant_total, currency)}</span>
                       </div>
                     )}
@@ -308,7 +310,7 @@ export const BonsCommandePage = () => {
                     to={`/bons-commande/${bon.id}`}
                     className="block w-full text-center bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg font-medium transition-colors"
                   >
-                    Voir les détails
+                    {t('common.details')}
                   </Link>
                 </div>
               )

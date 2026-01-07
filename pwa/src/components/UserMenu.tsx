@@ -1,35 +1,40 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 
-// Fonction pour formater le rôle selon le sexe
-const formatRole = (role: string, sexe?: string): string => {
-  if (sexe === 'F') {
-    switch (role) {
-      case 'infirmier': return 'infirmière'
-      case 'major': return 'major (infirmière chef)'
-      case 'soignant': return 'soignante'
-      case 'pharmacien': return 'pharmacienne'
-      case 'medecin': return 'médecin'
-      default: return role
-    }
-  }
-  // Pour les hommes ou sexe non défini
-  switch (role) {
-    case 'infirmier': return 'infirmier'
-    case 'major': return 'major (infirmier chef)'
-    case 'soignant': return 'soignant'
-    case 'pharmacien': return 'pharmacien'
-    case 'medecin': return 'médecin'
-    default: return role
-  }
+interface UserMenuProps {
+  onNavigate?: () => void
 }
 
-export const UserMenu = () => {
+export const UserMenu = ({ onNavigate }: UserMenuProps) => {
+  const { t } = useTranslation()
   const { user, logout } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
+
+  // Fonction pour formater le rôle selon le sexe
+  const formatRole = (role: string, sexe?: string): string => {
+    const genderKey = sexe === 'F' ? 'female' : 'male'
+
+    switch (role) {
+      case 'infirmier':
+        return t(`userMenu.roles.nurse.${genderKey}`)
+      case 'major':
+        return t(`userMenu.roles.major.${genderKey}`)
+      case 'soignant':
+        return t(`userMenu.roles.caregiver.${genderKey}`)
+      case 'pharmacien':
+        return t(`userMenu.roles.pharmacist.${genderKey}`)
+      case 'medecin':
+        return t('userMenu.roles.doctor')
+      case 'admin':
+        return t('userMenu.roles.admin')
+      default:
+        return role
+    }
+  }
 
   // Fermer le menu si on clique en dehors
   useEffect(() => {
@@ -50,6 +55,7 @@ export const UserMenu = () => {
 
   const handleLogout = async () => {
     setIsOpen(false)
+    onNavigate?.()
     await logout()
     navigate('/login')
   }
@@ -105,20 +111,26 @@ export const UserMenu = () => {
             {/* Liens du menu */}
             <Link
               to="/profile"
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                setIsOpen(false)
+                onNavigate?.()
+              }}
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
             >
               <span className="mr-3">👤</span>
-              Mon profil
+              {t('userMenu.myProfile')}
             </Link>
 
             <Link
               to="/subscription"
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                setIsOpen(false)
+                onNavigate?.()
+              }}
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
             >
               <span className="mr-3">💳</span>
-              Abonnement
+              {t('userMenu.subscription')}
             </Link>
 
             {/* Lien Admin - visible uniquement pour les admins */}
@@ -127,19 +139,25 @@ export const UserMenu = () => {
                 <div className="border-t border-gray-100"></div>
                 <Link
                   to="/admin"
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => {
+                    setIsOpen(false)
+                    onNavigate?.()
+                  }}
                   className="flex items-center px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 transition-colors font-medium"
                 >
                   <span className="mr-3">📊</span>
-                  Dashboard Admin
+                  {t('userMenu.adminDashboard')}
                 </Link>
                 <Link
                   to="/admin/feedbacks"
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => {
+                    setIsOpen(false)
+                    onNavigate?.()
+                  }}
                   className="flex items-center px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 transition-colors font-medium"
                 >
                   <span className="mr-3">💬</span>
-                  Feedbacks Utilisateurs
+                  {t('userMenu.userFeedbacks')}
                 </Link>
               </>
             )}
@@ -151,7 +169,7 @@ export const UserMenu = () => {
               className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
             >
               <span className="mr-3">🚪</span>
-              Déconnexion
+              {t('userMenu.logout')}
             </button>
           </div>
         </div>

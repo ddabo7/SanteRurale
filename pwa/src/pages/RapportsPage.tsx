@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { reportsService } from '../services/api'
 
 interface TopDiagnostic {
@@ -26,6 +27,7 @@ interface ReportOverview {
 }
 
 export const RapportsPage = () => {
+  const { t } = useTranslation()
   const [report, setReport] = useState<ReportOverview | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -56,7 +58,7 @@ export const RapportsPage = () => {
       setReport(data)
     } catch (err) {
       console.error('Erreur lors du chargement du rapport:', err)
-      setError('Impossible de charger le rapport')
+      setError(t('reports.loadError', 'Impossible de charger le rapport'))
     } finally {
       setLoading(false)
     }
@@ -64,14 +66,14 @@ export const RapportsPage = () => {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Rapports et Statistiques</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">{t('reports.title')}</h1>
 
       {/* Sélecteur de période */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Date début
+              {t('consultations.filters.startDate')}
             </label>
             <input
               type="date"
@@ -83,7 +85,7 @@ export const RapportsPage = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Date fin
+              {t('consultations.filters.endDate')}
             </label>
             <input
               type="date"
@@ -97,7 +99,7 @@ export const RapportsPage = () => {
 
       {loading && (
         <div className="bg-white rounded-lg shadow p-12 text-center text-gray-500">
-          Chargement du rapport...
+          {t('common.loading')}
         </div>
       )}
 
@@ -113,7 +115,7 @@ export const RapportsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white rounded-lg shadow p-6">
               <div className="text-sm font-medium text-gray-500 mb-2">
-                Total Consultations
+                {t('reports.stats.totalConsultations')}
               </div>
               <div className="text-3xl font-bold text-gray-900">
                 {report.total_consultations}
@@ -122,7 +124,7 @@ export const RapportsPage = () => {
 
             <div className="bg-white rounded-lg shadow p-6">
               <div className="text-sm font-medium text-gray-500 mb-2">
-                Patients Consultés
+                {t('admin.dashboard.stats.patients')}
               </div>
               <div className="text-3xl font-bold text-gray-900">
                 {report.total_patients}
@@ -131,7 +133,7 @@ export const RapportsPage = () => {
 
             <div className="bg-white rounded-lg shadow p-6">
               <div className="text-sm font-medium text-gray-500 mb-2">
-                Nouveaux Patients
+                {t('reports.stats.newPatients')}
               </div>
               <div className="text-3xl font-bold text-gray-900">
                 {report.nouveaux_patients}
@@ -140,7 +142,7 @@ export const RapportsPage = () => {
 
             <div className="bg-white rounded-lg shadow p-6">
               <div className="text-sm font-medium text-gray-500 mb-2">
-                Enfants &lt; 5 ans
+                {t('reports.stats.childrenUnder5')}
               </div>
               <div className="text-3xl font-bold text-gray-900">
                 {report.consultations_moins_5_ans}
@@ -157,13 +159,13 @@ export const RapportsPage = () => {
           <div className="bg-white rounded-lg shadow">
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900">
-                Top 10 Diagnostics
+                {t('reports.charts.topDiagnoses')}
               </h2>
             </div>
             <div className="p-6">
               {report.top_diagnostics.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">
-                  Aucun diagnostic enregistré pour cette période
+                  {t('common.noData')}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -197,7 +199,7 @@ export const RapportsPage = () => {
                           {diagnostic.count}
                         </div>
                         <div className="text-xs text-gray-500">
-                          cas
+                          {t('reports.charts.cases')}
                         </div>
                       </div>
                     </div>
@@ -211,7 +213,7 @@ export const RapportsPage = () => {
           <div className="bg-white rounded-lg shadow">
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900">
-                Références et Évacuations
+                {t('reports.stats.references')}
               </h2>
             </div>
             <div className="p-6">
@@ -221,7 +223,7 @@ export const RapportsPage = () => {
                     {report.references.total}
                   </div>
                   <div className="text-sm text-gray-500 mt-1">
-                    Total
+                    {t('common.total')}
                   </div>
                 </div>
                 <div className="text-center">
@@ -229,7 +231,7 @@ export const RapportsPage = () => {
                     {report.references.en_attente}
                   </div>
                   <div className="text-sm text-gray-500 mt-1">
-                    En attente
+                    {t('consultation.form.statusPending')}
                   </div>
                 </div>
                 <div className="text-center">
@@ -237,7 +239,7 @@ export const RapportsPage = () => {
                     {report.references.confirmes}
                   </div>
                   <div className="text-sm text-gray-500 mt-1">
-                    Confirmées
+                    {t('consultation.form.statusConfirmed')}
                   </div>
                 </div>
                 <div className="text-center">
@@ -245,7 +247,7 @@ export const RapportsPage = () => {
                     {report.references.completes}
                   </div>
                   <div className="text-sm text-gray-500 mt-1">
-                    Complétées
+                    {t('consultation.form.statusCompleted')}
                   </div>
                 </div>
               </div>

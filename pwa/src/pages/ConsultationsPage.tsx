@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { encountersService, patientsService } from '../services/api'
 
 interface Encounter {
@@ -29,6 +30,7 @@ interface Patient {
 }
 
 export const ConsultationsPage = () => {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const patientIdParam = searchParams.get('patient')
 
@@ -65,7 +67,7 @@ export const ConsultationsPage = () => {
       setEncounters(encountersData || [])
     } catch (err) {
       console.error('Erreur lors du chargement:', err)
-      setError('Impossible de charger les consultations')
+      setError(t('consultations.loadingError'))
     } finally {
       setLoading(false)
     }
@@ -83,12 +85,12 @@ export const ConsultationsPage = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Consultations</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t('consultations.title')}</h1>
         <Link
           to="/consultations/nouvelle"
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
         >
-          + Nouvelle consultation
+          {t('consultations.newConsultation')}
         </Link>
       </div>
 
@@ -97,14 +99,14 @@ export const ConsultationsPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Patient
+              {t('consultations.filters.patient')}
             </label>
             <select
               value={selectedPatient}
               onChange={(e) => setSelectedPatient(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2"
             >
-              <option value="">Tous les patients</option>
+              <option value="">{t('consultations.filters.allPatients')}</option>
               {patients.map((patient) => (
                 <option key={patient.id} value={patient.id}>
                   {patient.nom} {patient.prenom}
@@ -115,7 +117,7 @@ export const ConsultationsPage = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Date début
+              {t('consultations.filters.startDate')}
             </label>
             <input
               type="date"
@@ -127,7 +129,7 @@ export const ConsultationsPage = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Date fin
+              {t('consultations.filters.endDate')}
             </label>
             <input
               type="date"
@@ -143,7 +145,7 @@ export const ConsultationsPage = () => {
       <div className="bg-white rounded-lg shadow">
         {loading && (
           <div className="p-8 text-center text-gray-500">
-            Chargement...
+            {t('common.loading')}
           </div>
         )}
 
@@ -155,7 +157,7 @@ export const ConsultationsPage = () => {
 
         {!loading && !error && encounters.length === 0 && (
           <div className="p-8 text-center text-gray-500">
-            Aucune consultation trouvée
+            {t('consultations.noConsultations')}
           </div>
         )}
 
@@ -165,22 +167,22 @@ export const ConsultationsPage = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
+                    {t('consultations.table.date')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Patient
+                    {t('consultations.table.patient')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Motif
+                    {t('consultations.table.reason')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Signes vitaux
+                    {t('consultations.table.vitalSigns')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Diagnostics
+                    {t('consultations.table.diagnoses')}
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    {t('consultations.table.actions')}
                   </th>
                 </tr>
               </thead>
@@ -199,13 +201,13 @@ export const ConsultationsPage = () => {
                     <td className="px-6 py-4 text-sm text-gray-900">
                       <div className="space-y-1">
                         {encounter.temperature && (
-                          <div>T: {encounter.temperature}°C</div>
+                          <div>{t('consultations.table.temperature')}: {encounter.temperature}°C</div>
                         )}
                         {encounter.pouls && (
-                          <div>Pouls: {encounter.pouls} bpm</div>
+                          <div>{t('consultations.table.pulse')}: {encounter.pouls} {t('consultations.table.bpm')}</div>
                         )}
                         {encounter.pression_systolique && encounter.pression_diastolique && (
-                          <div>TA: {encounter.pression_systolique}/{encounter.pression_diastolique}</div>
+                          <div>{t('consultations.table.bloodPressure')}: {encounter.pression_systolique}/{encounter.pression_diastolique}</div>
                         )}
                       </div>
                     </td>
@@ -228,7 +230,7 @@ export const ConsultationsPage = () => {
                         to={`/consultations/${encounter.id}`}
                         className="text-blue-600 hover:text-blue-900"
                       >
-                        Voir détails
+                        {t('consultations.table.viewDetails')}
                       </Link>
                     </td>
                   </tr>

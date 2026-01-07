@@ -1,14 +1,17 @@
 import { ReactNode, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import { SyncIndicator } from './SyncIndicator'
 import { UserMenu } from './UserMenu'
+import { LanguageSwitcher } from './LanguageSwitcher'
 
 interface LayoutProps {
   children: ReactNode
 }
 
 export const Layout = ({ children }: LayoutProps) => {
+  const { t } = useTranslation()
   const { isAuthenticated } = useAuth()
   const location = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -27,7 +30,7 @@ export const Layout = ({ children }: LayoutProps) => {
               <Link to="/" className="flex items-center group" onClick={closeMobileMenu}>
                 <span className="text-xl sm:text-2xl font-bold flex items-center gap-1 sm:gap-2 transition-transform group-hover:scale-105">
                   <span className="text-2xl sm:text-3xl">🏥</span>
-                  <span className="bg-white/20 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-lg text-sm sm:text-base">Santé Rurale</span>
+                  <span className="bg-white/20 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-lg text-sm sm:text-base">{t('common.appName')}</span>
                 </span>
               </Link>
 
@@ -44,7 +47,7 @@ export const Layout = ({ children }: LayoutProps) => {
                   >
                     <span className="flex items-center gap-2">
                       <span className="text-lg">👥</span>
-                      Patients
+                      {t('nav.patients')}
                     </span>
                   </Link>
                   <Link
@@ -57,7 +60,7 @@ export const Layout = ({ children }: LayoutProps) => {
                   >
                     <span className="flex items-center gap-2">
                       <span className="text-lg">🩺</span>
-                      Consultations
+                      {t('nav.consultations')}
                     </span>
                   </Link>
                   <Link
@@ -70,7 +73,7 @@ export const Layout = ({ children }: LayoutProps) => {
                   >
                     <span className="flex items-center gap-2">
                       <span className="text-lg">💊</span>
-                      Pharmacie
+                      {t('nav.pharmacy')}
                     </span>
                   </Link>
                   <Link
@@ -83,7 +86,7 @@ export const Layout = ({ children }: LayoutProps) => {
                   >
                     <span className="flex items-center gap-2">
                       <span className="text-lg">📊</span>
-                      Rapports
+                      {t('nav.reports')}
                     </span>
                   </Link>
                 </nav>
@@ -91,10 +94,15 @@ export const Layout = ({ children }: LayoutProps) => {
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Language Switcher - always visible */}
+              <div className="hidden sm:block">
+                <LanguageSwitcher />
+              </div>
+
               {/* Desktop User Menu */}
               {isAuthenticated && (
                 <div className="hidden sm:block">
-                  <UserMenu />
+                  <UserMenu onNavigate={closeMobileMenu} />
                 </div>
               )}
 
@@ -147,7 +155,7 @@ export const Layout = ({ children }: LayoutProps) => {
                 >
                   <span className="flex items-center gap-2">
                     <span className="text-lg">👥</span>
-                    Patients
+                    {t('nav.patients')}
                   </span>
                 </Link>
                 <Link
@@ -161,7 +169,7 @@ export const Layout = ({ children }: LayoutProps) => {
                 >
                   <span className="flex items-center gap-2">
                     <span className="text-lg">🩺</span>
-                    Consultations
+                    {t('nav.consultations')}
                   </span>
                 </Link>
                 <Link
@@ -175,7 +183,7 @@ export const Layout = ({ children }: LayoutProps) => {
                 >
                   <span className="flex items-center gap-2">
                     <span className="text-lg">💊</span>
-                    Pharmacie
+                    {t('nav.pharmacy')}
                   </span>
                 </Link>
                 <Link
@@ -189,12 +197,13 @@ export const Layout = ({ children }: LayoutProps) => {
                 >
                   <span className="flex items-center gap-2">
                     <span className="text-lg">📊</span>
-                    Rapports
+                    {t('nav.reports')}
                   </span>
                 </Link>
-                {/* Mobile User Menu */}
-                <div className="sm:hidden pt-2 border-t border-white/20">
-                  <UserMenu />
+                {/* Mobile Language Switcher and User Menu */}
+                <div className="sm:hidden pt-2 border-t border-white/20 space-y-2">
+                  <LanguageSwitcher />
+                  <UserMenu onNavigate={closeMobileMenu} />
                 </div>
               </nav>
             </div>
@@ -216,8 +225,8 @@ export const Layout = ({ children }: LayoutProps) => {
             <div className="flex items-center gap-2 text-center sm:text-left">
               <span className="text-2xl">🏥</span>
               <div>
-                <p className="text-xs sm:text-sm font-semibold text-gray-700">© 2025 Santé Rurale. Tous droits réservés.</p>
-                <p className="text-xs text-gray-500 hidden sm:block">Plateforme de gestion de santé en zones rurales</p>
+                <p className="text-xs sm:text-sm font-semibold text-gray-700">{t('common.copyright', { year: 2025 })}</p>
+                <p className="text-xs text-gray-500 hidden sm:block">{t('common.tagline')}</p>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
@@ -235,7 +244,7 @@ export const Layout = ({ children }: LayoutProps) => {
                   navigator.onLine ? 'bg-green-500' : 'bg-orange-500'
                 }`}></span>
                 <span className="text-xs sm:text-sm font-medium text-gray-700">
-                  {navigator.onLine ? '✓ En ligne' : '⚠ Hors-ligne'}
+                  {navigator.onLine ? `✓ ${t('common.online', 'En ligne')}` : `⚠ ${t('common.offline', 'Hors-ligne')}`}
                 </span>
               </span>
             </div>

@@ -1,8 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from './contexts/AuthContext'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { SyncProvider } from './contexts/SyncContext'
 import { Layout } from './components/Layout'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { InactivityWarningModal } from './components/InactivityWarningModal'
+import { useInactivityDetection } from './hooks/useInactivityDetection'
 import { LandingPage } from './pages/LandingPage'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
@@ -28,13 +30,31 @@ import { StockPage } from './pages/StockPage'
 import { FournisseursPage } from './pages/FournisseursPage'
 import { BonsCommandePage } from './pages/BonsCommandePage'
 
-function App() {
+// Inner component that has access to AuthContext
+function AppRoutes() {
+  const { isAuthenticated, logout } = useAuth()
+
+  // Inactivity detection - only enabled when authenticated
+  const { showWarning, remainingSeconds, dismissWarning, forceLogout } = useInactivityDetection({
+    warningTimeout: 14 * 60 * 1000, // 14 minutes
+    logoutTimeout: 15 * 60 * 1000, // 15 minutes
+    onLogout: logout,
+    enabled: isAuthenticated
+  })
+
   return (
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <AuthProvider>
-        <SyncProvider>
-          <Routes>
-          {/* Public routes */}
+    <>
+      {/* Inactivity Warning Modal */}
+      <InactivityWarningModal
+        isOpen={showWarning}
+        remainingSeconds={remainingSeconds}
+        onStayConnected={dismissWarning}
+        onLogout={forceLogout}
+      />
+
+      {/* Routes */}
+      <Routes>
+        {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
@@ -230,9 +250,19 @@ function App() {
             }
           />
 
-          {/* 404 */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        {/* 404 */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
+  )
+}
+
+function App() {
+  return (
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <AuthProvider>
+        <SyncProvider>
+          <AppRoutes />
         </SyncProvider>
       </AuthProvider>
     </BrowserRouter>

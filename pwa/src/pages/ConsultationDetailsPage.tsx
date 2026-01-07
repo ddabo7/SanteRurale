@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { encountersService } from '../services/api'
 import { FileList } from '../components/FileList'
 import { downloadPrescriptionPDF } from '../utils/pdfGenerator'
@@ -63,6 +64,7 @@ interface EncounterDetails {
 }
 
 export const ConsultationDetailsPage = () => {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const [encounter, setEncounter] = useState<EncounterDetails | null>(null)
@@ -83,7 +85,7 @@ export const ConsultationDetailsPage = () => {
       setEncounter(data)
     } catch (err) {
       console.error('Erreur lors du chargement:', err)
-      setError('Impossible de charger les détails de la consultation')
+      setError(t('consultation.details.loadError'))
     } finally {
       setLoading(false)
     }
@@ -165,7 +167,7 @@ export const ConsultationDetailsPage = () => {
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto p-8 text-center">
-        <div className="text-gray-500">Chargement...</div>
+        <div className="text-gray-500">{t('consultation.details.loading')}</div>
       </div>
     )
   }
@@ -174,13 +176,13 @@ export const ConsultationDetailsPage = () => {
     return (
       <div className="max-w-5xl mx-auto p-8">
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          {error || 'Consultation non trouvée'}
+          {error || t('consultation.details.notFound')}
         </div>
         <button
           onClick={() => navigate('/consultations')}
           className="mt-4 text-blue-600 hover:text-blue-800"
         >
-          ← Retour aux consultations
+          {t('consultation.details.backButton')}
         </button>
       </div>
     )
@@ -194,15 +196,15 @@ export const ConsultationDetailsPage = () => {
           onClick={() => navigate('/consultations')}
           className="text-blue-600 hover:text-blue-800 mb-4 inline-flex items-center"
         >
-          ← Retour aux consultations
+          {t('consultation.details.backButton')}
         </button>
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              Consultation du {formatDate(encounter.date)}
+              {t('consultation.details.title', { date: formatDate(encounter.date) })}
             </h1>
             <p className="text-gray-600 mt-1">
-              Créée le {formatDateTime(encounter.created_at)}
+              {t('consultation.details.createdAt', { date: formatDateTime(encounter.created_at) })}
             </p>
           </div>
           <button
@@ -210,7 +212,7 @@ export const ConsultationDetailsPage = () => {
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors inline-flex items-center"
           >
             <span className="mr-2">📄</span>
-            Télécharger ordonnance (PDF)
+            {t('consultation.details.downloadPDF')}
           </button>
         </div>
       </div>
@@ -219,10 +221,10 @@ export const ConsultationDetailsPage = () => {
         {/* Informations patient */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow p-6 sticky top-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Patient</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('consultation.details.patientInfo')}</h2>
             <div className="space-y-3">
               <div>
-                <div className="text-sm text-gray-500">Nom</div>
+                <div className="text-sm text-gray-500">{t('consultation.details.patientName')}</div>
                 <div className="font-medium">
                   <Link
                     to={`/patients/${encounter.patient_id}`}
@@ -234,25 +236,25 @@ export const ConsultationDetailsPage = () => {
               </div>
               {encounter.patient?.sexe && (
                 <div>
-                  <div className="text-sm text-gray-500">Sexe</div>
-                  <div>{encounter.patient.sexe === 'M' ? 'Homme' : 'Femme'}</div>
+                  <div className="text-sm text-gray-500">{t('consultation.details.patientGender')}</div>
+                  <div>{encounter.patient.sexe === 'M' ? t('patients.gender.male') : t('patients.gender.female')}</div>
                 </div>
               )}
               {calculateAge() && (
                 <div>
-                  <div className="text-sm text-gray-500">Âge</div>
-                  <div>{calculateAge()} ans</div>
+                  <div className="text-sm text-gray-500">{t('consultation.details.patientAge')}</div>
+                  <div>{t('patients.age', { count: calculateAge() })}</div>
                 </div>
               )}
               {encounter.patient?.telephone && (
                 <div>
-                  <div className="text-sm text-gray-500">Téléphone</div>
+                  <div className="text-sm text-gray-500">{t('consultation.details.patientPhone')}</div>
                   <div>{encounter.patient.telephone}</div>
                 </div>
               )}
               {encounter.patient?.village && (
                 <div>
-                  <div className="text-sm text-gray-500">Village</div>
+                  <div className="text-sm text-gray-500">{t('consultation.details.patientVillage')}</div>
                   <div>{encounter.patient.village}</div>
                 </div>
               )}
@@ -260,7 +262,7 @@ export const ConsultationDetailsPage = () => {
 
             {encounter.user && (
               <div className="mt-6 pt-6 border-t">
-                <h3 className="text-sm font-semibold text-gray-900 mb-2">Soignant</h3>
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">{t('consultation.details.provider')}</h3>
                 <div className="text-sm">
                   {encounter.user.prenom} {encounter.user.nom}
                   <div className="text-gray-500">{encounter.user.role}</div>
@@ -275,7 +277,7 @@ export const ConsultationDetailsPage = () => {
           {/* Motif */}
           {encounter.motif && (
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-3">Motif de consultation</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">{t('consultation.details.reasonTitle')}</h2>
               <p className="text-gray-700">{encounter.motif}</p>
             </div>
           )}
@@ -283,23 +285,23 @@ export const ConsultationDetailsPage = () => {
           {/* Signes vitaux */}
           {(encounter.temperature || encounter.pouls || encounter.pression_systolique || encounter.poids || encounter.taille) && (
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Signes vitaux</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('consultation.details.vitalSignsTitle')}</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {encounter.temperature && (
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-sm text-gray-500">Température</div>
+                    <div className="text-sm text-gray-500">{t('consultation.details.temperature')}</div>
                     <div className="text-xl font-semibold">{encounter.temperature}°C</div>
                   </div>
                 )}
                 {encounter.pouls && (
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-sm text-gray-500">Pouls</div>
+                    <div className="text-sm text-gray-500">{t('consultation.details.pulse')}</div>
                     <div className="text-xl font-semibold">{encounter.pouls} bpm</div>
                   </div>
                 )}
                 {encounter.pression_systolique && encounter.pression_diastolique && (
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-sm text-gray-500">Tension artérielle</div>
+                    <div className="text-sm text-gray-500">{t('consultation.details.bloodPressure')}</div>
                     <div className="text-xl font-semibold">
                       {encounter.pression_systolique}/{encounter.pression_diastolique}
                     </div>
@@ -307,19 +309,19 @@ export const ConsultationDetailsPage = () => {
                 )}
                 {encounter.poids && (
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-sm text-gray-500">Poids</div>
+                    <div className="text-sm text-gray-500">{t('consultation.details.weight')}</div>
                     <div className="text-xl font-semibold">{encounter.poids} kg</div>
                   </div>
                 )}
                 {encounter.taille && (
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-sm text-gray-500">Taille</div>
+                    <div className="text-sm text-gray-500">{t('consultation.details.height')}</div>
                     <div className="text-xl font-semibold">{encounter.taille} cm</div>
                   </div>
                 )}
                 {calculateIMC() && (
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-sm text-gray-500">IMC</div>
+                    <div className="text-sm text-gray-500">{t('consultation.details.bmi')}</div>
                     <div className="text-xl font-semibold">{calculateIMC()}</div>
                   </div>
                 )}
@@ -330,7 +332,7 @@ export const ConsultationDetailsPage = () => {
           {/* Diagnostics */}
           {encounter.conditions && encounter.conditions.length > 0 && (
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Diagnostics</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('consultation.details.diagnosesTitle')}</h2>
               <div className="space-y-3">
                 {encounter.conditions.map((condition) => (
                   <div key={condition.id} className="border-l-4 border-blue-500 pl-4 py-2">
@@ -352,14 +354,14 @@ export const ConsultationDetailsPage = () => {
           {/* Prescriptions */}
           {encounter.medication_requests && encounter.medication_requests.length > 0 && (
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Prescriptions</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('consultation.details.prescriptionsTitle')}</h2>
               <div className="space-y-3">
                 {encounter.medication_requests.map((medication) => (
                   <div key={medication.id} className="border-l-4 border-green-500 pl-4 py-2">
                     <div className="font-medium">{medication.medicament}</div>
                     <div className="text-sm text-gray-600 mt-1">
                       {medication.posologie}
-                      {medication.duree_jours && ` - ${medication.duree_jours} jours`}
+                      {medication.duree_jours && ` - ${t('consultation.details.durationDays', { days: medication.duree_jours })}`}
                     </div>
                     {medication.notes && (
                       <div className="text-sm text-gray-500 mt-1">{medication.notes}</div>
@@ -373,7 +375,7 @@ export const ConsultationDetailsPage = () => {
           {/* Actes médicaux */}
           {encounter.procedures && encounter.procedures.length > 0 && (
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Actes médicaux</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('consultation.details.proceduresTitle')}</h2>
               <div className="space-y-3">
                 {encounter.procedures.map((procedure) => (
                   <div key={procedure.id} className="border-l-4 border-purple-500 pl-4 py-2">
@@ -383,7 +385,7 @@ export const ConsultationDetailsPage = () => {
                     )}
                     {procedure.resultat && (
                       <div className="text-sm text-gray-700 mt-1">
-                        <span className="font-medium">Résultat:</span> {procedure.resultat}
+                        <span className="font-medium">{t('consultation.details.procedureResult')}</span> {procedure.resultat}
                       </div>
                     )}
                   </div>
@@ -397,31 +399,31 @@ export const ConsultationDetailsPage = () => {
             <div className="bg-red-50 border-2 border-red-200 rounded-lg shadow p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <span className="mr-2">🚑</span>
-                Référence / Évacuation
+                {t('consultation.details.referenceTitle')}
                 <span className={`ml-auto text-sm px-3 py-1 rounded-full ${
                   encounter.reference.statut === 'complete' ? 'bg-green-100 text-green-800' :
                   encounter.reference.statut === 'confirme' ? 'bg-blue-100 text-blue-800' :
                   encounter.reference.statut === 'annule' ? 'bg-gray-100 text-gray-800' :
                   'bg-yellow-100 text-yellow-800'
                 }`}>
-                  {encounter.reference.statut === 'en_attente' ? 'En attente' :
-                   encounter.reference.statut === 'confirme' ? 'Confirmée' :
-                   encounter.reference.statut === 'complete' ? 'Complétée' :
-                   'Annulée'}
+                  {encounter.reference.statut === 'en_attente' ? t('consultation.form.statusPending') :
+                   encounter.reference.statut === 'confirme' ? t('consultation.form.statusConfirmed') :
+                   encounter.reference.statut === 'complete' ? t('consultation.form.statusCompleted') :
+                   t('consultation.form.statusCancelled')}
                 </span>
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-gray-500 mb-1">Destination</div>
+                  <div className="text-sm text-gray-500 mb-1">{t('consultation.details.referenceDestination')}</div>
                   <div className="font-medium text-gray-900">{encounter.reference.destination}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-500 mb-1">Raison</div>
+                  <div className="text-sm text-gray-500 mb-1">{t('consultation.details.referenceReason')}</div>
                   <div className="font-medium text-gray-900">{encounter.reference.raison}</div>
                 </div>
                 {encounter.reference.eta && (
                   <div>
-                    <div className="text-sm text-gray-500 mb-1">Heure d'arrivée estimée</div>
+                    <div className="text-sm text-gray-500 mb-1">{t('consultation.details.referenceETA')}</div>
                     <div className="font-medium text-gray-900">
                       {new Date(encounter.reference.eta).toLocaleString('fr-FR')}
                     </div>
@@ -429,7 +431,7 @@ export const ConsultationDetailsPage = () => {
                 )}
                 {encounter.reference.notes && (
                   <div className="md:col-span-2">
-                    <div className="text-sm text-gray-500 mb-1">Notes</div>
+                    <div className="text-sm text-gray-500 mb-1">{t('consultation.details.referenceNotes')}</div>
                     <div className="text-gray-700">{encounter.reference.notes}</div>
                   </div>
                 )}
@@ -440,14 +442,14 @@ export const ConsultationDetailsPage = () => {
           {/* Notes */}
           {encounter.notes && (
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-3">Notes</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">{t('consultation.details.notesTitle')}</h2>
               <p className="text-gray-700 whitespace-pre-line">{encounter.notes}</p>
             </div>
           )}
 
           {/* Documents médicaux */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">📎 Documents médicaux du patient</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('consultation.details.documentsTitle')}</h2>
             <FileList patientId={encounter.patient_id} />
           </div>
         </div>

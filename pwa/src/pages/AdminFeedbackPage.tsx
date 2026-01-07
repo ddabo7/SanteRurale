@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Layout } from '../components/Layout'
 import { apiClient } from '../services/api'
 
@@ -25,6 +26,7 @@ interface FeedbackStats {
 }
 
 export const AdminFeedbackPage = () => {
+  const { t } = useTranslation()
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
   const [stats, setStats] = useState<FeedbackStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -99,16 +101,17 @@ export const AdminFeedbackPage = () => {
   }
 
   const getStatusBadge = (status: string) => {
-    const badges: Record<string, { bg: string; text: string; label: string }> = {
-      new: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Nouveau' },
-      in_progress: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'En cours' },
-      resolved: { bg: 'bg-green-100', text: 'text-green-800', label: 'Résolu' },
-      closed: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Fermé' },
+    const badges: Record<string, { bg: string; text: string }> = {
+      new: { bg: 'bg-blue-100', text: 'text-blue-800' },
+      in_progress: { bg: 'bg-yellow-100', text: 'text-yellow-800' },
+      resolved: { bg: 'bg-green-100', text: 'text-green-800' },
+      closed: { bg: 'bg-gray-100', text: 'text-gray-800' },
     }
     const badge = badges[status] || badges.new
+    const label = t(`admin.feedback.status.${status}`, { defaultValue: t('admin.feedback.status.new') })
     return (
       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${badge.bg} ${badge.text}`}>
-        {badge.label}
+        {label}
       </span>
     )
   }
@@ -117,7 +120,7 @@ export const AdminFeedbackPage = () => {
     return (
       <Layout>
         <div className="flex justify-center py-12">
-          <div className="text-gray-500">Chargement...</div>
+          <div className="text-gray-500">{t('common.loading')}</div>
         </div>
       </Layout>
     )
@@ -130,10 +133,10 @@ export const AdminFeedbackPage = () => {
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-8 mb-8 text-white shadow-2xl">
           <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
             <span className="text-4xl">📬</span>
-            Feedbacks Utilisateurs
+            {t('admin.feedback.title')}
           </h1>
           <p className="text-blue-100">
-            Gérez les retours des utilisateurs et améliorez l'application
+            {t('admin.feedback.subtitle')}
           </p>
         </div>
 
@@ -143,22 +146,22 @@ export const AdminFeedbackPage = () => {
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
               <div className="text-3xl mb-2">📊</div>
               <div className="text-2xl font-bold text-gray-800">{stats.total}</div>
-              <div className="text-sm text-gray-600">Total feedbacks</div>
+              <div className="text-sm text-gray-600">{t('admin.feedback.stats.total')}</div>
             </div>
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
               <div className="text-3xl mb-2">🆕</div>
               <div className="text-2xl font-bold text-blue-600">{stats.by_status.new || 0}</div>
-              <div className="text-sm text-gray-600">Nouveaux</div>
+              <div className="text-sm text-gray-600">{t('admin.feedback.stats.new')}</div>
             </div>
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
               <div className="text-3xl mb-2">⚡</div>
               <div className="text-2xl font-bold text-orange-600">{stats.recent_count}</div>
-              <div className="text-sm text-gray-600">Dernières 24h</div>
+              <div className="text-sm text-gray-600">{t('admin.feedback.stats.last24h')}</div>
             </div>
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
               <div className="text-3xl mb-2">✅</div>
               <div className="text-2xl font-bold text-green-600">{stats.by_status.resolved || 0}</div>
-              <div className="text-sm text-gray-600">Résolus</div>
+              <div className="text-sm text-gray-600">{t('admin.feedback.stats.resolved')}</div>
             </div>
           </div>
         )}
@@ -167,32 +170,32 @@ export const AdminFeedbackPage = () => {
         <div className="bg-white rounded-2xl p-6 shadow-lg mb-6 border border-gray-100">
           <div className="flex flex-wrap gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Type</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">{t('admin.feedback.filters.type')}</label>
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
                 className="px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500"
               >
-                <option value="all">Tous</option>
-                <option value="bug">🐛 Bugs</option>
-                <option value="feature_request">✨ Features</option>
-                <option value="improvement">🚀 Améliorations</option>
-                <option value="general">💬 Général</option>
-                <option value="complaint">⚠️ Réclamations</option>
+                <option value="all">{t('admin.feedback.filters.all')}</option>
+                <option value="bug">🐛 {t('feedback.types.bug')}</option>
+                <option value="feature_request">✨ {t('feedback.types.featureRequest')}</option>
+                <option value="improvement">🚀 {t('feedback.types.improvement')}</option>
+                <option value="general">💬 {t('feedback.types.general')}</option>
+                <option value="complaint">⚠️ {t('feedback.types.complaint')}</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Statut</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">{t('admin.feedback.filters.status')}</label>
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
                 className="px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500"
               >
-                <option value="all">Tous</option>
-                <option value="new">Nouveaux</option>
-                <option value="in_progress">En cours</option>
-                <option value="resolved">Résolus</option>
-                <option value="closed">Fermés</option>
+                <option value="all">{t('admin.feedback.filters.all')}</option>
+                <option value="new">{t('admin.feedback.status.new')}</option>
+                <option value="in_progress">{t('admin.feedback.status.in_progress')}</option>
+                <option value="resolved">{t('admin.feedback.status.resolved')}</option>
+                <option value="closed">{t('admin.feedback.status.closed')}</option>
               </select>
             </div>
           </div>
@@ -203,7 +206,7 @@ export const AdminFeedbackPage = () => {
           {feedbacks.length === 0 ? (
             <div className="bg-white rounded-2xl p-12 text-center shadow-lg">
               <div className="text-6xl mb-4">📭</div>
-              <p className="text-gray-500">Aucun feedback pour ces filtres</p>
+              <p className="text-gray-500">{t('admin.feedback.noFeedback')}</p>
             </div>
           ) : (
             feedbacks.map((feedback) => (
@@ -217,7 +220,7 @@ export const AdminFeedbackPage = () => {
                     <div className="flex-1">
                       <h3 className="text-lg font-bold text-gray-900">{feedback.subject}</h3>
                       <div className="flex items-center gap-3 mt-2 text-sm text-gray-600">
-                        <span>👤 {feedback.user_name || feedback.user_email || 'Anonyme'}</span>
+                        <span>👤 {feedback.user_name || feedback.user_email || t('admin.feedback.anonymous')}</span>
                         <span>•</span>
                         <span>📅 {new Date(feedback.created_at).toLocaleDateString('fr-FR')}</span>
                       </div>
@@ -230,7 +233,7 @@ export const AdminFeedbackPage = () => {
 
                 {feedback.admin_response && (
                   <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4 rounded">
-                    <p className="text-sm font-semibold text-blue-900 mb-1">Réponse Admin:</p>
+                    <p className="text-sm font-semibold text-blue-900 mb-1">{t('admin.feedback.adminResponse')}</p>
                     <p className="text-blue-800">{feedback.admin_response}</p>
                   </div>
                 )}
@@ -240,14 +243,14 @@ export const AdminFeedbackPage = () => {
                     onClick={() => setSelectedFeedback(feedback)}
                     className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm font-semibold"
                   >
-                    💬 Répondre
+                    💬 {t('admin.feedback.actions.respond')}
                   </button>
                   {feedback.status !== 'resolved' && (
                     <button
                       onClick={() => handleUpdateStatus(feedback.id, 'resolved')}
                       className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors text-sm font-semibold"
                     >
-                      ✅ Marquer résolu
+                      ✅ {t('admin.feedback.actions.markResolved')}
                     </button>
                   )}
                   {feedback.status !== 'closed' && (
@@ -255,7 +258,7 @@ export const AdminFeedbackPage = () => {
                       onClick={() => handleUpdateStatus(feedback.id, 'closed')}
                       className="px-4 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors text-sm font-semibold"
                     >
-                      🔒 Fermer
+                      🔒 {t('admin.feedback.actions.close')}
                     </button>
                   )}
                 </div>
@@ -270,7 +273,7 @@ export const AdminFeedbackPage = () => {
             <div className="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl animate-scaleIn">
               <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
                 <span>💬</span>
-                Répondre au feedback
+                {t('admin.feedback.modal.title')}
               </h3>
               <div className="bg-gray-50 p-4 rounded-xl mb-4">
                 <p className="font-semibold text-gray-900">{selectedFeedback.subject}</p>
@@ -280,7 +283,7 @@ export const AdminFeedbackPage = () => {
                 value={adminResponse}
                 onChange={(e) => setAdminResponse(e.target.value)}
                 rows={5}
-                placeholder="Votre réponse..."
+                placeholder={t('admin.feedback.modal.placeholder')}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 resize-none mb-4"
               />
               <div className="flex gap-3">
@@ -288,14 +291,14 @@ export const AdminFeedbackPage = () => {
                   onClick={() => setSelectedFeedback(null)}
                   className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50"
                 >
-                  Annuler
+                  {t('admin.feedback.modal.cancel')}
                 </button>
                 <button
                   onClick={() => handleRespondToFeedback(selectedFeedback.id)}
                   disabled={!adminResponse.trim()}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg disabled:opacity-50"
                 >
-                  Envoyer la réponse
+                  {t('admin.feedback.modal.send')}
                 </button>
               </div>
             </div>

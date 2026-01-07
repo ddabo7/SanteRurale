@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Layout } from '../components/Layout'
 import { apiClient } from '../services/api'
 
 type FeedbackType = 'bug' | 'feature_request' | 'improvement' | 'general' | 'complaint'
 
 export const FeedbackPage = () => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -18,11 +20,11 @@ export const FeedbackPage = () => {
   })
 
   const feedbackTypes = [
-    { value: 'bug', label: '🐛 Bug / Problème', icon: '🐛' },
-    { value: 'feature_request', label: '✨ Nouvelle fonctionnalité', icon: '✨' },
-    { value: 'improvement', label: '🚀 Amélioration', icon: '🚀' },
-    { value: 'general', label: '💬 Commentaire général', icon: '💬' },
-    { value: 'complaint', label: '⚠️ Réclamation', icon: '⚠️' },
+    { value: 'bug', label: `🐛 ${t('feedback.types.bug')}`, icon: '🐛' },
+    { value: 'feature_request', label: `✨ ${t('feedback.types.featureRequest')}`, icon: '✨' },
+    { value: 'improvement', label: `🚀 ${t('feedback.types.improvement')}`, icon: '🚀' },
+    { value: 'general', label: `💬 ${t('feedback.types.general')}`, icon: '💬' },
+    { value: 'complaint', label: `⚠️ ${t('feedback.types.complaint')}`, icon: '⚠️' },
   ]
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,7 +53,7 @@ export const FeedbackPage = () => {
         navigate('/')
       }, 3000)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur lors de l\'envoi du feedback')
+      setError(err.response?.data?.detail || t('feedback.errors.submitError'))
     } finally {
       setLoading(false)
     }
@@ -64,13 +66,13 @@ export const FeedbackPage = () => {
           <div className="bg-green-50 border-2 border-green-500 rounded-3xl p-8 text-center animate-scaleIn">
             <div className="text-6xl mb-4 animate-bounce">✅</div>
             <h2 className="text-2xl font-bold text-green-800 mb-2">
-              Merci pour votre feedback !
+              {t('feedback.success.title')}
             </h2>
             <p className="text-green-700">
-              Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.
+              {t('feedback.success.message')}
             </p>
             <p className="text-sm text-green-600 mt-4">
-              Redirection vers l'accueil...
+              {t('feedback.success.redirecting')}
             </p>
           </div>
         </div>
@@ -85,10 +87,10 @@ export const FeedbackPage = () => {
         <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 rounded-3xl p-8 mb-8 text-white shadow-2xl">
           <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
             <span className="text-4xl">💬</span>
-            Votre avis compte !
+            {t('feedback.title')}
           </h1>
           <p className="text-blue-100">
-            Aidez-nous à améliorer Santé Rurale en partageant vos suggestions, en signalant des bugs, ou en nous faisant part de vos besoins.
+            {t('feedback.subtitle')}
           </p>
         </div>
 
@@ -106,7 +108,7 @@ export const FeedbackPage = () => {
           {/* Type de feedback */}
           <div className="mb-6">
             <label className="block text-gray-700 font-semibold mb-3">
-              Type de feedback <span className="text-red-500">*</span>
+              {t('feedback.form.type')} <span className="text-red-500">*</span>
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {feedbackTypes.map((type) => (
@@ -130,7 +132,7 @@ export const FeedbackPage = () => {
           {/* Sujet */}
           <div className="mb-6">
             <label htmlFor="subject" className="block text-gray-700 font-semibold mb-2">
-              Sujet <span className="text-red-500">*</span>
+              {t('feedback.form.subject')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -140,18 +142,18 @@ export const FeedbackPage = () => {
               required
               minLength={5}
               maxLength={255}
-              placeholder="Ex: Problème de connexion, Suggestion d'amélioration..."
+              placeholder={t('feedback.form.subjectPlaceholder')}
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 transition-colors"
             />
             <p className="text-sm text-gray-500 mt-1">
-              {formData.subject.length}/255 caractères
+              {t('feedback.form.characterCount', { count: formData.subject.length, max: 255 })}
             </p>
           </div>
 
           {/* Message */}
           <div className="mb-6">
             <label htmlFor="message" className="block text-gray-700 font-semibold mb-2">
-              Message <span className="text-red-500">*</span>
+              {t('feedback.form.message')} <span className="text-red-500">*</span>
             </label>
             <textarea
               id="message"
@@ -161,11 +163,11 @@ export const FeedbackPage = () => {
               minLength={10}
               maxLength={5000}
               rows={8}
-              placeholder="Décrivez en détail votre feedback. Plus vous êtes précis, mieux nous pourrons vous aider !"
+              placeholder={t('feedback.form.messagePlaceholder')}
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 transition-colors resize-none"
             />
             <p className="text-sm text-gray-500 mt-1">
-              {formData.message.length}/5000 caractères
+              {t('feedback.form.characterCount', { count: formData.message.length, max: 5000 })}
             </p>
           </div>
 
@@ -174,8 +176,7 @@ export const FeedbackPage = () => {
             <p className="text-sm text-blue-800 flex items-center gap-2">
               <span className="text-xl">ℹ️</span>
               <span>
-                <strong>Informations techniques :</strong> Pour mieux diagnostiquer les problèmes, nous collectons automatiquement
-                des informations techniques non-sensibles (type de navigateur, résolution d'écran, page actuelle).
+                {t('feedback.form.technicalInfo')}
               </span>
             </p>
           </div>
@@ -187,7 +188,7 @@ export const FeedbackPage = () => {
               onClick={() => navigate(-1)}
               className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all transform hover:scale-105"
             >
-              Annuler
+              {t('feedback.form.cancel')}
             </button>
             <button
               type="submit"
@@ -200,12 +201,12 @@ export const FeedbackPage = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Envoi en cours...
+                  {t('feedback.form.sending')}
                 </span>
               ) : (
                 <span className="flex items-center justify-center gap-2">
                   <span>📤</span>
-                  Envoyer le feedback
+                  {t('feedback.form.submit')}
                 </span>
               )}
             </button>
@@ -216,18 +217,18 @@ export const FeedbackPage = () => {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-2xl border border-green-200">
             <div className="text-3xl mb-2">⚡</div>
-            <div className="font-semibold text-green-800">Réponse Rapide</div>
-            <div className="text-sm text-green-600">Sous 24-48h en moyenne</div>
+            <div className="font-semibold text-green-800">{t('feedback.features.quickResponse.title')}</div>
+            <div className="text-sm text-green-600">{t('feedback.features.quickResponse.subtitle')}</div>
           </div>
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-2xl border border-blue-200">
             <div className="text-3xl mb-2">🔒</div>
-            <div className="font-semibold text-blue-800">Confidentialité</div>
-            <div className="text-sm text-blue-600">Vos données sont protégées</div>
+            <div className="font-semibold text-blue-800">{t('feedback.features.privacy.title')}</div>
+            <div className="text-sm text-blue-600">{t('feedback.features.privacy.subtitle')}</div>
           </div>
           <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-2xl border border-purple-200">
             <div className="text-3xl mb-2">📊</div>
-            <div className="font-semibold text-purple-800">Impact Direct</div>
-            <div className="text-sm text-purple-600">Vos idées façonnent l'app</div>
+            <div className="font-semibold text-purple-800">{t('feedback.features.directImpact.title')}</div>
+            <div className="text-sm text-purple-600">{t('feedback.features.directImpact.subtitle')}</div>
           </div>
         </div>
       </div>

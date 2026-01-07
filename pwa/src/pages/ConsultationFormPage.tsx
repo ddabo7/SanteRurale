@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { encountersService, patientsService, conditionsService, medicationsService, proceduresService, referencesService } from '../services/api'
 import { offlineFirst, connectivityMonitor } from '../services/offlineFirst'
 import { FileUpload } from '../components/FileUpload'
@@ -45,6 +46,7 @@ interface Reference {
 }
 
 export const ConsultationFormPage = () => {
+  const { t } = useTranslation()
   const { id } = useParams()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -223,10 +225,10 @@ export const ConsultationFormPage = () => {
 
       // Messages de succès adaptés
       if (connectivityMonitor.isOnline()) {
-        setSuccess('✅ Consultation créée avec succès')
+        setSuccess(t('consultation.form.successCreated'))
         setTimeout(() => navigate('/consultations'), 1000)
       } else {
-        setSuccess('✅ Consultation créée localement (mode hors ligne). Sera synchronisée automatiquement.')
+        setSuccess(t('consultation.form.successCreatedOffline'))
         setTimeout(() => navigate('/consultations'), 2000)
       }
     } catch (error: any) {
@@ -237,12 +239,12 @@ export const ConsultationFormPage = () => {
       } else if (error.response?.data?.detail) {
         if (Array.isArray(error.response.data.detail)) {
           const errors = error.response.data.detail.map((e: any) => e.msg).join(', ')
-          setError(`Erreur de validation: ${errors}`)
+          setError(t('consultation.form.validationError', { errors }))
         } else {
           setError(error.response.data.detail)
         }
       } else {
-        setError('Impossible de sauvegarder la consultation. Veuillez réessayer.')
+        setError(t('consultation.form.saveError'))
       }
     } finally {
       setIsLoading(false)
@@ -284,10 +286,10 @@ export const ConsultationFormPage = () => {
     <div className="max-w-5xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
-          {isEditMode ? 'Modifier la consultation' : 'Nouvelle consultation'}
+          {isEditMode ? t('consultation.form.titleEdit') : t('consultation.form.titleNew')}
         </h1>
         <p className="text-gray-600 mt-1">
-          Enregistrez les détails de la consultation médicale
+          {t('consultation.form.subtitle')}
         </p>
       </div>
 
@@ -298,7 +300,7 @@ export const ConsultationFormPage = () => {
             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
-            Mode hors ligne - Les données seront synchronisées automatiquement
+            {t('consultation.form.offlineMode')}
           </div>
         )}
 
@@ -321,7 +323,7 @@ export const ConsultationFormPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="patient_id" className="block text-sm font-medium text-gray-700 mb-2">
-                Patient <span className="text-red-500">*</span>
+                {t('consultation.form.patient')} <span className="text-red-500">*</span>
               </label>
               <select
                 id="patient_id"
@@ -330,7 +332,7 @@ export const ConsultationFormPage = () => {
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
               >
-                <option value="">Sélectionner un patient</option>
+                <option value="">{t('consultation.form.selectPatient')}</option>
                 {patients.map((patient) => (
                   <option key={patient.id} value={patient.id}>
                     {patient.nom} {patient.prenom} ({patient.sexe})
@@ -339,14 +341,14 @@ export const ConsultationFormPage = () => {
               </select>
               {selectedPatient && (
                 <p className="text-sm text-gray-500 mt-1">
-                  {calculateAge() && `Âge: ${calculateAge()} ans`}
+                  {calculateAge() && t('consultation.form.patientAge', { age: calculateAge() })}
                 </p>
               )}
             </div>
 
             <div>
               <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
-                Date de consultation <span className="text-red-500">*</span>
+                {t('consultation.form.date')} <span className="text-red-500">*</span>
               </label>
               <input
                 id="date"
@@ -363,7 +365,7 @@ export const ConsultationFormPage = () => {
           {/* Motif */}
           <div>
             <label htmlFor="motif" className="block text-sm font-medium text-gray-700 mb-2">
-              Motif de consultation
+              {t('consultation.form.reason')}
             </label>
             <textarea
               id="motif"
@@ -371,17 +373,17 @@ export const ConsultationFormPage = () => {
               onChange={(e) => setFormData({ ...formData, motif: e.target.value })}
               rows={3}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-              placeholder="Raison de la visite..."
+              placeholder={t('consultation.form.reasonPlaceholder')}
             />
           </div>
 
           {/* Signes vitaux */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Signes vitaux</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('consultation.form.vitalSigns')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label htmlFor="temperature" className="block text-sm font-medium text-gray-700 mb-2">
-                  Température (°C)
+                  {t('consultation.form.temperature')}
                 </label>
                 <input
                   id="temperature"
@@ -390,13 +392,13 @@ export const ConsultationFormPage = () => {
                   value={formData.temperature}
                   onChange={(e) => setFormData({ ...formData, temperature: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                  placeholder="37.5"
+                  placeholder={t('consultation.form.temperaturePlaceholder')}
                 />
               </div>
 
               <div>
                 <label htmlFor="pouls" className="block text-sm font-medium text-gray-700 mb-2">
-                  Pouls (bpm)
+                  {t('consultation.form.pulse')}
                 </label>
                 <input
                   id="pouls"
@@ -404,13 +406,13 @@ export const ConsultationFormPage = () => {
                   value={formData.pouls}
                   onChange={(e) => setFormData({ ...formData, pouls: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                  placeholder="72"
+                  placeholder={t('consultation.form.pulsePlaceholder')}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tension artérielle
+                  {t('consultation.form.bloodPressure')}
                 </label>
                 <div className="flex items-center space-x-2">
                   <input
@@ -418,7 +420,7 @@ export const ConsultationFormPage = () => {
                     value={formData.pression_systolique}
                     onChange={(e) => setFormData({ ...formData, pression_systolique: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                    placeholder="120"
+                    placeholder={t('consultation.form.systolicPlaceholder')}
                   />
                   <span className="text-gray-500">/</span>
                   <input
@@ -426,14 +428,14 @@ export const ConsultationFormPage = () => {
                     value={formData.pression_diastolique}
                     onChange={(e) => setFormData({ ...formData, pression_diastolique: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                    placeholder="80"
+                    placeholder={t('consultation.form.diastolicPlaceholder')}
                   />
                 </div>
               </div>
 
               <div>
                 <label htmlFor="poids" className="block text-sm font-medium text-gray-700 mb-2">
-                  Poids (kg)
+                  {t('consultation.form.weight')}
                 </label>
                 <input
                   id="poids"
@@ -442,13 +444,13 @@ export const ConsultationFormPage = () => {
                   value={formData.poids}
                   onChange={(e) => setFormData({ ...formData, poids: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                  placeholder="70.5"
+                  placeholder={t('consultation.form.weightPlaceholder')}
                 />
               </div>
 
               <div>
                 <label htmlFor="taille" className="block text-sm font-medium text-gray-700 mb-2">
-                  Taille (cm)
+                  {t('consultation.form.height')}
                 </label>
                 <input
                   id="taille"
@@ -456,7 +458,7 @@ export const ConsultationFormPage = () => {
                   value={formData.taille}
                   onChange={(e) => setFormData({ ...formData, taille: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                  placeholder="175"
+                  placeholder={t('consultation.form.heightPlaceholder')}
                 />
               </div>
             </div>
@@ -465,13 +467,13 @@ export const ConsultationFormPage = () => {
           {/* Diagnostics */}
           <div>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Diagnostics</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('consultation.form.diagnoses')}</h3>
               <button
                 type="button"
                 onClick={addCondition}
                 className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg"
               >
-                + Ajouter diagnostic
+                {t('consultation.form.addDiagnosis')}
               </button>
             </div>
             <div className="space-y-3">
@@ -487,7 +489,7 @@ export const ConsultationFormPage = () => {
                         setConditions(updated)
                       }}
                       className="px-3 py-2 border border-gray-300 rounded-lg"
-                      placeholder="Libellé du diagnostic"
+                      placeholder={t('consultation.form.diagnosisLabel')}
                     />
                     <input
                       type="text"
@@ -498,7 +500,7 @@ export const ConsultationFormPage = () => {
                         setConditions(updated)
                       }}
                       className="px-3 py-2 border border-gray-300 rounded-lg"
-                      placeholder="Code CIM-10"
+                      placeholder={t('consultation.form.diagnosisCode')}
                       maxLength={10}
                     />
                     <input
@@ -510,7 +512,7 @@ export const ConsultationFormPage = () => {
                         setConditions(updated)
                       }}
                       className="px-3 py-2 border border-gray-300 rounded-lg"
-                      placeholder="Notes"
+                      placeholder={t('consultation.form.diagnosisNotes')}
                     />
                   </div>
                   <button
@@ -528,13 +530,13 @@ export const ConsultationFormPage = () => {
           {/* Prescriptions */}
           <div>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Prescriptions</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('consultation.form.prescriptions')}</h3>
               <button
                 type="button"
                 onClick={addMedication}
                 className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg"
               >
-                + Ajouter prescription
+                {t('consultation.form.addPrescription')}
               </button>
             </div>
             <div className="space-y-3">
@@ -550,7 +552,7 @@ export const ConsultationFormPage = () => {
                         setMedications(updated)
                       }}
                       className="px-3 py-2 border border-gray-300 rounded-lg"
-                      placeholder="Médicament"
+                      placeholder={t('consultation.form.medication')}
                     />
                     <input
                       type="text"
@@ -561,7 +563,7 @@ export const ConsultationFormPage = () => {
                         setMedications(updated)
                       }}
                       className="px-3 py-2 border border-gray-300 rounded-lg"
-                      placeholder="Posologie (ex: 1 cp x 3/jour)"
+                      placeholder={t('consultation.form.dosage')}
                     />
                     <input
                       type="number"
@@ -572,7 +574,7 @@ export const ConsultationFormPage = () => {
                         setMedications(updated)
                       }}
                       className="px-3 py-2 border border-gray-300 rounded-lg"
-                      placeholder="Durée (jours)"
+                      placeholder={t('consultation.form.duration')}
                     />
                     <input
                       type="text"
@@ -583,7 +585,7 @@ export const ConsultationFormPage = () => {
                         setMedications(updated)
                       }}
                       className="px-3 py-2 border border-gray-300 rounded-lg"
-                      placeholder="Notes"
+                      placeholder={t('consultation.form.prescriptionNotes')}
                     />
                   </div>
                   <button
@@ -601,13 +603,13 @@ export const ConsultationFormPage = () => {
           {/* Actes médicaux */}
           <div>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Actes médicaux</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('consultation.form.procedures')}</h3>
               <button
                 type="button"
                 onClick={addProcedure}
                 className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg"
               >
-                + Ajouter acte
+                {t('consultation.form.addProcedure')}
               </button>
             </div>
             <div className="space-y-3">
@@ -623,7 +625,7 @@ export const ConsultationFormPage = () => {
                         setProcedures(updated)
                       }}
                       className="px-3 py-2 border border-gray-300 rounded-lg"
-                      placeholder="Type d'acte"
+                      placeholder={t('consultation.form.procedureType')}
                     />
                     <input
                       type="text"
@@ -634,7 +636,7 @@ export const ConsultationFormPage = () => {
                         setProcedures(updated)
                       }}
                       className="px-3 py-2 border border-gray-300 rounded-lg"
-                      placeholder="Description"
+                      placeholder={t('consultation.form.procedureDescription')}
                     />
                     <input
                       type="text"
@@ -645,7 +647,7 @@ export const ConsultationFormPage = () => {
                         setProcedures(updated)
                       }}
                       className="px-3 py-2 border border-gray-300 rounded-lg"
-                      placeholder="Résultat"
+                      placeholder={t('consultation.form.procedureResult')}
                     />
                   </div>
                   <button
@@ -663,7 +665,7 @@ export const ConsultationFormPage = () => {
           {/* Référence/Évacuation */}
           <div className="border-t pt-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">🚑 Référence / Évacuation</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('consultation.form.reference')}</h3>
               <label className="flex items-center space-x-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -672,7 +674,7 @@ export const ConsultationFormPage = () => {
                   className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
                 />
                 <span className="text-sm font-medium text-gray-700">
-                  Patient à évacuer/référer
+                  {t('consultation.form.referenceCheckbox')}
                 </span>
               </label>
             </div>
@@ -682,52 +684,52 @@ export const ConsultationFormPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Destination <span className="text-red-500">*</span>
+                      {t('consultation.form.destination')} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={reference.etablissement_destination}
                       onChange={(e) => setReference({ ...reference, etablissement_destination: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                      placeholder="Ex: Hôpital de Bamako, Centre de santé de référence..."
+                      placeholder={t('consultation.form.destinationPlaceholder')}
                       required={hasReference}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Statut
+                      {t('consultation.form.referenceStatus')}
                     </label>
                     <select
                       value={reference.statut}
                       onChange={(e) => setReference({ ...reference, statut: e.target.value as Reference['statut'] })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     >
-                      <option value="en_attente">En attente</option>
-                      <option value="confirme">Confirmée</option>
-                      <option value="complete">Complétée</option>
-                      <option value="annule">Annulée</option>
+                      <option value="en_attente">{t('consultation.form.statusPending')}</option>
+                      <option value="confirme">{t('consultation.form.statusConfirmed')}</option>
+                      <option value="complete">{t('consultation.form.statusCompleted')}</option>
+                      <option value="annule">{t('consultation.form.statusCancelled')}</option>
                     </select>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Raison de l'évacuation <span className="text-red-500">*</span>
+                    {t('consultation.form.referenceReason')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={reference.motif}
                     onChange={(e) => setReference({ ...reference, motif: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                    placeholder="Ex: Complications nécessitant chirurgie, Accouchement à risque..."
+                    placeholder={t('consultation.form.referenceReasonPlaceholder')}
                     required={hasReference}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Heure d'arrivée estimée (ETA)
+                    {t('consultation.form.eta')}
                   </label>
                   <input
                     type="datetime-local"
@@ -739,14 +741,14 @@ export const ConsultationFormPage = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Notes complémentaires
+                    {t('consultation.form.referenceNotes')}
                   </label>
                   <textarea
                     value={reference.commentaire}
                     onChange={(e) => setReference({ ...reference, commentaire: e.target.value })}
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                    placeholder="Informations supplémentaires, contact du centre de destination..."
+                    placeholder={t('consultation.form.referenceNotesPlaceholder')}
                   />
                 </div>
               </div>
@@ -756,7 +758,7 @@ export const ConsultationFormPage = () => {
           {/* Notes */}
           <div>
             <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
-              Notes de consultation
+              {t('consultation.form.consultationNotes')}
             </label>
             <textarea
               id="notes"
@@ -764,7 +766,7 @@ export const ConsultationFormPage = () => {
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               rows={4}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-              placeholder="Observations, recommandations..."
+              placeholder={t('consultation.form.consultationNotesPlaceholder')}
             />
           </div>
 
@@ -775,14 +777,14 @@ export const ConsultationFormPage = () => {
               disabled={isLoading || !!createdEncounterId}
               className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
             >
-              {isLoading ? 'Enregistrement...' : isEditMode ? 'Modifier' : 'Enregistrer la consultation'}
+              {isLoading ? t('consultation.form.saving') : isEditMode ? t('consultation.form.editButton') : t('consultation.form.saveButton')}
             </button>
             <button
               type="button"
               onClick={() => navigate('/consultations')}
               className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
             >
-              {createdEncounterId ? 'Terminer' : 'Annuler'}
+              {createdEncounterId ? t('consultation.form.finish') : t('consultation.form.cancel')}
             </button>
           </div>
         </form>
@@ -791,12 +793,12 @@ export const ConsultationFormPage = () => {
         {createdEncounterId && (
           <div className="mt-8 pt-8 border-t">
             <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-6">
-              <p className="font-medium mb-1">✅ Consultation enregistrée avec succès!</p>
-              <p className="text-sm">Vous pouvez maintenant ajouter des documents médicaux (radios, résultats d'analyses, etc.)</p>
+              <p className="font-medium mb-1">{t('consultation.form.documentsSuccess')}</p>
+              <p className="text-sm">{t('consultation.form.documentsSubtitle')}</p>
             </div>
 
             <h3 className="text-lg font-medium text-gray-900 mb-4">
-              📎 Documents médicaux
+              {t('consultation.form.documentsTitle')}
             </h3>
 
             <FileUpload
@@ -819,7 +821,7 @@ export const ConsultationFormPage = () => {
                 onClick={() => navigate('/consultations')}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
               >
-                Retour à la liste des consultations
+                {t('consultation.form.backToList')}
               </button>
             </div>
           </div>

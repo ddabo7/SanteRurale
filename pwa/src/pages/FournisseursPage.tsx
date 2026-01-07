@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { fournisseursService } from '../services/api'
 
 interface Fournisseur {
@@ -18,6 +19,7 @@ interface Fournisseur {
 }
 
 export const FournisseursPage = () => {
+  const { t } = useTranslation()
   const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('')
@@ -41,7 +43,7 @@ export const FournisseursPage = () => {
       setFournisseurs(response.items || [])
     } catch (error: any) {
       console.error('Erreur chargement fournisseurs:', error)
-      setError(error.response?.data?.detail || 'Impossible de charger les fournisseurs')
+      setError(error.response?.data?.detail || t('common.error'))
     } finally {
       setIsLoading(false)
     }
@@ -54,14 +56,14 @@ export const FournisseursPage = () => {
       {/* En-tête */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">🏢 Fournisseurs</h1>
-          <p className="text-gray-600 mt-1">Gestion des fournisseurs de produits pharmaceutiques</p>
+          <h1 className="text-3xl font-bold text-gray-900">🏢 {t('pharmacy.suppliers.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('pharmacy.modules.suppliers.description')}</p>
         </div>
         <Link
           to="/fournisseurs/nouveau"
           className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
         >
-          + Nouveau fournisseur
+          + {t('pharmacy.suppliers.addSupplier')}
         </Link>
       </div>
 
@@ -70,26 +72,26 @@ export const FournisseursPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Rechercher
+              {t('common.search')}
             </label>
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Nom, code ou contact..."
+              placeholder={t('pharmacy.suppliers.searchPlaceholder')}
               className="w-full border border-gray-300 rounded-lg px-4 py-2"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Type de fournisseur
+              {t('common.filter')}
             </label>
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-4 py-2"
             >
-              <option value="">Tous les types</option>
+              <option value="">{t('pharmacy.orders.filters.allSuppliers')}</option>
               {types.map(type => (
                 <option key={type} value={type}>{type}</option>
               ))}
@@ -102,7 +104,7 @@ export const FournisseursPage = () => {
       {isLoading && (
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
-          <p className="text-gray-500 mt-4">Chargement...</p>
+          <p className="text-gray-500 mt-4">{t('common.loading')}</p>
         </div>
       )}
 
@@ -116,16 +118,16 @@ export const FournisseursPage = () => {
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <div className="text-6xl mb-4">🏢</div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            Aucun fournisseur trouvé
+            {t('common.noData')}
           </h3>
           <p className="text-gray-600 mb-6">
-            Commencez par ajouter des fournisseurs
+            {t('pharmacy.modules.suppliers.description')}
           </p>
           <Link
             to="/fournisseurs/nouveau"
             className="inline-block bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold"
           >
-            + Ajouter un fournisseur
+            + {t('pharmacy.suppliers.addSupplier')}
           </Link>
         </div>
       )}
@@ -138,25 +140,25 @@ export const FournisseursPage = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Code
+                    {t('pharmacy.catalog.table.code')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Nom
+                    {t('pharmacy.suppliers.table.name')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Type
+                    {t('common.filter')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Contact
+                    {t('pharmacy.suppliers.table.contact')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Localisation
+                    {t('pharmacy.suppliers.table.address')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Statut
+                    {t('pharmacy.suppliers.table.status')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Actions
+                    {t('pharmacy.suppliers.table.actions')}
                   </th>
                 </tr>
               </thead>
@@ -187,11 +189,11 @@ export const FournisseursPage = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       {fourn.is_active ? (
                         <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                          Actif
+                          {t('common.status')}
                         </span>
                       ) : (
                         <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                          Inactif
+                          {t('common.status')}
                         </span>
                       )}
                     </td>
@@ -200,13 +202,13 @@ export const FournisseursPage = () => {
                         to={`/fournisseurs/${fourn.id}`}
                         className="text-emerald-600 hover:text-emerald-900 font-medium"
                       >
-                        Modifier
+                        {t('common.edit')}
                       </Link>
                       <Link
                         to={`/bons-commande?fournisseur_id=${fourn.id}`}
                         className="text-blue-600 hover:text-blue-900 font-medium"
                       >
-                        Commandes
+                        {t('pharmacy.orders.title')}
                       </Link>
                     </td>
                   </tr>
@@ -231,11 +233,11 @@ export const FournisseursPage = () => {
                     </span>
                     {fourn.is_active ? (
                       <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                        Actif
+                        {t('common.status')}
                       </span>
                     ) : (
                       <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-                        Inactif
+                        {t('common.status')}
                       </span>
                     )}
                   </div>
@@ -252,13 +254,13 @@ export const FournisseursPage = () => {
                     to={`/fournisseurs/${fourn.id}`}
                     className="text-center bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg font-medium transition-colors"
                   >
-                    Modifier
+                    {t('common.edit')}
                   </Link>
                   <Link
                     to={`/bons-commande?fournisseur_id=${fourn.id}`}
                     className="text-center bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-medium transition-colors"
                   >
-                    Commandes
+                    {t('pharmacy.orders.title')}
                   </Link>
                 </div>
               </div>

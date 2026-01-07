@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { medicamentsService } from '../services/api'
 
 interface Medicament {
@@ -17,6 +18,7 @@ interface Medicament {
 }
 
 export const MedicamentsPage = () => {
+  const { t } = useTranslation()
   const [medicaments, setMedicaments] = useState<Medicament[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [filterForme, setFilterForme] = useState('')
@@ -40,7 +42,7 @@ export const MedicamentsPage = () => {
       setMedicaments(response.items || [])
     } catch (error: any) {
       console.error('Erreur chargement médicaments:', error)
-      setError(error.response?.data?.detail || 'Impossible de charger les médicaments')
+      setError(error.response?.data?.detail || t('pharmacy.catalog.noResults'))
     } finally {
       setIsLoading(false)
     }
@@ -53,14 +55,14 @@ export const MedicamentsPage = () => {
       {/* En-tête */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">💊 Catalogue de Médicaments</h1>
-          <p className="text-gray-600 mt-1">Gestion du catalogue des produits pharmaceutiques</p>
+          <h1 className="text-3xl font-bold text-gray-900">💊 {t('pharmacy.catalog.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('pharmacy.modules.catalog.description')}</p>
         </div>
         <Link
           to="/medicaments/nouveau"
           className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
         >
-          + Nouveau médicament
+          + {t('pharmacy.catalog.addMedication')}
         </Link>
       </div>
 
@@ -69,26 +71,26 @@ export const MedicamentsPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Rechercher
+              {t('common.search')}
             </label>
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Nom, code ou DCI..."
+              placeholder={t('pharmacy.catalog.searchPlaceholder')}
               className="w-full border border-gray-300 rounded-lg px-4 py-2"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Forme pharmaceutique
+              {t('pharmacy.catalog.filters.form')}
             </label>
             <select
               value={filterForme}
               onChange={(e) => setFilterForme(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-4 py-2"
             >
-              <option value="">Toutes les formes</option>
+              <option value="">{t('pharmacy.catalog.filters.allForms')}</option>
               {formes.map(forme => (
                 <option key={forme} value={forme}>{forme}</option>
               ))}
@@ -101,7 +103,7 @@ export const MedicamentsPage = () => {
       {isLoading && (
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
-          <p className="text-gray-500 mt-4">Chargement...</p>
+          <p className="text-gray-500 mt-4">{t('common.loading')}</p>
         </div>
       )}
 
@@ -115,16 +117,16 @@ export const MedicamentsPage = () => {
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <div className="text-6xl mb-4">💊</div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            Aucun médicament trouvé
+            {t('pharmacy.catalog.noResults')}
           </h3>
           <p className="text-gray-600 mb-6">
-            Commencez par ajouter des médicaments au catalogue
+            {t('pharmacy.modules.catalog.description')}
           </p>
           <Link
             to="/medicaments/nouveau"
             className="inline-block bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold"
           >
-            + Ajouter un médicament
+            + {t('pharmacy.catalog.addMedication')}
           </Link>
         </div>
       )}
@@ -137,25 +139,25 @@ export const MedicamentsPage = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Code
+                    {t('pharmacy.catalog.table.code')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Nom / DCI
+                    {t('pharmacy.catalog.table.name')} / {t('pharmacy.catalog.table.dci')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Forme
+                    {t('pharmacy.catalog.table.form')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Dosage
+                    {t('pharmacy.catalog.table.dosage')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Prix
+                    {t('pharmacy.catalog.table.price')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Seuil alerte
+                    {t('pharmacy.stock.table.minThreshold')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Actions
+                    {t('pharmacy.catalog.table.actions')}
                   </th>
                 </tr>
               </thead>
@@ -190,7 +192,7 @@ export const MedicamentsPage = () => {
                         to={`/medicaments/${med.id}`}
                         className="text-emerald-600 hover:text-emerald-900 font-medium"
                       >
-                        Modifier
+                        {t('common.edit')}
                       </Link>
                     </td>
                   </tr>
@@ -215,13 +217,13 @@ export const MedicamentsPage = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm mb-3">
                   <div>
-                    <span className="text-gray-600">Dosage:</span>
+                    <span className="text-gray-600">{t('pharmacy.catalog.table.dosage')}:</span>
                     <p className="font-medium">
                       {med.dosage && med.unite ? `${med.dosage} ${med.unite}` : '-'}
                     </p>
                   </div>
                   <div>
-                    <span className="text-gray-600">Prix:</span>
+                    <span className="text-gray-600">{t('pharmacy.catalog.table.price')}:</span>
                     <p className="font-medium">
                       {med.prix_unitaire ? `${med.prix_unitaire} FCFA` : '-'}
                     </p>
@@ -231,7 +233,7 @@ export const MedicamentsPage = () => {
                   to={`/medicaments/${med.id}`}
                   className="block w-full text-center bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg font-medium transition-colors"
                 >
-                  Modifier
+                  {t('common.edit')}
                 </Link>
               </div>
             ))}

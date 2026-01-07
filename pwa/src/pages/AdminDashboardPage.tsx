@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 interface GlobalStats {
   total_tenants: number
@@ -32,6 +33,7 @@ interface TenantStats {
 }
 
 export const AdminDashboardPage = () => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [stats, setStats] = useState<GlobalStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -52,19 +54,19 @@ export const AdminDashboardPage = () => {
       })
 
       if (response.status === 403) {
-        setError('Accès réservé aux administrateurs')
+        setError(t('admin.dashboard.errors.accessDenied'))
         return
       }
 
       if (!response.ok) {
-        throw new Error('Erreur lors du chargement des statistiques')
+        throw new Error(t('admin.dashboard.errors.loadError'))
       }
 
       const data = await response.json()
       setStats(data)
     } catch (err: any) {
       console.error('Erreur:', err)
-      setError(err.message || 'Erreur lors du chargement des statistiques')
+      setError(err.message || t('admin.dashboard.errors.loadError'))
     } finally {
       setLoading(false)
     }
@@ -100,7 +102,7 @@ export const AdminDashboardPage = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="text-gray-500">Chargement...</div>
+        <div className="text-gray-500">{t('common.loading')}</div>
       </div>
     )
   }
@@ -115,7 +117,7 @@ export const AdminDashboardPage = () => {
           onClick={() => navigate('/')}
           className="mt-4 text-blue-600 hover:text-blue-800"
         >
-          ← Retour à l'accueil
+          {t('admin.dashboard.backToHome')}
         </button>
       </div>
     )
@@ -126,9 +128,9 @@ export const AdminDashboardPage = () => {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">📊 Dashboard Administrateur</h1>
+        <h1 className="text-3xl font-bold text-gray-900">📊 {t('admin.dashboard.title')}</h1>
         <p className="text-gray-600 mt-1">
-          Vue d'ensemble de la plateforme Santé Rurale
+          {t('admin.dashboard.subtitle')}
         </p>
       </div>
 
@@ -138,10 +140,10 @@ export const AdminDashboardPage = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Hôpitaux</p>
+              <p className="text-sm text-gray-600">{t('admin.dashboard.stats.totalHospitals')}</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">{stats.total_tenants}</p>
               <p className="text-xs text-green-600 mt-1">
-                +{stats.new_tenants_this_month} ce mois
+                {t('admin.dashboard.stats.newThisMonth', { count: stats.new_tenants_this_month })}
               </p>
             </div>
             <div className="text-4xl">🏥</div>
@@ -152,11 +154,11 @@ export const AdminDashboardPage = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">MRR</p>
+              <p className="text-sm text-gray-600">{t('admin.dashboard.stats.mrr')}</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">
                 {formatCurrency(stats.mrr)}
               </p>
-              <p className="text-xs text-gray-500 mt-1">Revenu mensuel</p>
+              <p className="text-xs text-gray-500 mt-1">{t('admin.dashboard.stats.monthlyRevenue')}</p>
             </div>
             <div className="text-4xl">💰</div>
           </div>
@@ -166,11 +168,11 @@ export const AdminDashboardPage = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">ARR</p>
+              <p className="text-sm text-gray-600">{t('admin.dashboard.stats.arr')}</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">
                 {formatCurrency(stats.arr)}
               </p>
-              <p className="text-xs text-gray-500 mt-1">Revenu annuel</p>
+              <p className="text-xs text-gray-500 mt-1">{t('admin.dashboard.stats.annualRevenue')}</p>
             </div>
             <div className="text-4xl">📈</div>
           </div>
@@ -180,9 +182,9 @@ export const AdminDashboardPage = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Hôpitaux Actifs</p>
+              <p className="text-sm text-gray-600">{t('admin.dashboard.stats.activeHospitals')}</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">{stats.active_tenants}</p>
-              <p className="text-xs text-gray-500 mt-1">Ce mois</p>
+              <p className="text-xs text-gray-500 mt-1">{t('admin.dashboard.stats.thisMonth')}</p>
             </div>
             <div className="text-4xl">✅</div>
           </div>
@@ -193,34 +195,34 @@ export const AdminDashboardPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            📋 Répartition par Plan
+            📋 {t('admin.dashboard.planDistribution.title')}
           </h2>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <span className="w-4 h-4 bg-gray-400 rounded mr-3"></span>
-                <span>Plan Gratuit (Pilote)</span>
+                <span>{t('admin.dashboard.planDistribution.freePlan')}</span>
               </div>
               <span className="font-semibold">{stats.total_free_plan}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <span className="w-4 h-4 bg-blue-500 rounded mr-3"></span>
-                <span>Plan Starter</span>
+                <span>{t('admin.dashboard.planDistribution.starterPlan')}</span>
               </div>
               <span className="font-semibold">{stats.total_starter_plan}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <span className="w-4 h-4 bg-purple-500 rounded mr-3"></span>
-                <span>Plan Pro</span>
+                <span>{t('admin.dashboard.planDistribution.proPlan')}</span>
               </div>
               <span className="font-semibold">{stats.total_pro_plan}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <span className="w-4 h-4 bg-yellow-500 rounded mr-3"></span>
-                <span>Plan Enterprise</span>
+                <span>{t('admin.dashboard.planDistribution.enterprisePlan')}</span>
               </div>
               <span className="font-semibold">{stats.total_enterprise_plan}</span>
             </div>
@@ -229,12 +231,12 @@ export const AdminDashboardPage = () => {
 
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            📊 Utilisation Globale
+            📊 {t('admin.dashboard.globalUsage.title')}
           </h2>
           <div className="space-y-4">
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Utilisateurs</span>
+                <span className="text-gray-600">{t('admin.dashboard.globalUsage.users')}</span>
                 <span className="font-medium">{stats.total_users}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
@@ -243,7 +245,7 @@ export const AdminDashboardPage = () => {
             </div>
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Patients</span>
+                <span className="text-gray-600">{t('admin.dashboard.globalUsage.patients')}</span>
                 <span className="font-medium">{stats.total_patients}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
@@ -252,7 +254,7 @@ export const AdminDashboardPage = () => {
             </div>
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Consultations</span>
+                <span className="text-gray-600">{t('admin.dashboard.globalUsage.consultations')}</span>
                 <span className="font-medium">{stats.total_encounters}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
@@ -261,7 +263,7 @@ export const AdminDashboardPage = () => {
             </div>
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Stockage</span>
+                <span className="text-gray-600">{t('admin.dashboard.globalUsage.storage')}</span>
                 <span className="font-medium">{formatStorage(stats.total_storage_bytes)}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
@@ -276,7 +278,7 @@ export const AdminDashboardPage = () => {
       <div className="bg-white rounded-lg shadow mb-8">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">
-            🏆 Top 10 Hôpitaux les Plus Actifs
+            🏆 {t('admin.dashboard.topHospitals.title')}
           </h2>
         </div>
         <div className="overflow-x-auto">
@@ -284,25 +286,25 @@ export const AdminDashboardPage = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Hôpital
+                  {t('admin.dashboard.topHospitals.hospital')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Plan
+                  {t('admin.dashboard.topHospitals.plan')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Utilisateurs
+                  {t('admin.dashboard.topHospitals.users')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Patients
+                  {t('admin.dashboard.topHospitals.patients')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Consultations
+                  {t('admin.dashboard.topHospitals.consultations')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Revenu/mois
+                  {t('admin.dashboard.topHospitals.revenuePerMonth')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Inscrit le
+                  {t('admin.dashboard.topHospitals.registeredOn')}
                 </th>
               </tr>
             </thead>

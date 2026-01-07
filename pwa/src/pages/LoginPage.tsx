@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 
 export const LoginPage = () => {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -22,7 +24,7 @@ export const LoginPage = () => {
       await login(email, password)
       navigate('/patients')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur de connexion')
+      setError(err instanceof Error ? err.message : t('auth.connectionError'))
     } finally {
       setIsLoading(false)
     }
@@ -46,17 +48,17 @@ export const LoginPage = () => {
               <div className="text-7xl mb-4 filter drop-shadow-lg">🏥</div>
             </div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-              Santé Rurale
+              {t('auth.appTitle')}
             </h1>
             <p className="text-gray-600 mt-2 font-medium">
-              Plateforme de gestion de santé moderne
+              {t('auth.appDescription')}
             </p>
             <div className="flex items-center justify-center gap-2 mt-3">
               <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
-                ✓ Mode Offline
+                ✓ {t('auth.offlineMode')}
               </span>
               <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">
-                ✓ Sécurisé
+                ✓ {t('auth.secureSSL')}
               </span>
             </div>
           </div>
@@ -77,7 +79,7 @@ export const LoginPage = () => {
 
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                📧 Adresse email
+                📧 {t('auth.emailLabel')}
               </label>
               <input
                 id="email"
@@ -87,13 +89,13 @@ export const LoginPage = () => {
                 required
                 autoComplete="email"
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all hover:border-emerald-300"
-                placeholder="votre.email@example.com"
+                placeholder={t('auth.emailPlaceholder')}
               />
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-                🔒 Mot de passe
+                🔒 {t('auth.passwordLabel')}
               </label>
               <input
                 id="password"
@@ -103,7 +105,7 @@ export const LoginPage = () => {
                 required
                 autoComplete="current-password"
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all hover:border-emerald-300"
-                placeholder="••••••••"
+                placeholder={t('auth.passwordPlaceholder')}
               />
             </div>
 
@@ -118,14 +120,14 @@ export const LoginPage = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Connexion en cours...
+                  {t('auth.loggingIn')}
                 </>
               ) : (
                 <>
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                   </svg>
-                  Se connecter
+                  {t('auth.loginButton')}
                 </>
               )}
             </button>
@@ -134,7 +136,7 @@ export const LoginPage = () => {
           <div className="mt-6 space-y-3">
             <div className="text-center">
               <Link to="/forgot-password" className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors font-medium">
-                🔑 Mot de passe oublié ?
+                🔑 {t('auth.forgotPasswordLink')}
               </Link>
             </div>
 
@@ -143,16 +145,16 @@ export const LoginPage = () => {
                 <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">ou</span>
+                <span className="px-2 bg-white text-gray-500">{t('common.or')}</span>
               </div>
             </div>
 
             <div className="text-center">
               <p className="text-sm text-gray-600">
-                Pas encore de compte ?
+                {t('auth.noAccount')}
               </p>
-              <Link to="/signup" className="mt-2 inline-block px-6 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-xl transition-all transform hover:scale-105"> 
-                ✨ Créer un compte gratuitement 
+              <Link to="/signup" className="mt-2 inline-block px-6 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-xl transition-all transform hover:scale-105">
+                ✨ {t('auth.createAccountButton')}
               </Link>
             </div>
           </div>
@@ -165,13 +167,13 @@ export const LoginPage = () => {
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
               </svg>
-              <span className="text-sm font-medium">Sécurisé SSL</span>
+              <span className="text-sm font-medium">{t('auth.secureSSL')}</span>
             </div>
             <div className="flex items-center gap-2">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="text-sm font-medium">Mode Offline</span>
+              <span className="text-sm font-medium">{t('auth.offlineMode')}</span>
             </div>
           </div>
         </div>
