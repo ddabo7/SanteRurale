@@ -62,11 +62,6 @@ export const PharmaciePage = () => {
         <p className="text-lg text-gray-600">
           {t('pharmacy.description')}
         </p>
-        {user?.site_id && (
-          <p className="text-sm text-gray-500 mt-2">
-            Site actuel: <span className="font-semibold">{user.site_id}</span>
-          </p>
-        )}
       </div>
 
       {/* Grille des modules */}
