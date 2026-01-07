@@ -44,7 +44,7 @@ interface UsageStats {
 }
 
 export const SubscriptionPage = () => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [usage, setUsage] = useState<UsageStats | null>(null)
   const [plans, setPlans] = useState<Plan[]>([])
@@ -57,6 +57,40 @@ export const SubscriptionPage = () => {
   const [showSubscribeModal, setShowSubscribeModal] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'usage'>('overview')
+
+  // Helper function to translate plan names and descriptions
+  const translatePlan = (plan: Plan) => {
+    const isEnglish = i18n.language === 'en'
+
+    if (!isEnglish) {
+      return { name: plan.name, description: plan.description }
+    }
+
+    // Mapping for plan names
+    const nameMapping: Record<string, string> = {
+      'Plan Gratuit': 'Free Plan',
+      'Plan Starter': 'Starter Plan',
+      'Plan Pro': 'Pro Plan',
+      'Plan Enterprise': 'Enterprise Plan',
+      'Gratuit': 'Free',
+      'Starter': 'Starter',
+      'Pro': 'Pro',
+      'Enterprise': 'Enterprise'
+    }
+
+    // Mapping for plan descriptions
+    const descriptionMapping: Record<string, string> = {
+      "Plan d'essai - Limité à 50 patients au total": "Trial plan - Limited to 50 patients total",
+      "Abonnement mensuel - 500 nouveaux patients/mois": "Monthly subscription - 500 new patients/month",
+      "Abonnement mensuel - Patients illimités + fonctionnalités avancées": "Monthly subscription - Unlimited patients + advanced features",
+      "Abonnement mensuel - Solution complète pour réseaux de santé": "Monthly subscription - Complete solution for health networks"
+    }
+
+    return {
+      name: nameMapping[plan.name] || plan.name,
+      description: descriptionMapping[plan.description] || plan.description
+    }
+  }
 
   const fetchData = async () => {
     try {
@@ -358,11 +392,11 @@ export const SubscriptionPage = () => {
                     </div>
                     <div>
                       <span className="text-sm font-medium text-white/80">{t('subscription.currentPlan')}</span>
-                      <h2 className="text-3xl font-bold">{subscription.plan.name}</h2>
+                      <h2 className="text-3xl font-bold">{translatePlan(subscription.plan).name}</h2>
                     </div>
                   </div>
 
-                  <p className="text-white/90 text-lg mb-6">{subscription.plan.description}</p>
+                  <p className="text-white/90 text-lg mb-6">{translatePlan(subscription.plan).description}</p>
 
                   <div className="flex items-baseline space-x-3">
                     <span className="text-5xl font-bold">{formatCurrency(subscription.plan.price_monthly, currency)}</span>
@@ -686,8 +720,8 @@ export const SubscriptionPage = () => {
                       )}
 
                       <div className="text-center mb-6">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                        <p className="text-sm text-gray-600 mb-4 h-10">{plan.description}</p>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">{translatePlan(plan).name}</h3>
+                        <p className="text-sm text-gray-600 mb-4 h-10">{translatePlan(plan).description}</p>
                         <div className="mb-4">
                           <span className="text-4xl font-bold text-gray-900">
                             {formatCurrency(plan.price_monthly, currency)}
@@ -822,8 +856,8 @@ export const SubscriptionPage = () => {
             <div className="px-4 sm:px-8 py-4 sm:py-6">
               {/* Plan Summary */}
               <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl p-4 sm:p-6 mb-6 text-white">
-                <h3 className="text-2xl font-bold mb-2">{selectedPlan.name}</h3>
-                <p className="text-white/90 mb-4">{selectedPlan.description}</p>
+                <h3 className="text-2xl font-bold mb-2">{translatePlan(selectedPlan).name}</h3>
+                <p className="text-white/90 mb-4">{translatePlan(selectedPlan).description}</p>
                 <div className="flex items-baseline space-x-2">
                   <span className="text-5xl font-bold">{formatCurrency(selectedPlan.price_monthly, currency)}</span>
                   <span className="text-xl">{t('subscription.perMonth')}</span>
@@ -840,7 +874,7 @@ export const SubscriptionPage = () => {
                     <div>
                       <h4 className="font-semibold text-blue-900 mb-1">{t('subscription.confirmModal.title')}</h4>
                       <p className="text-sm text-blue-800">
-                        {t('subscription.confirmModal.changingFrom')} <strong>{subscription.plan.name}</strong> {t('subscription.confirmModal.changingTo')} <strong>{selectedPlan.name}</strong>.
+                        {t('subscription.confirmModal.changingFrom')} <strong>{translatePlan(subscription.plan).name}</strong> {t('subscription.confirmModal.changingTo')} <strong>{translatePlan(selectedPlan).name}</strong>.
                         {selectedPlan.price_monthly > 0 && ` ${t('subscription.confirmModal.immediateEffect')}`}
                       </p>
                     </div>
