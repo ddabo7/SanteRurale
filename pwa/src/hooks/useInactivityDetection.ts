@@ -4,7 +4,7 @@ interface UseInactivityDetectionOptions {
   /**
    * Timeout in milliseconds before showing warning
    * Default: 14 minutes (14 * 60 * 1000)
-   */
+   */ 
   warningTimeout?: number
   /**
    * Timeout in milliseconds before auto-logout
