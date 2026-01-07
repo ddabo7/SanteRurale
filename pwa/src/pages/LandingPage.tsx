@@ -105,6 +105,9 @@ export const LandingPage = () => {
                   {t('landing.nav.security')}
                 </a>
                 <div className="flex flex-col gap-3 pt-4 border-t border-gray-100">
+                  <div className="flex justify-center">
+                    <LanguageSwitcher />
+                  </div>
                   <Link to="/login" className="text-emerald-600 font-semibold text-center py-2">
                     {t('landing.nav.login')}
                   </Link>
