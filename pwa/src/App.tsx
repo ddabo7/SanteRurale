@@ -4,6 +4,7 @@ import { SyncProvider } from './contexts/SyncContext'
 import { Layout } from './components/Layout'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { InactivityWarningModal } from './components/InactivityWarningModal'
+import { CookieConsentBanner } from './components/CookieConsentBanner'
 import { useInactivityDetection } from './hooks/useInactivityDetection'
 import { LandingPage } from './pages/LandingPage'
 import { LoginPage } from './pages/LoginPage'
@@ -29,6 +30,8 @@ import { MedicamentsPage } from './pages/MedicamentsPage'
 import { StockPage } from './pages/StockPage'
 import { FournisseursPage } from './pages/FournisseursPage'
 import { BonsCommandePage } from './pages/BonsCommandePage'
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage'
+import { TermsPage } from './pages/TermsPage'
 
 // Inner component that has access to AuthContext
 function AppRoutes() {
@@ -63,6 +66,8 @@ function AppRoutes() {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/debug-env" element={<DebugEnvPage />} />
           <Route path="/debug" element={<DebugPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
 
           {/* Protected routes */}
 
@@ -253,6 +258,9 @@ function AppRoutes() {
         {/* 404 */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
+      {/* Cookie Consent Banner - RGPD Compliance */}
+      <CookieConsentBanner />
     </>
   )
 }

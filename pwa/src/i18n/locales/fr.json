@@ -309,7 +309,30 @@
     },
     "loadingError": "Chargement...",
     "successMessage": "{{message}}",
-    "errorMessage": "{{message}}"
+    "errorMessage": "{{message}}",
+    "gdpr": {
+      "title": "Vos droits RGPD",
+      "subtitle": "Gerez vos donnees personnelles",
+      "exportTitle": "Exporter mes donnees",
+      "exportDescription": "Telechargez une copie de toutes vos donnees personnelles (Article 20 RGPD)",
+      "exportSuccess": "Vos donnees ont ete exportees avec succes",
+      "exportError": "Erreur lors de l'export des donnees",
+      "privacyTitle": "Politique de confidentialite",
+      "privacyDescription": "Consultez comment nous traitons vos donnees",
+      "viewPolicy": "Consulter",
+      "deleteTitle": "Supprimer mon compte",
+      "deleteDescription": "Supprimez definitivement votre compte et vos donnees (Article 17 RGPD)",
+      "deleteModalTitle": "Supprimer votre compte ?",
+      "deleteWarning": "Cette action est IRREVERSIBLE !",
+      "deleteWarning1": "Votre compte sera supprime definitivement",
+      "deleteWarning2": "Vos donnees personnelles seront effacees",
+      "deleteWarning3": "Vous serez deconnecte immediatement",
+      "currentPassword": "Mot de passe actuel",
+      "typeToConfirm": "Tapez \"SUPPRIMER MON COMPTE\" pour confirmer",
+      "confirmDelete": "Supprimer definitivement",
+      "confirmationError": "Veuillez saisir exactement: SUPPRIMER MON COMPTE",
+      "deleteError": "Erreur lors de la suppression du compte"
+    }
   },
   "pharmacy": {
     "title": "Gestion de la Pharmacie",
@@ -918,6 +941,222 @@
       "anonymous": "Anonyme",
       "noFeedback": "Aucun feedback"
     }
+  },
+  "cookies": {
+    "bannerText": "Nous utilisons des cookies pour ameliorer votre experience sur notre site, analyser le trafic et personnaliser le contenu. En continuant a naviguer, vous acceptez notre utilisation des cookies.",
+    "learnMore": "En savoir plus",
+    "customize": "Personnaliser",
+    "rejectAll": "Refuser tout",
+    "acceptAll": "Accepter tout",
+    "customizeTitle": "Personnaliser vos preferences",
+    "savePreferences": "Enregistrer mes preferences",
+    "required": "Requis",
+    "essential": {
+      "title": "Cookies essentiels",
+      "description": "Necessaires au fonctionnement du site. Ils permettent la navigation et l'acces aux zones securisees."
+    },
+    "functional": {
+      "title": "Cookies fonctionnels",
+      "description": "Permettent de memoriser vos preferences (langue, parametres d'affichage) pour ameliorer votre experience."
+    },
+    "analytics": {
+      "title": "Cookies analytiques",
+      "description": "Nous aident a comprendre comment vous utilisez le site pour l'ameliorer (pages visitees, temps de chargement)."
+    },
+    "marketing": {
+      "title": "Cookies marketing",
+      "description": "Utilises pour vous proposer des contenus et publicites pertinents en fonction de vos interets."
+    }
+  },
+  "privacy": {
+    "title": "Politique de confidentialite",
+    "lastUpdated": "Derniere mise a jour",
+    "intro": {
+      "title": "Introduction",
+      "text": "Sante Rurale (\"nous\", \"notre\", \"nos\") s'engage a proteger la vie privee de ses utilisateurs. Cette politique de confidentialite explique comment nous collectons, utilisons, stockons et protegeons vos donnees personnelles conformement au Reglement General sur la Protection des Donnees (RGPD) et aux reglementations africaines en matiere de protection des donnees."
+    },
+    "controller": {
+      "title": "Responsable du traitement",
+      "address": "Adresse"
+    },
+    "dataCollected": {
+      "title": "Donnees collectees",
+      "personal": {
+        "title": "Donnees personnelles",
+        "items": [
+          "Nom, prenom, adresse email",
+          "Numero de telephone",
+          "Photo de profil (optionnel)",
+          "Role professionnel et structure de sante"
+        ]
+      },
+      "medical": {
+        "title": "Donnees medicales (patients)",
+        "items": [
+          "Informations d'identification du patient",
+          "Historique des consultations",
+          "Diagnostics et prescriptions",
+          "Documents medicaux"
+        ]
+      },
+      "technical": {
+        "title": "Donnees techniques",
+        "items": [
+          "Adresse IP et donnees de connexion",
+          "Type de navigateur et appareil",
+          "Donnees de synchronisation"
+        ]
+      }
+    },
+    "purpose": {
+      "title": "Finalites du traitement",
+      "items": [
+        "Gestion des dossiers medicaux et suivi des patients",
+        "Authentification et securisation de l'acces a la plateforme",
+        "Synchronisation des donnees entre appareils",
+        "Generation de rapports statistiques et exports DHIS2",
+        "Amelioration continue de nos services"
+      ]
+    },
+    "security": {
+      "title": "Securite des donnees",
+      "encryption": {
+        "title": "Chiffrement",
+        "description": "Toutes les communications sont chiffrees via HTTPS/TLS. Les donnees sensibles sont chiffrees au repos."
+      },
+      "authentication": {
+        "title": "Authentification",
+        "description": "Authentification JWT securisee avec tokens de courte duree et refresh tokens."
+      },
+      "isolation": {
+        "title": "Isolation",
+        "description": "Architecture multi-tenant avec isolation complete des donnees entre structures de sante."
+      },
+      "backups": {
+        "title": "Sauvegardes",
+        "description": "Sauvegardes automatiques quotidiennes avec retention securisee."
+      }
+    },
+    "retention": {
+      "title": "Duree de conservation",
+      "text": "Les donnees personnelles sont conservees pendant la duree de votre utilisation du service, puis 5 ans apres la derniere activite, conformement aux obligations legales de conservation des donnees medicales. Vous pouvez demander la suppression de vos donnees a tout moment (voir \"Vos droits\")."
+    },
+    "rights": {
+      "title": "Vos droits RGPD",
+      "intro": "Conformement au RGPD et aux reglementations africaines, vous disposez des droits suivants:",
+      "access": {
+        "title": "Droit d'acces",
+        "description": "Obtenir une copie de vos donnees personnelles"
+      },
+      "portability": {
+        "title": "Droit a la portabilite",
+        "description": "Recevoir vos donnees dans un format structure et lisible par machine"
+      },
+      "erasure": {
+        "title": "Droit a l'effacement",
+        "description": "Demander la suppression de vos donnees personnelles"
+      },
+      "exerciseRights": "Pour exercer ces droits, rendez-vous dans votre profil ou contactez-nous a privacy@santerurale.io"
+    },
+    "cookies": {
+      "title": "Utilisation des cookies",
+      "text": "Nous utilisons des cookies pour assurer le bon fonctionnement de notre service. Pour plus d'informations sur les types de cookies utilises et comment gerer vos preferences, consultez notre bandeau de cookies.",
+      "essential": "Cookies essentiels: Necessaires au fonctionnement (authentification, securite)",
+      "functional": "Cookies fonctionnels: Memorisent vos preferences (langue, parametres)",
+      "analytics": "Cookies analytiques: Nous aident a ameliorer le service (avec votre consentement)"
+    },
+    "contact": {
+      "title": "Nous contacter",
+      "text": "Pour toute question concernant cette politique de confidentialite ou vos donnees personnelles, contactez notre Delegue a la Protection des Donnees:"
+    },
+    "seeTerms": "Voir les Conditions d'utilisation"
+  },
+  "terms": {
+    "title": "Conditions d'utilisation",
+    "lastUpdated": "Derniere mise a jour",
+    "acceptance": {
+      "title": "Acceptation des conditions",
+      "text": "En accedant et en utilisant la plateforme Sante Rurale, vous acceptez d'etre lie par les presentes Conditions d'utilisation. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser notre service. Ces conditions constituent un accord juridiquement contraignant entre vous et Sante Rurale."
+    },
+    "description": {
+      "title": "Description du service",
+      "text": "Sante Rurale est une application web progressive (PWA) de gestion de sante conçue pour les centres de sante en zones rurales. Le service comprend:",
+      "items": [
+        "Gestion des dossiers patients electroniques",
+        "Enregistrement des consultations medicales",
+        "Mode offline avec synchronisation automatique",
+        "Generation de rapports et exports DHIS2",
+        "Gestion de la pharmacie et des stocks"
+      ]
+    },
+    "eligibility": {
+      "title": "Conditions d'admissibilite",
+      "text": "L'utilisation de Sante Rurale est reservee aux professionnels de sante dument autorises et aux structures de sante accreditees. En creant un compte, vous certifiez:",
+      "items": [
+        "Etre un professionnel de sante qualifie",
+        "Etre habilite a acceder aux donnees medicales des patients",
+        "Agir dans le cadre de vos fonctions professionnelles",
+        "Respecter le secret medical et les codes de deontologie"
+      ]
+    },
+    "obligations": {
+      "title": "Obligations de l'utilisateur",
+      "accountSecurity": {
+        "title": "Securite du compte",
+        "text": "Vous etes responsable de la confidentialite de vos identifiants de connexion. Vous devez utiliser un mot de passe fort et ne jamais le partager. Toute activite effectuee sous votre compte est de votre responsabilite."
+      },
+      "properUse": {
+        "title": "Utilisation conforme",
+        "text": "Vous vous engagez a utiliser le service conformement aux lois applicables, aux reglementations sanitaires et aux bonnes pratiques medicales. L'acces aux donnees doit etre limite au strict necessaire."
+      },
+      "accuracy": {
+        "title": "Exactitude des informations",
+        "text": "Vous garantissez que les informations que vous saisissez sont exactes, completes et mises a jour. Les erreurs doivent etre corrigees dans les meilleurs delais."
+      }
+    },
+    "prohibited": {
+      "title": "Utilisations interdites",
+      "intro": "Il est strictement interdit de:",
+      "items": [
+        "Acceder aux donnees de patients sans autorisation legitime",
+        "Partager vos identifiants avec des tiers",
+        "Tenter de contourner les mesures de securite",
+        "Utiliser le service a des fins commerciales non autorisees",
+        "Introduire des virus ou logiciels malveillants",
+        "Exporter des donnees a des fins non medicales"
+      ]
+    },
+    "data": {
+      "title": "Donnees et confidentialite",
+      "text": "Le traitement de vos donnees personnelles et des donnees de sante est regi par notre",
+      "privacyPolicy": "Politique de confidentialite",
+      "textEnd": ". En utilisant le service, vous consentez a ce traitement conformement au RGPD et aux reglementations locales."
+    },
+    "availability": {
+      "title": "Disponibilite du service",
+      "text": "Nous nous efforçons de maintenir le service disponible 24h/24, 7j/7. Cependant, des interruptions peuvent survenir pour maintenance ou cas de force majeure. Le mode offline permet de continuer a travailler meme en cas d'indisponibilite temporaire."
+    },
+    "liability": {
+      "title": "Limitation de responsabilite",
+      "text": "Sante Rurale fournit un outil de gestion. Les decisions medicales restent de la responsabilite exclusive des professionnels de sante. Nous ne saurions etre tenus responsables des consequences de decisions medicales prises sur la base des informations enregistrees dans le systeme. Le service est fourni \"tel quel\" sans garantie d'adequation a un usage particulier."
+    },
+    "termination": {
+      "title": "Resiliation",
+      "text": "Vous pouvez resilier votre compte a tout moment depuis les parametres de votre profil. Nous nous reservons le droit de suspendre ou de resilier votre acces en cas de violation des presentes conditions, sans preavis. En cas de resiliation, vous conservez le droit d'exporter vos donnees conformement au RGPD."
+    },
+    "modifications": {
+      "title": "Modifications des conditions",
+      "text": "Nous nous reservons le droit de modifier ces conditions a tout moment. Les modifications seront notifiees par email ou via l'application. Votre utilisation continue du service apres notification vaut acceptation des nouvelles conditions."
+    },
+    "law": {
+      "title": "Droit applicable",
+      "text": "Les presentes conditions sont regies par le droit malien et le RGPD europeen pour les aspects relatifs a la protection des donnees. Tout litige sera soumis aux tribunaux competents de Bamako, Mali."
+    },
+    "contact": {
+      "title": "Contact",
+      "text": "Pour toute question concernant ces conditions:"
+    },
+    "seePrivacy": "Voir la Politique de confidentialite"
   },
   "reports": {
     "title": "Rapports",

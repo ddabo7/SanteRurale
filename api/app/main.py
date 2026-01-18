@@ -8,7 +8,7 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.config import settings
-from app.routers import auth, encounters, reports, tenants, attachments, admin, references, feedback
+from app.routers import auth, encounters, reports, tenants, attachments, admin, references, feedback, gdpr
 from app.routers import patients_simple as patients
 from app.routers import medicaments, stock, fournisseurs, bons_commande
 
@@ -71,6 +71,8 @@ app.include_router(medicaments.router, prefix=settings.API_V1_STR)
 app.include_router(stock.router, prefix=settings.API_V1_STR)
 app.include_router(fournisseurs.router, prefix=settings.API_V1_STR)
 app.include_router(bons_commande.router, prefix=settings.API_V1_STR)
+# GDPR/RGPD compliance router
+app.include_router(gdpr.router, prefix=settings.API_V1_STR)
 
 
 @app.get("/")

@@ -1,17 +1,26 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { authService } from '../services/authService'
-import { User, Mail, Phone, Shield, Lock, Key, Edit2, Check, X, Camera, Upload } from 'lucide-react'
+import { User, Mail, Phone, Shield, Lock, Key, Edit2, Check, X, Camera, Upload, Download, Trash2, AlertTriangle } from 'lucide-react'
 
 export const ProfilePage = () => {
   const { t } = useTranslation()
-  const { user, updateUser } = useAuth()
+  const navigate = useNavigate()
+  const { user, updateUser, logout } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+
+  // RGPD states
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
+  const [deletingAccount, setDeletingAccount] = useState(false)
+  const [exportingData, setExportingData] = useState(false)
 
   // Fonction pour formater le rôle selon le sexe
   const formatRole = (role: string, sexe?: string): string => {
@@ -171,6 +180,78 @@ export const ProfilePage = () => {
       setError(err.message || t('profile.security.changeError'))
     } finally {
       setLoading(false)
+    }
+  }
+
+  // RGPD: Export user data
+  const handleExportData = async () => {
+    setExportingData(true)
+    setError(null)
+    try {
+      const response = await fetch('/api/v1/gdpr/export-data', {
+        method: 'GET',
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'export des donnees')
+      }
+
+      // Telecharger le fichier JSON
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `sante_rurale_export_${user?.email}_${new Date().toISOString().split('T')[0]}.json`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      setSuccess(t('profile.gdpr.exportSuccess', 'Vos donnees ont ete exportees avec succes'))
+    } catch (err: any) {
+      setError(err.message || t('profile.gdpr.exportError', 'Erreur lors de l\'export'))
+    } finally {
+      setExportingData(false)
+    }
+  }
+
+  // RGPD: Delete account
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== 'SUPPRIMER MON COMPTE') {
+      setError(t('profile.gdpr.confirmationError', 'Veuillez saisir exactement: SUPPRIMER MON COMPTE'))
+      return
+    }
+
+    setDeletingAccount(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/v1/gdpr/delete-account', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          password: deletePassword,
+          confirmation: deleteConfirmation,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Erreur lors de la suppression')
+      }
+
+      // Deconnecter et rediriger
+      logout()
+      navigate('/', { replace: true })
+    } catch (err: any) {
+      setError(err.message || t('profile.gdpr.deleteError', 'Erreur lors de la suppression'))
+    } finally {
+      setDeletingAccount(false)
     }
   }
 
@@ -505,6 +586,151 @@ export const ProfilePage = () => {
           </form>
         </div>
       </div>
+
+      {/* Section RGPD - Droits sur les donnees */}
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden mt-6 border border-gray-100">
+        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 px-6 py-4 border-b border-purple-100">
+          <div className="flex items-center space-x-3">
+            <div className="bg-purple-600 p-2 rounded-lg">
+              <Shield className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">{t('profile.gdpr.title', 'Vos droits RGPD')}</h2>
+              <p className="text-sm text-gray-600 mt-0.5">{t('profile.gdpr.subtitle', 'Gerez vos donnees personnelles')}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 space-y-4">
+          {/* Export des donnees */}
+          <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+            <div className="flex-1">
+              <h3 className="font-medium text-gray-900 flex items-center gap-2">
+                <Download className="w-4 h-4 text-green-600" />
+                {t('profile.gdpr.exportTitle', 'Exporter mes donnees')}
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                {t('profile.gdpr.exportDescription', 'Telechargez une copie de toutes vos donnees personnelles (Article 20 RGPD)')}
+              </p>
+            </div>
+            <button
+              onClick={handleExportData}
+              disabled={exportingData}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+            >
+              <Download className="w-4 h-4" />
+              {exportingData ? t('common.loading', 'Chargement...') : t('common.export', 'Exporter')}
+            </button>
+          </div>
+
+          {/* Lien vers politique de confidentialite */}
+          <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex-1">
+              <h3 className="font-medium text-gray-900">{t('profile.gdpr.privacyTitle', 'Politique de confidentialite')}</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                {t('profile.gdpr.privacyDescription', 'Consultez comment nous traitons vos donnees')}
+              </p>
+            </div>
+            <Link
+              to="/privacy"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              {t('profile.gdpr.viewPolicy', 'Consulter')}
+            </Link>
+          </div>
+
+          {/* Suppression du compte */}
+          <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
+            <div className="flex-1">
+              <h3 className="font-medium text-gray-900 flex items-center gap-2">
+                <Trash2 className="w-4 h-4 text-red-600" />
+                {t('profile.gdpr.deleteTitle', 'Supprimer mon compte')}
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                {t('profile.gdpr.deleteDescription', 'Supprimez definitivement votre compte et vos donnees (Article 17 RGPD)')}
+              </p>
+            </div>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              {t('common.delete', 'Supprimer')}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal de confirmation de suppression */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-red-100 p-3 rounded-full">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">{t('profile.gdpr.deleteModalTitle', 'Supprimer votre compte ?')}</h3>
+            </div>
+
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+              <p className="text-red-800 text-sm font-medium mb-2">{t('profile.gdpr.deleteWarning', 'Cette action est IRREVERSIBLE !')}</p>
+              <ul className="text-red-700 text-sm space-y-1">
+                <li>- {t('profile.gdpr.deleteWarning1', 'Votre compte sera supprime definitivement')}</li>
+                <li>- {t('profile.gdpr.deleteWarning2', 'Vos donnees personnelles seront effacees')}</li>
+                <li>- {t('profile.gdpr.deleteWarning3', 'Vous serez deconnecte immediatement')}</li>
+              </ul>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t('profile.gdpr.currentPassword', 'Mot de passe actuel')}
+                </label>
+                <input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  className="w-full border-2 border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 rounded-lg px-4 py-2"
+                  placeholder="********"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t('profile.gdpr.typeToConfirm', 'Tapez "SUPPRIMER MON COMPTE" pour confirmer')}
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                  className="w-full border-2 border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 rounded-lg px-4 py-2"
+                  placeholder="SUPPRIMER MON COMPTE"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false)
+                  setDeletePassword('')
+                  setDeleteConfirmation('')
+                }}
+                className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+              >
+                {t('common.cancel', 'Annuler')}
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deletingAccount || deleteConfirmation !== 'SUPPRIMER MON COMPTE'}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deletingAccount ? t('common.loading', 'Chargement...') : t('profile.gdpr.confirmDelete', 'Supprimer definitivement')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

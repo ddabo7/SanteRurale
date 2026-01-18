@@ -309,7 +309,30 @@
     },
     "loadingError": "Loading...",
     "successMessage": "{{message}}",
-    "errorMessage": "{{message}}"
+    "errorMessage": "{{message}}",
+    "gdpr": {
+      "title": "Your GDPR Rights",
+      "subtitle": "Manage your personal data",
+      "exportTitle": "Export my data",
+      "exportDescription": "Download a copy of all your personal data (GDPR Article 20)",
+      "exportSuccess": "Your data has been exported successfully",
+      "exportError": "Error exporting data",
+      "privacyTitle": "Privacy policy",
+      "privacyDescription": "See how we process your data",
+      "viewPolicy": "View",
+      "deleteTitle": "Delete my account",
+      "deleteDescription": "Permanently delete your account and data (GDPR Article 17)",
+      "deleteModalTitle": "Delete your account?",
+      "deleteWarning": "This action is IRREVERSIBLE!",
+      "deleteWarning1": "Your account will be permanently deleted",
+      "deleteWarning2": "Your personal data will be erased",
+      "deleteWarning3": "You will be logged out immediately",
+      "currentPassword": "Current password",
+      "typeToConfirm": "Type \"SUPPRIMER MON COMPTE\" to confirm",
+      "confirmDelete": "Delete permanently",
+      "confirmationError": "Please type exactly: SUPPRIMER MON COMPTE",
+      "deleteError": "Error deleting account"
+    }
   },
   "pharmacy": {
     "title": "Pharmacy Management",
@@ -918,6 +941,222 @@
       "anonymous": "Anonymous",
       "noFeedback": "No feedback"
     }
+  },
+  "cookies": {
+    "bannerText": "We use cookies to improve your experience on our site, analyze traffic and personalize content. By continuing to browse, you accept our use of cookies.",
+    "learnMore": "Learn more",
+    "customize": "Customize",
+    "rejectAll": "Reject all",
+    "acceptAll": "Accept all",
+    "customizeTitle": "Customize your preferences",
+    "savePreferences": "Save my preferences",
+    "required": "Required",
+    "essential": {
+      "title": "Essential cookies",
+      "description": "Necessary for the site to function. They allow navigation and access to secure areas."
+    },
+    "functional": {
+      "title": "Functional cookies",
+      "description": "Allow us to remember your preferences (language, display settings) to improve your experience."
+    },
+    "analytics": {
+      "title": "Analytics cookies",
+      "description": "Help us understand how you use the site to improve it (pages visited, loading time)."
+    },
+    "marketing": {
+      "title": "Marketing cookies",
+      "description": "Used to offer you relevant content and advertisements based on your interests."
+    }
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated",
+    "intro": {
+      "title": "Introduction",
+      "text": "Rural Health (\"we\", \"our\", \"us\") is committed to protecting the privacy of its users. This privacy policy explains how we collect, use, store and protect your personal data in accordance with the General Data Protection Regulation (GDPR) and African data protection regulations."
+    },
+    "controller": {
+      "title": "Data controller",
+      "address": "Address"
+    },
+    "dataCollected": {
+      "title": "Data collected",
+      "personal": {
+        "title": "Personal data",
+        "items": [
+          "Last name, first name, email address",
+          "Phone number",
+          "Profile photo (optional)",
+          "Professional role and health facility"
+        ]
+      },
+      "medical": {
+        "title": "Medical data (patients)",
+        "items": [
+          "Patient identification information",
+          "Consultation history",
+          "Diagnoses and prescriptions",
+          "Medical documents"
+        ]
+      },
+      "technical": {
+        "title": "Technical data",
+        "items": [
+          "IP address and connection data",
+          "Browser and device type",
+          "Synchronization data"
+        ]
+      }
+    },
+    "purpose": {
+      "title": "Processing purposes",
+      "items": [
+        "Medical records management and patient follow-up",
+        "Authentication and platform access security",
+        "Data synchronization between devices",
+        "Statistical reports generation and DHIS2 exports",
+        "Continuous improvement of our services"
+      ]
+    },
+    "security": {
+      "title": "Data security",
+      "encryption": {
+        "title": "Encryption",
+        "description": "All communications are encrypted via HTTPS/TLS. Sensitive data is encrypted at rest."
+      },
+      "authentication": {
+        "title": "Authentication",
+        "description": "Secure JWT authentication with short-lived tokens and refresh tokens."
+      },
+      "isolation": {
+        "title": "Isolation",
+        "description": "Multi-tenant architecture with complete data isolation between health facilities."
+      },
+      "backups": {
+        "title": "Backups",
+        "description": "Automatic daily backups with secure retention."
+      }
+    },
+    "retention": {
+      "title": "Data retention",
+      "text": "Personal data is retained for the duration of your use of the service, then 5 years after the last activity, in accordance with legal obligations for medical data retention. You can request deletion of your data at any time (see \"Your rights\")."
+    },
+    "rights": {
+      "title": "Your GDPR rights",
+      "intro": "In accordance with GDPR and African regulations, you have the following rights:",
+      "access": {
+        "title": "Right of access",
+        "description": "Obtain a copy of your personal data"
+      },
+      "portability": {
+        "title": "Right to portability",
+        "description": "Receive your data in a structured, machine-readable format"
+      },
+      "erasure": {
+        "title": "Right to erasure",
+        "description": "Request the deletion of your personal data"
+      },
+      "exerciseRights": "To exercise these rights, go to your profile or contact us at privacy@santerurale.io"
+    },
+    "cookies": {
+      "title": "Use of cookies",
+      "text": "We use cookies to ensure the proper functioning of our service. For more information about the types of cookies used and how to manage your preferences, see our cookie banner.",
+      "essential": "Essential cookies: Necessary for operation (authentication, security)",
+      "functional": "Functional cookies: Remember your preferences (language, settings)",
+      "analytics": "Analytics cookies: Help us improve the service (with your consent)"
+    },
+    "contact": {
+      "title": "Contact us",
+      "text": "For any questions about this privacy policy or your personal data, contact our Data Protection Officer:"
+    },
+    "seeTerms": "See Terms of Use"
+  },
+  "terms": {
+    "title": "Terms of Use",
+    "lastUpdated": "Last updated",
+    "acceptance": {
+      "title": "Acceptance of terms",
+      "text": "By accessing and using the Rural Health platform, you agree to be bound by these Terms of Use. If you do not accept these terms, please do not use our service. These terms constitute a legally binding agreement between you and Rural Health."
+    },
+    "description": {
+      "title": "Service description",
+      "text": "Rural Health is a progressive web application (PWA) for health management designed for health centers in rural areas. The service includes:",
+      "items": [
+        "Electronic patient records management",
+        "Medical consultation recording",
+        "Offline mode with automatic synchronization",
+        "Report generation and DHIS2 exports",
+        "Pharmacy and stock management"
+      ]
+    },
+    "eligibility": {
+      "title": "Eligibility conditions",
+      "text": "Use of Rural Health is reserved for duly authorized health professionals and accredited health facilities. By creating an account, you certify:",
+      "items": [
+        "Being a qualified health professional",
+        "Being authorized to access patient medical data",
+        "Acting within the scope of your professional duties",
+        "Respecting medical confidentiality and codes of ethics"
+      ]
+    },
+    "obligations": {
+      "title": "User obligations",
+      "accountSecurity": {
+        "title": "Account security",
+        "text": "You are responsible for the confidentiality of your login credentials. You must use a strong password and never share it. All activity under your account is your responsibility."
+      },
+      "properUse": {
+        "title": "Proper use",
+        "text": "You agree to use the service in accordance with applicable laws, health regulations and good medical practices. Access to data must be limited to what is strictly necessary."
+      },
+      "accuracy": {
+        "title": "Information accuracy",
+        "text": "You guarantee that the information you enter is accurate, complete and up to date. Errors must be corrected as soon as possible."
+      }
+    },
+    "prohibited": {
+      "title": "Prohibited uses",
+      "intro": "It is strictly prohibited to:",
+      "items": [
+        "Access patient data without legitimate authorization",
+        "Share your credentials with third parties",
+        "Attempt to circumvent security measures",
+        "Use the service for unauthorized commercial purposes",
+        "Introduce viruses or malicious software",
+        "Export data for non-medical purposes"
+      ]
+    },
+    "data": {
+      "title": "Data and privacy",
+      "text": "The processing of your personal data and health data is governed by our",
+      "privacyPolicy": "Privacy Policy",
+      "textEnd": ". By using the service, you consent to this processing in accordance with GDPR and local regulations."
+    },
+    "availability": {
+      "title": "Service availability",
+      "text": "We strive to maintain the service available 24/7. However, interruptions may occur for maintenance or force majeure. Offline mode allows you to continue working even in case of temporary unavailability."
+    },
+    "liability": {
+      "title": "Limitation of liability",
+      "text": "Rural Health provides a management tool. Medical decisions remain the exclusive responsibility of health professionals. We cannot be held responsible for the consequences of medical decisions made based on information recorded in the system. The service is provided \"as is\" without warranty of fitness for a particular purpose."
+    },
+    "termination": {
+      "title": "Termination",
+      "text": "You can terminate your account at any time from your profile settings. We reserve the right to suspend or terminate your access in case of violation of these terms, without notice. In case of termination, you retain the right to export your data in accordance with GDPR."
+    },
+    "modifications": {
+      "title": "Modifications to terms",
+      "text": "We reserve the right to modify these terms at any time. Modifications will be notified by email or via the application. Your continued use of the service after notification constitutes acceptance of the new terms."
+    },
+    "law": {
+      "title": "Governing law",
+      "text": "These terms are governed by Malian law and European GDPR for aspects related to data protection. Any dispute shall be submitted to the competent courts of Bamako, Mali."
+    },
+    "contact": {
+      "title": "Contact",
+      "text": "For any questions about these terms:"
+    },
+    "seePrivacy": "See Privacy Policy"
   },
   "reports": {
     "title": "Reports",
