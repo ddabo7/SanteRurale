@@ -90,10 +90,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log('[Auth] Nettoyage des données locales avant connexion...')
       try {
         await db.clearAllData()
+        // Préserver la préférence de langue avant de vider localStorage
+        const savedLanguage = localStorage.getItem('i18nextLng') || i18n.language
         localStorage.clear()
-        // Réinitialiser la langue en français par défaut
-        await i18n.changeLanguage('fr')
-        console.log('[Auth] ✅ Données locales vidées et langue réinitialisée en français')
+        // Restaurer la préférence de langue
+        localStorage.setItem('i18nextLng', savedLanguage)
+        console.log('[Auth] ✅ Données locales vidées, langue préservée:', savedLanguage)
       } catch (error) {
         console.error('[Auth] ⚠️ Erreur lors du nettoyage pré-connexion:', error)
       }
@@ -149,18 +151,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('[Auth] Erreur lors du vidage d\'IndexedDB:', error)
     }
 
-    // Réinitialiser la langue en français avant de vider le localStorage
-    try {
-      await i18n.changeLanguage('fr')
-      console.log('[Auth] Langue réinitialisée en français')
-    } catch (error) {
-      console.warn('[Auth] Impossible de réinitialiser la langue:', error)
-    }
-
-    // Vider le localStorage
+    // Vider le localStorage et réinitialiser la langue selon le navigateur
     try {
       localStorage.clear()
-      console.log('[Auth] localStorage vidé')
+      // Détecter la langue du navigateur/système
+      const browserLang = navigator.language?.split('-')[0] || 'fr'
+      const supportedLang = ['fr', 'en'].includes(browserLang) ? browserLang : 'fr'
+      localStorage.setItem('i18nextLng', supportedLang)
+      await i18n.changeLanguage(supportedLang)
+      console.log('[Auth] localStorage vidé, langue réinitialisée selon navigateur:', supportedLang)
     } catch (error) {
       console.warn('[Auth] Impossible de vider localStorage:', error)
     }

@@ -14,12 +14,16 @@ const resources = {
   }
 }
 
+// Vérifier si une préférence de langue existe déjà dans localStorage
+const storedLanguage = localStorage.getItem('i18nextLng')
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'fr',
+    // Utiliser la langue stockée si elle existe, sinon français par défaut
+    lng: storedLanguage || 'fr',
     fallbackLng: 'fr',
     debug: false,
     interpolation: {
@@ -27,7 +31,8 @@ i18n
     },
     detection: {
       order: ['localStorage'],
-      caches: ['localStorage']
+      caches: ['localStorage'],
+      lookupLocalStorage: 'i18nextLng'
     }
   })
 
