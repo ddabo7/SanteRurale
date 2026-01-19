@@ -177,7 +177,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // 🔥 CRITIQUE: Forcer un rechargement COMPLET de la page pour vider TOUT le cache
     // Cela empêche le prochain utilisateur de voir les données en cache du précédent
     console.log('[Auth] Rechargement complet de la page pour vider le cache...')
-    window.location.href = '/login'
+    window.location.href = '/'
   }
 
   const updateUser = async (userData: Partial<User>) => {
