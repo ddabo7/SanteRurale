@@ -90,12 +90,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log('[Auth] Nettoyage des données locales avant connexion...')
       try {
         await db.clearAllData()
-        // Préserver la préférence de langue avant de vider localStorage
+        // Préserver la préférence de langue et les cookies avant de vider localStorage
         const savedLanguage = localStorage.getItem('i18nextLng') || i18n.language
+        const cookieConsent = localStorage.getItem('sante_rurale_cookie_consent')
+        const cookiePreferences = localStorage.getItem('sante_rurale_cookie_preferences')
+
         localStorage.clear()
-        // Restaurer la préférence de langue
+
+        // Restaurer les préférences
         localStorage.setItem('i18nextLng', savedLanguage)
-        console.log('[Auth] ✅ Données locales vidées, langue préservée:', savedLanguage)
+        if (cookieConsent) {
+          localStorage.setItem('sante_rurale_cookie_consent', cookieConsent)
+        }
+        if (cookiePreferences) {
+          localStorage.setItem('sante_rurale_cookie_preferences', cookiePreferences)
+        }
+        console.log('[Auth] ✅ Données locales vidées, langue et cookies préservés')
       } catch (error) {
         console.error('[Auth] ⚠️ Erreur lors du nettoyage pré-connexion:', error)
       }
@@ -151,15 +161,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('[Auth] Erreur lors du vidage d\'IndexedDB:', error)
     }
 
-    // Vider le localStorage et réinitialiser la langue selon le navigateur
+    // Vider le localStorage en préservant les préférences cookies et langue
     try {
+      // Sauvegarder les préférences cookies avant de vider
+      const cookieConsent = localStorage.getItem('sante_rurale_cookie_consent')
+      const cookiePreferences = localStorage.getItem('sante_rurale_cookie_preferences')
+
       localStorage.clear()
+
+      // Restaurer les préférences cookies
+      if (cookieConsent) {
+        localStorage.setItem('sante_rurale_cookie_consent', cookieConsent)
+      }
+      if (cookiePreferences) {
+        localStorage.setItem('sante_rurale_cookie_preferences', cookiePreferences)
+      }
+
       // Détecter la langue du navigateur/système
       const browserLang = navigator.language?.split('-')[0] || 'fr'
       const supportedLang = ['fr', 'en'].includes(browserLang) ? browserLang : 'fr'
       localStorage.setItem('i18nextLng', supportedLang)
       await i18n.changeLanguage(supportedLang)
-      console.log('[Auth] localStorage vidé, langue réinitialisée selon navigateur:', supportedLang)
+      console.log('[Auth] localStorage vidé, cookies préservés, langue réinitialisée:', supportedLang)
     } catch (error) {
       console.warn('[Auth] Impossible de vider localStorage:', error)
     }
