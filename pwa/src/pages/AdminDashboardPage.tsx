@@ -6,6 +6,8 @@ interface GlobalStats {
   total_tenants: number
   active_tenants: number
   new_tenants_this_month: number
+  total_sites: number
+  active_sites: number
   total_free_plan: number
   total_starter_plan: number
   total_pro_plan: number
@@ -135,15 +137,29 @@ export const AdminDashboardPage = () => {
       </div>
 
       {/* Statistiques principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Total tenants */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        {/* Total Organisations */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">{t('admin.dashboard.stats.totalHospitals')}</p>
+              <p className="text-sm text-gray-600">{t('admin.dashboard.stats.totalOrganizations')}</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">{stats.total_tenants}</p>
               <p className="text-xs text-green-600 mt-1">
                 {t('admin.dashboard.stats.newThisMonth', { count: stats.new_tenants_this_month })}
+              </p>
+            </div>
+            <div className="text-4xl">🏢</div>
+          </div>
+        </div>
+
+        {/* Total Sites */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">{t('admin.dashboard.stats.totalSites')}</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{stats.total_sites}</p>
+              <p className="text-xs text-green-600 mt-1">
+                {stats.active_sites} {t('admin.dashboard.stats.active')}
               </p>
             </div>
             <div className="text-4xl">🏥</div>
@@ -178,11 +194,11 @@ export const AdminDashboardPage = () => {
           </div>
         </div>
 
-        {/* Hôpitaux actifs */}
+        {/* Organisations actives */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">{t('admin.dashboard.stats.activeHospitals')}</p>
+              <p className="text-sm text-gray-600">{t('admin.dashboard.stats.activeOrganizations')}</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">{stats.active_tenants}</p>
               <p className="text-xs text-gray-500 mt-1">{t('admin.dashboard.stats.thisMonth')}</p>
             </div>

@@ -852,14 +852,16 @@
         "sites": "Sites",
         "patients": "Patients",
         "consultations": "Consultations",
-        "totalHospitals": "Total Hôpitaux",
+        "totalOrganizations": "Total Organisations",
+        "totalSites": "Total Sites",
         "mrr": "MRR",
         "arr": "ARR",
-        "activeHospitals": "Hôpitaux Actifs",
+        "activeOrganizations": "Organisations Actives",
         "newThisMonth": "Nouveaux ce Mois",
         "monthlyRevenue": "Revenu Mensuel",
         "annualRevenue": "Revenu Annuel",
-        "thisMonth": "Ce Mois"
+        "thisMonth": "Ce Mois",
+        "active": "actifs"
       },
       "planDistribution": {
         "title": "Distribution des Plans",

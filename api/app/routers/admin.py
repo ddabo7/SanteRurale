@@ -34,10 +34,14 @@ class TenantStats(BaseModel):
 
 
 class GlobalStats(BaseModel):
-    # Tenants
+    # Tenants (Organisations)
     total_tenants: int
     active_tenants: int  # avec au moins 1 consultation ce mois
     new_tenants_this_month: int
+
+    # Sites (Centres de santé)
+    total_sites: int
+    active_sites: int
 
     # Abonnements
     total_free_plan: int
@@ -168,6 +172,19 @@ async def get_global_stats(
     storage_row = result.fetchone()
     total_storage_bytes = int(storage_row.total_bytes) if storage_row else 0
 
+    # Sites (centres de santé)
+    sites_query = text("""
+        SELECT
+            COUNT(*) as total_sites,
+            COUNT(CASE WHEN actif = true THEN 1 END) as active_sites
+        FROM sites
+    """)
+
+    result = await db.execute(sites_query)
+    sites_row = result.fetchone()
+    total_sites = int(sites_row.total_sites) if sites_row else 0
+    active_sites = int(sites_row.active_sites) if sites_row else 0
+
     # Top 10 tenants les plus actifs
     # Note: patients appartiennent au site, on joint via users.site_id
     top_tenants_query = text("""
@@ -217,6 +234,8 @@ async def get_global_stats(
         total_tenants=tenant_stats.total_tenants,
         active_tenants=tenant_stats.active_tenants or 0,
         new_tenants_this_month=tenant_stats.new_tenants_this_month or 0,
+        total_sites=total_sites,
+        active_sites=active_sites,
         total_free_plan=plan_counts.get('free', 0),
         total_starter_plan=plan_counts.get('starter', 0),
         total_pro_plan=plan_counts.get('pro', 0),
