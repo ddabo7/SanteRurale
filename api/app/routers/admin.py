@@ -346,3 +346,100 @@ async def list_all_tenants(
         )
         for row in rows
     ]
+
+
+# ===========================================================================
+# GET USER STATS (Inscriptions et utilisateurs)
+# ===========================================================================
+
+class UserRoleStats(BaseModel):
+    role: str
+    count: int
+
+
+class UserRegistrationsByMonth(BaseModel):
+    month: str
+    count: int
+
+
+class UserStats(BaseModel):
+    total_users: int
+    active_users: int
+    new_users_this_month: int
+    new_users_this_week: int
+    users_by_role: list[UserRoleStats]
+    registrations_by_month: list[UserRegistrationsByMonth]
+
+
+@router.get("/user-stats", response_model=UserStats)
+async def get_user_stats(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Retourne les statistiques détaillées des utilisateurs inscrits"""
+
+    # Total et utilisateurs actifs
+    total_query = text("""
+        SELECT
+            COUNT(*) as total_users,
+            COUNT(CASE WHEN actif = true THEN 1 END) as active_users,
+            COUNT(CASE WHEN created_at >= DATE_TRUNC('month', CURRENT_DATE) THEN 1 END) as new_this_month,
+            COUNT(CASE WHEN created_at >= DATE_TRUNC('week', CURRENT_DATE) THEN 1 END) as new_this_week
+        FROM users
+    """)
+
+    result = await db.execute(total_query)
+    total_row = result.fetchone()
+
+    # Utilisateurs par rôle
+    role_query = text("""
+        SELECT
+            role,
+            COUNT(*) as count
+        FROM users
+        GROUP BY role
+        ORDER BY count DESC
+    """)
+
+    result = await db.execute(role_query)
+    role_rows = result.fetchall()
+
+    users_by_role = [
+        UserRoleStats(role=row.role, count=row.count)
+        for row in role_rows
+    ]
+
+    # Inscriptions par mois (12 derniers mois)
+    monthly_query = text("""
+        WITH months AS (
+            SELECT generate_series(
+                DATE_TRUNC('month', CURRENT_DATE - INTERVAL '11 months'),
+                DATE_TRUNC('month', CURRENT_DATE),
+                '1 month'::interval
+            ) as month
+        )
+        SELECT
+            TO_CHAR(m.month, 'YYYY-MM') as month,
+            COUNT(u.id) as count
+        FROM months m
+        LEFT JOIN users u ON DATE_TRUNC('month', u.created_at) = m.month
+        GROUP BY m.month
+        ORDER BY m.month ASC
+    """)
+
+    result = await db.execute(monthly_query)
+    monthly_rows = result.fetchall()
+
+    registrations_by_month = [
+        UserRegistrationsByMonth(month=row.month, count=row.count)
+        for row in monthly_rows
+    ]
+
+    return UserStats(
+        total_users=total_row.total_users or 0,
+        active_users=total_row.active_users or 0,
+        new_users_this_month=total_row.new_this_month or 0,
+        new_users_this_week=total_row.new_this_week or 0,
+        users_by_role=users_by_role,
+        registrations_by_month=registrations_by_month
+    )

@@ -34,10 +34,30 @@ interface TenantStats {
   monthly_revenue: number
 }
 
+interface UserRoleStats {
+  role: string
+  count: number
+}
+
+interface UserRegistrationsByMonth {
+  month: string
+  count: number
+}
+
+interface UserStats {
+  total_users: number
+  active_users: number
+  new_users_this_month: number
+  new_users_this_week: number
+  users_by_role: UserRoleStats[]
+  registrations_by_month: UserRegistrationsByMonth[]
+}
+
 export const AdminDashboardPage = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [stats, setStats] = useState<GlobalStats | null>(null)
+  const [userStats, setUserStats] = useState<UserStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -51,21 +71,29 @@ export const AdminDashboardPage = () => {
       setError(null)
 
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
-      const response = await fetch(`${API_BASE_URL}/admin/stats`, {
-        credentials: 'include',
-      })
 
-      if (response.status === 403) {
+      // Charger les stats globales et les stats utilisateurs en parallèle
+      const [statsResponse, userStatsResponse] = await Promise.all([
+        fetch(`${API_BASE_URL}/admin/stats`, { credentials: 'include' }),
+        fetch(`${API_BASE_URL}/admin/user-stats`, { credentials: 'include' })
+      ])
+
+      if (statsResponse.status === 403 || userStatsResponse.status === 403) {
         setError(t('admin.dashboard.errors.accessDenied'))
         return
       }
 
-      if (!response.ok) {
+      if (!statsResponse.ok || !userStatsResponse.ok) {
         throw new Error(t('admin.dashboard.errors.loadError'))
       }
 
-      const data = await response.json()
-      setStats(data)
+      const [statsData, userStatsData] = await Promise.all([
+        statsResponse.json(),
+        userStatsResponse.json()
+      ])
+
+      setStats(statsData)
+      setUserStats(userStatsData)
     } catch (err: any) {
       console.error('Erreur:', err)
       setError(err.message || t('admin.dashboard.errors.loadError'))
@@ -206,6 +234,68 @@ export const AdminDashboardPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Statistiques Utilisateurs */}
+      {userStats && (
+        <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">
+            👥 {t('admin.dashboard.userStats.title', 'Statistiques Utilisateurs')}
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div className="bg-blue-50 rounded-lg p-4">
+              <p className="text-sm text-blue-600 font-medium">{t('admin.dashboard.userStats.totalRegistered', 'Total Inscrits')}</p>
+              <p className="text-3xl font-bold text-blue-900 mt-1">{userStats.total_users}</p>
+            </div>
+            <div className="bg-green-50 rounded-lg p-4">
+              <p className="text-sm text-green-600 font-medium">{t('admin.dashboard.userStats.activeUsers', 'Utilisateurs Actifs')}</p>
+              <p className="text-3xl font-bold text-green-900 mt-1">{userStats.active_users}</p>
+            </div>
+            <div className="bg-purple-50 rounded-lg p-4">
+              <p className="text-sm text-purple-600 font-medium">{t('admin.dashboard.userStats.newThisMonth', 'Nouveaux ce mois')}</p>
+              <p className="text-3xl font-bold text-purple-900 mt-1">{userStats.new_users_this_month}</p>
+            </div>
+            <div className="bg-orange-50 rounded-lg p-4">
+              <p className="text-sm text-orange-600 font-medium">{t('admin.dashboard.userStats.newThisWeek', 'Nouveaux cette semaine')}</p>
+              <p className="text-3xl font-bold text-orange-900 mt-1">{userStats.new_users_this_week}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Utilisateurs par rôle */}
+            <div className="border rounded-lg p-4">
+              <h3 className="font-semibold text-gray-700 mb-3">{t('admin.dashboard.userStats.byRole', 'Par Rôle')}</h3>
+              <div className="space-y-2">
+                {userStats.users_by_role.map((roleData) => (
+                  <div key={roleData.role} className="flex items-center justify-between">
+                    <span className="capitalize text-gray-600">{roleData.role}</span>
+                    <span className="font-semibold bg-gray-100 px-3 py-1 rounded-full text-sm">{roleData.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Inscriptions par mois */}
+            <div className="border rounded-lg p-4">
+              <h3 className="font-semibold text-gray-700 mb-3">{t('admin.dashboard.userStats.registrationsByMonth', 'Inscriptions par mois')}</h3>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {userStats.registrations_by_month.slice().reverse().map((monthData) => (
+                  <div key={monthData.month} className="flex items-center justify-between">
+                    <span className="text-gray-600">{monthData.month}</span>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="h-2 bg-emerald-500 rounded"
+                        style={{ width: `${Math.max(4, (monthData.count / Math.max(...userStats.registrations_by_month.map(m => m.count), 1)) * 100)}px` }}
+                      ></div>
+                      <span className="font-semibold text-sm w-8 text-right">{monthData.count}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Répartition par plan */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">

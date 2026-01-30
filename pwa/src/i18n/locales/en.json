@@ -863,6 +863,15 @@
         "thisMonth": "This Month",
         "active": "active"
       },
+      "userStats": {
+        "title": "User Statistics",
+        "totalRegistered": "Total Registered",
+        "activeUsers": "Active Users",
+        "newThisMonth": "New this month",
+        "newThisWeek": "New this week",
+        "byRole": "By Role",
+        "registrationsByMonth": "Registrations by month"
+      },
       "planDistribution": {
         "title": "Plan Distribution",
         "freePlan": "Free Plan",

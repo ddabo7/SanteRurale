@@ -863,6 +863,15 @@
         "thisMonth": "Ce Mois",
         "active": "actifs"
       },
+      "userStats": {
+        "title": "Statistiques Utilisateurs",
+        "totalRegistered": "Total Inscrits",
+        "activeUsers": "Utilisateurs Actifs",
+        "newThisMonth": "Nouveaux ce mois",
+        "newThisWeek": "Nouveaux cette semaine",
+        "byRole": "Par Rôle",
+        "registrationsByMonth": "Inscriptions par mois"
+      },
       "planDistribution": {
         "title": "Distribution des Plans",
         "freePlan": "Plan Gratuit",
