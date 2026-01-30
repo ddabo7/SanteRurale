@@ -1,13 +1,52 @@
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LanguageSwitcher } from '../components/LanguageSwitcher'
+
+interface PlatformStats {
+  health_centers: number
+  active_caregivers: number
+  patients_followed: number
+  availability: number
+}
+
+const formatNumber = (num: number): string => {
+  if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(1)}M+`
+  }
+  if (num >= 1000) {
+    return `${(num / 1000).toFixed(0)}k+`
+  }
+  return `${num}+`
+}
 
 export const LandingPage = () => {
   const { t } = useTranslation()
   const { isAuthenticated, isLoading } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [stats, setStats] = useState<PlatformStats>({
+    health_centers: 0,
+    active_caregivers: 0,
+    patients_followed: 0,
+    availability: 99.9
+  })
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+        const response = await fetch(`${API_URL}/stats/public`)
+        if (response.ok) {
+          const data = await response.json()
+          setStats(data)
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des statistiques:', error)
+      }
+    }
+    fetchStats()
+  }, [])
 
   // Rediriger vers /patients si déjà connecté
   if (isLoading) {
@@ -253,19 +292,19 @@ export const LandingPage = () => {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold mb-2">50+</div>
+              <div className="text-4xl md:text-5xl font-bold mb-2">{formatNumber(stats.health_centers)}</div>
               <div className="text-emerald-200 font-medium">{t('landing.stats.items.healthCenters')}</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold mb-2">500+</div>
+              <div className="text-4xl md:text-5xl font-bold mb-2">{formatNumber(stats.active_caregivers)}</div>
               <div className="text-emerald-200 font-medium">{t('landing.stats.items.activeCarers')}</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold mb-2">10k+</div>
+              <div className="text-4xl md:text-5xl font-bold mb-2">{formatNumber(stats.patients_followed)}</div>
               <div className="text-emerald-200 font-medium">{t('landing.stats.items.patientsFollowed')}</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold mb-2">99.9%</div>
+              <div className="text-4xl md:text-5xl font-bold mb-2">{stats.availability}%</div>
               <div className="text-emerald-200 font-medium">{t('landing.stats.items.availability')}</div>
             </div>
           </div>
